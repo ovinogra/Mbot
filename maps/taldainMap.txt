@@ -1,0 +1,10 @@
+	0	0	0	0	0	0	0	0		
+0	Start	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0	
+0	Zone	Zone	Zone	Dark	Light	Zone	Zone	Zone	0	
+0	Zone	Zone	Light	Zone	Zone	Light	Zone	Zone	0	
+0	Zone	Dark	Zone	Light	Light	Zone	Dark	Zone	0	
+0	Zone	Dark	Zone	Zone	Zone	Zone	Dark	Zone	0	
+0	Zone	Zone	Light	Zone	Zone	Light	Zone	Zone	0	
+0	Zone	Light	Zone	Light	Light	Kress	Light	Zone	0	
+0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0	
+	0	0	0	0	0	0	0	0		

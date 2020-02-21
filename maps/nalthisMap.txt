@@ -1,0 +1,10 @@
+	0	0	0	0	0	0	0	0		
+0	ColorPurple	ColorGreen	Space	Space	Space	Space	Space	Space	0	
+0	Space	Space	Space	Space	Space	Space	Space	Space	0	
+0	Space	Space	ColorBlue	Space	Space	ColorOrange	Space	Space	0	
+0	Space	Space	Debris	Space	Kress	ColorRed	ColorYellow	Space	0	
+0	Space	Space	Debris	Space	Space	Space	Space	Space	0	
+0	Space	Start	ColorBlue	Space	Space	ColorOrange	Space	Space	0	
+0	Space	ColorYellow	ColorRed	Space	Space	Space	Space	ColorGreen	0	
+0	Space	Space	Space	Space	Space	Space	Space	ColorPurple	0	
+	0	0	0	0	0	0	0	0		

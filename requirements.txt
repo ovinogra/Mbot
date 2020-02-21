@@ -1,0 +1,6 @@
+discord.py==1.2.5
+python-dotenv
+asyncio
+regex
+numpy==1.18.1
+mechanize==0.4.5

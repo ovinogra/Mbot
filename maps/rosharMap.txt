@@ -1,0 +1,13 @@
+			0	0	0	0	0				
+		0	Zone	Zone	Zone	Zone	Zone	0			
+	0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0		
+0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0	
+0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0	
+0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0	
+0	Zone	Zone	Zone	Zone	Kress	Zone	Zone	Zone	Zone	0	
+0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0	
+0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Start	0	
+0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0	
+	0	Zone	Zone	Zone	Zone	Zone	Zone	Zone	0		
+		0	Zone	Zone	Zone	Zone	Zone	0			
+			0	0	0	0	0				
