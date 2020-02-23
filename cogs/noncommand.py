@@ -21,15 +21,15 @@ class NoncommandCog(commands.Cog):
             await message.channel.send('Pong!')
 
 
-        if message.content.lower().startswith('hello mbot'):
+        if message.content.lower().startswith('hello mbot') or message.content.lower().startswith('hi mbot'):
             await message.channel.send('Welcome again {}!'.format(message.author.mention))
 
 
-        if message.content.lower().startswith('bye mbot'):
+        if message.content.lower().startswith('bye mbot') or message.content.lower().startswith('goodbye mbot'):
             await message.channel.send('Good night {}'.format(message.author.mention))
 
 
-        if message.content.lower().startswith('thanks mbot'):
+        if message.content.lower().startswith('thanks mbot') or message.content.lower().startswith('thank you mbot'):
             url = 'https://i.imgur.com/XZsOmxg.png?2'
             embed=discord.Embed()
             embed.set_image(url=url)

@@ -94,6 +94,7 @@ class DebrisCog(commands.Cog):
                 elif newTile == '0':
                     await stop('krell')
 
+
         # Map tile functions (need to be customized for each map notation)
 
         async def Start(r,c):
@@ -372,17 +373,17 @@ class DebrisCog(commands.Cog):
                             '>>> Well that was fun I hope! Or at least somewhat entertaining.\n'\
                             'Since Mbot reached a state I am reasonably happy with, I pushed a copy to github. '\
                             'Congratulations, you found the link: https://github.com/Moonrise55/Mbot (I couldn\'t rightly release the source code until you finished this, now could I?) '\
-                            'If you want to see :ramen: code, well, this game was probably it. Did it work? '\
-                            'If you are reading this, it presumably worked, eventually. https://i.imgur.com/ur9zW5O.jpg \n'\
+                            'If you want to see :ramen: code, well, this game was probably it. '\
+                            'But if you are reading this, it presumably worked, eventually. https://i.imgur.com/ur9zW5O.jpg \n'\
                             '\n'\
                             'Why did I do this?\n'\
                             '1) I was bored\n'\
                             '2) I wanted to do something cool with Mbot, a little cherry on top\n'\
-                            '3) I wanted to try some new computer things\n'\
+                            '3) I wanted to mess around with new computer things\n'\
                             '4) `Engage cytonic hyperdrive` was just asking for a text adventure game\n'\
                             '5) Meta\'s comment got me thinking :thinking: *spreadsheet you say... heh*\n'\
                             '\n'\
-                            'What\'s next? Well, I am feeling a little burnt out by bot stuff, so no updates for a while. Unless you write them :wink: Maybe now I\'ll finally go and read Starsight.'
+                            'What\'s next? Well, I am feeling a little tired from bot stuff, so no updates for a while. Unless you write them :wink: Maybe now I\'ll finally go and read Starsight.'
                 url = 'https://i.imgur.com/2XybUZ3.png'
                 embed=discord.Embed()
                 embed.set_image(url=url)
@@ -394,6 +395,7 @@ class DebrisCog(commands.Cog):
                                     'Be careful and do not fly me into a Krell station or floating space junk! \n'\
                                     'You can exit the trip at any time by sending **stop**\n'\
                                     'Send **yes** if ready!'
+                
                 if query.content.lower() in ['sel']:
                     await message.channel.send(prompt)
                     await asyncio.sleep(1.0)

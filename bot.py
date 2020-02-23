@@ -49,8 +49,9 @@ async def help(ctx):
         '**!sz**: Szeth emote (szeth)\n'\
         '**!flip**: Toss a coin to your Witcher!\n'\
         '**!dice** *N S*: Roll *N* dice each of *S* sides (roll)\n'\
-        'Other trigger words, good luck finding them...',inline=False)
-    embed.set_footer(text='Crreated by @Moonrise')
+        'What does Mbot need to engage to fly?'\
+        'Other trigger words (be nice to Mbot)',inline=False)
+    embed.set_footer(text='Created/hosted by @Moonrise')
     await ctx.send(embed=embed)
 
 @bot.command(name='sz')
@@ -60,13 +61,13 @@ async def szeth(ctx):
 
 # Development Commands #######################################################
 
-@bot.listen()
-async def on_message(message):
-    if message.author == bot.user:
-        return
+# @bot.listen()
+# async def on_message(message):
+#     if message.author == bot.user:
+#         return
     
-    if message.content.lower() =='pping':
-        await message.channel.send('Pong!')
+#     if message.content.lower() =='pping':
+#         await message.channel.send('Pong!')
 
 @bot.command(name='load')
 @commands.is_owner()
