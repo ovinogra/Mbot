@@ -12,3 +12,4 @@ A discord bot with puzzle hunt solving related features, with a hint of Brandon 
 ### TODO Wishlist
 * [quipqiup](https://quipqiup.com/) cryptograms
 * Integration with google sheets? (gsheets python library)
+* Pagination of nutrimatic and quipqiup queries
