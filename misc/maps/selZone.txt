@@ -8,7 +8,7 @@
 0								O3		O5				0	
 0				F4		F5	T1	T3	T2					0	
 0					L1									0	
-0			Start			Y1	Kress	Y4			Start			0	
+0			Start			Y1	Kress	Y4						0	
 0				F3					O2					0	
 0														0	
 0							Y2							0	

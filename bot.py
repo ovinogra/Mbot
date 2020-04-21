@@ -18,20 +18,22 @@ bot = commands.Bot(command_prefix='!',case_insensitive=True)
 bot.remove_command('help')
 MoonID = '<@416656299661459458>'
 
-initial_extensions = ['cogs.practice',
-                      'cogs.toolbox',
-                      'cogs.noncommand',
-                      'cogs.hunt',
-                      'cogs.debris']
+initial_extensions = ['misc',
+                      'toolbox',
+                      'noncommand',
+                      'hunt',
+                      'debris']
 
-#initial_extensions = ['cogs.debris']
+#initial_extensions = ['test']
 
 
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
     for extension in initial_extensions:
-        bot.load_extension(extension)
+        bot.load_extension('cogs.'+extension)
+    pfp = open('./misc/mush0_color.png', 'rb').read()
+    await bot.user.edit(avatar=pfp)
 
 
 # General #################################################################
@@ -40,23 +42,19 @@ async def on_ready():
 async def help(ctx):
     embed = discord.Embed(
         title='Commands',
-        colour=discord.Colour.blurple()
+        colour=discord.Colour.dark_grey()
     )
-    embed.add_field(name='Tools',value='**!nut** *query N*: Call nutrimatic *query* for *N* answers (n, nutr, nutrimatic)\n'\
-        '**!sub** *query*: Call substitution cryptogram *query* (s, substitution)\n'\
-        '**!cc** *query key*: Call caesar cipher *query* key optional (caesar)',inline=False)
-    embed.add_field(name='Other',value='**!info**: Current hunt login and links (hunt, huntinfo)\n'\
-        '**!sz**: Szeth emote (szeth)\n'\
+    embed.add_field(name='Tools',value='**!nut** *query*: Nutrimatic\n'\
+        '**!qq** *query key*: Quipqiup (opt. key(s))\n'\
+        '**!cc** *query key*: Caesar cipher (opt. key)\n'\
+        '**!let** *query*: Convert letters <-> numbers',inline=False)
+    embed.add_field(name='Other',value='**!info**: Current hunt login and links\n'\
+        '**!sz**: Szeth\n'\
         '**!flip**: Toss a coin to your Witcher!\n'\
-        '**!dice** *N S*: Roll *N* dice each of *S* sides (roll)\n'\
-        'What does Mbot need to engage to fly?'\
-        'Other trigger words (be nice to Mbot)',inline=False)
+        '**!dice** *N S*: Roll *N* dice of *S* sides\n'\
+        'What does Mbot need to engage to fly?\n',inline=False)
     embed.set_footer(text='Created/hosted by @Moonrise')
     await ctx.send(embed=embed)
-
-@bot.command(name='sz')
-async def szeth(ctx):
-    await ctx.send('<:szeth:667773296896507919>')
 
 
 # Development Commands #######################################################
@@ -65,7 +63,6 @@ async def szeth(ctx):
 # async def on_message(message):
 #     if message.author == bot.user:
 #         return
-    
 #     if message.content.lower() =='pping':
 #         await message.channel.send('Pong!')
 
@@ -86,7 +83,23 @@ async def reload(ctx, cogname):
 async def unload(ctx, cogname):
     bot.unload_extension('cogs.'+cogname)
     await ctx.send('Cog {} is unloaded!'.format(cogname))
+
+@bot.command(name='restart')
+@commands.is_owner()
+async def restart(ctx,initial=initial_extensions):
+    for cogname in initial:
+        try:
+            bot.reload_extension('cogs.'+cogname)
+            await ctx.send('Cog {} is reloaded!'.format(cogname))
+        except:
+            try: 
+                bot.load_extension('cogs.'+cogname)
+                await ctx.send('Cog {} is loaded!'.format(cogname))
+            except:
+                await ctx.send('Cog {} not loaded :('.format(cogname))
+
     
+
 @bot.listen()
 async def on_command_error(ctx, error):
     await ctx.send(error)

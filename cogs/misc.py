@@ -6,7 +6,7 @@ import random
 
 # A cog with some simple practice commands
 
-class PracticeCog(commands.Cog):
+class MiscCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -58,6 +58,12 @@ class PracticeCog(commands.Cog):
             ]
             await ctx.send(', '.join(dice))
 
+    @commands.command(aliases=['sz'])
+    async def szeth(self,ctx):
+        await ctx.send('<:szeth:667773296896507919>')
+
+
+
 
 def setup(bot):
-    bot.add_cog(PracticeCog(bot))
+    bot.add_cog(MiscCog(bot))
