@@ -15,7 +15,6 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 
 bot = commands.Bot(command_prefix='!',case_insensitive=True)
-bot.remove_command('help')
 MoonID = '<@416656299661459458>'
 
 initial_extensions = ['misc',
@@ -37,6 +36,8 @@ async def on_ready():
 
 
 # General #################################################################
+
+bot.remove_command('help')
 
 @bot.command(name='help')
 async def help(ctx):

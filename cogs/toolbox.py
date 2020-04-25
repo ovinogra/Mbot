@@ -18,15 +18,14 @@ class ToolboxCog(commands.Cog):
 
 
     @commands.command(aliases=['n','nu','nut','nutr','nutri','nutrim','nutrima','nutrimat','nutrimati'])
-    async def nutrimatic(self, ctx, *query: str):
+    async def nutrimatic(self, ctx, *, query=None):
 
-        query_initial = ' '.join(query[:])
-        if not query_initial:
+        if not query:
             await ctx.send('Send `!nut input` with the same **input** as you would use on nutrimatic.org\nExample: `!nut "<asympote_>"`')
             return
 
-
         # get html page - TODO change requests to aiohttp?
+        query_initial = query[:]
         query = query_initial.replace('&','%26').replace('+','%2B').replace('#','%23').replace(' ','+') # html syntax
         url = 'https://nutrimatic.org/?q='+query+'&go=Go'
         text = urllib.request.urlopen(url).read()
@@ -94,9 +93,8 @@ class ToolboxCog(commands.Cog):
 
 
     @commands.command(aliases=['cc','caesar'])
-    async def caesar_cipher(self, ctx, *query0: str):
+    async def caesar_cipher(self, ctx, *, query0=None):
 
-        query0 = ' '.join(query0[:])
         if not query0:
             await ctx.send('Send `!cc input key` with a text **input** with an optional **key** shift between 1 to 25 or in the form of `x=y` (or choose 0 to guess a key)\n'\
                 'Example: `!cc irargvna` or `!cc qvntenz 13` or `!cc qvntenz q=d`')
@@ -156,9 +154,8 @@ class ToolboxCog(commands.Cog):
 
 
     @commands.command(aliases=['qq'])
-    async def quipqiup(self, ctx, *query: str):
+    async def quipqiup(self, ctx, *, query=None):
 
-        query = ' '.join(query[:])
         if not query:
             await ctx.send('Send `!qq input key` with an **input** same as you would use on quipqiup.com with optional **key(s)** in the form of `x=y n=m`.\n'\
                 'Example: `!qq cbg bfabdbebfab` or `!qq cbg bfabdbebfab c=s b=a`')
@@ -210,9 +207,8 @@ class ToolboxCog(commands.Cog):
 
 
     @commands.command(aliases=['letnum','let'])
-    async def letternumber(self, ctx, *query: str):
+    async def letternumber(self, ctx, *, query=None):
 
-        query = ' '.join(query[:])
         if not query:
             await ctx.send('Send `!letnum input` with an **input** of either letters or numbers. Space separation needed for numeric input.\nExample: `!let ferROUs` or `!let 58 31 18 18 15 47 19`')
             return
