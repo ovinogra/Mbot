@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 
-# A cog with some simple non command responses
+# A cog with some hunt specific commands
 
 huntrole = 'pam player'
 
