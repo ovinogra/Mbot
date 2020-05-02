@@ -284,14 +284,22 @@ class DebrisCog(commands.Cog):
                 nameTile = '0'
                 return nameTile
 
-        async def timeanswer(r,c):
+        async def timeanswer(r0,c0):
             try: 
                 direction = await self.bot.wait_for('message',check=check,timeout=self.timeout)
             except asyncio.TimeoutError:
                 r = 'timer'
                 return r,c
             else:
-                r,c = stepxy(r,c,direction.content)
+                r,c = stepxy(r0,c0,direction.content)
+                try:
+                    if self.world == 'sel' and getTile(r,c) == '0':
+                        prompt = 'We can\'t go there. Krell ships are blocking the way. Choose another direction.' 
+                        await message.channel.send(prompt)
+                        r,c = await timeanswer(r0,c0)
+                        return r,c
+                except:
+                    return r,c
                 return r,c
 
         async def checkanswermission(r,c):

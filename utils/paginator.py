@@ -1,4 +1,4 @@
-# paginate.py
+# paginator.py
 import discord
 import asyncio
 

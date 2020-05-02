@@ -2,8 +2,6 @@
 import os
 import discord
 import asyncio
-import random
-import numpy
 from dotenv import load_dotenv
 from discord.ext import commands
 
@@ -23,7 +21,7 @@ initial_extensions = ['misc',
                       'hunt',
                       'debris']
 
-#initial_extensions = ['test']
+#initial_extensions = ['debris']
 
 
 @bot.event

@@ -35,29 +35,36 @@ class ToolboxCog(commands.Cog):
         embed = discord.Embed(title='Your nutrimatic link', url=url, colour=discord.Colour.magenta())
         embed.set_footer(text='Query: '+query_initial)
 
-        # parse error messages
-        if text1.find('No results found, sorry') != -1:
-            final = 'Error: No results found at all :('
-            embed.description(final)
-            await ctx.send(embed=embed)
-            return
-
-        if text1.find('error: can\'t parse') != -1:
-            final = 'Error: I cannot parse that :('
-            embed.description(final)
-            await ctx.send(embed=embed)
-            return
-
-        
-        finalend = []
-        if text1.find('Computation') != -1:
-            finalend = 'Error: Computation limit reached'
-        if text1.find('No more results found') != -1:
-            finalend = 'Error: No more results found here'
-
-        # compile solution list
+        # parse for solution list
         posA = [m.start() for m in re.finditer('<span',text1)]
         posB = [m.start() for m in re.finditer('</span',text1)]
+
+        # check for no solutions, send error
+        if not posA:
+            final = 'None'
+            errA = [m.start() for m in re.finditer('<b>',text1)]
+            errB = [m.start() for m in re.finditer('</b>',text1)]
+            final = text1[errA[-1]+3:errB[-1]]
+            if final.find('font') != -1:
+                errA = [m.start() for m in re.finditer('<font',text1)]
+                errB = [m.start() for m in re.finditer('</font>',text1)]
+                final = text1[errA[-1]+16:errB[-1]]
+            embed.description = final
+            await ctx.send(embed=embed)
+            return
+
+        # check for ending error message, usually bolded
+        # max number of solutions on a nutrimatic page is 100
+        finalend = None
+        if len(posA) < 100:
+            try:
+                errA = [m.start() for m in re.finditer('<b>',text1)]
+                errB = [m.start() for m in re.finditer('</b>',text1)]
+                finalend = text1[errA[-1]+3:errB[-1]]
+            except:
+                pass
+
+        # prep solution and weights for paginator
         solutions = []
         weights = []
         for n in range(0,min(len(posA),200)):
@@ -66,11 +73,7 @@ class ToolboxCog(commands.Cog):
             solutions.append(word)
             weights.append(size)
 
-        if finalend:
-            p = Pages(ctx,solutions=solutions,weights=weights,embedTemp=embed,endflag=finalend)
-        else:
-            p = Pages(ctx,solutions=solutions,weights=weights,embedTemp=embed)
-        
+        p = Pages(ctx,solutions=solutions,weights=weights,embedTemp=embed,endflag=finalend)
         await p.pageLoop()
 
 
