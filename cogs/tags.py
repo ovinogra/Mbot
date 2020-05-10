@@ -22,7 +22,7 @@ class TagsCog(commands.Cog):
     @commands.command(aliases=['tag'])
     @commands.guild_only()
     async def taginfo(self, ctx, *, query=None):
-        helpstate = 'To use: `!tag <name>` fetches a stored message\n`!tag all` will list all tags \n`!tag <name> -new` saves your next message\n'\
+        helpstate = 'To use:\n`!tag list` will list all tags\n`!tag <name>` fetches a stored message\n`!tag <name> -new` saves your next message\n'\
             '`!tag <name> -update` overwrites existing tag with your next message\n`!tag <name> -delete`' \
 
         guildID = str(ctx.guild.id)
@@ -39,7 +39,7 @@ class TagsCog(commands.Cog):
             return
 
 
-        if query == 'all':
+        if query == 'list':
             db = DBase(ctx)
             result = await db.gettagall()
             if result:
@@ -54,13 +54,12 @@ class TagsCog(commands.Cog):
             return
 
         
-        # initialize query
-        db = DBase(ctx)
-        result = await db.gettagsingle(query)
-        tagname, action = query.split(' -',1)
+        # initialize db
+        db = DBase(ctx)      
 
 
         if '-' not in query:
+            result = await db.gettagsingle(query)
             if result:
                 tagcontent = result[0][0].replace('qqq',"'")
                 await ctx.send('>>> '+tagcontent)
@@ -68,6 +67,9 @@ class TagsCog(commands.Cog):
                 await ctx.send('No tag found: `'+query+'`.')
             return
     
+        # unpack modifiers
+        tagname, action = query.split(' -',1)
+        result = await db.gettagsingle(tagname)
 
         if action == 'new':
             if result:
@@ -77,7 +79,7 @@ class TagsCog(commands.Cog):
             try: 
                 response = await self.bot.wait_for('message',check=check,timeout=900.0)
             except asyncio.TimeoutError:
-                await ctx.send('Aborting. That was 15 min. You timed out to add a tag.')
+                await ctx.send('You timed out to add a tag. That was 15 min.')
                 return
 
             tagcontent = response.content.replace("'",'qqq')
@@ -92,7 +94,7 @@ class TagsCog(commands.Cog):
             try: 
                 response = await self.bot.wait_for('message',check=check,timeout=900.0)
             except asyncio.TimeoutError:
-                await ctx.send('Aborting. That was 15 min. You timed out to add a tag.')
+                await ctx.send('You timed out to add a tag. That was 15 min.')
                 return
 
             tagcontent = response.content.replace("'",'qqq')

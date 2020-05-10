@@ -34,8 +34,7 @@ class HuntCog(commands.Cog):
             return discord.utils.get(member.roles, id=role)
 
 
-    async def infofetch(self,ctx,guildID):
-        ''' guildID: string '''
+    async def infofetch(self,ctx):
 
         # set up query, pull db entry
         query = 'hunt_url, hunt_username, hunt_password, hunt_folder, hunt_nexus, hunt_role_id'
@@ -86,10 +85,9 @@ class HuntCog(commands.Cog):
             await ctx.send('Missing role for the current hunt.')
 
 
-    async def infoupdate(self,ctx,query,guildID):
+    async def infoupdate(self,ctx,query):
         '''
         query: list of arguments to update in form ['field1=text1','field2=text2'] \n
-        guildID: string
         '''
 
         # parse argument flags
@@ -133,11 +131,10 @@ class HuntCog(commands.Cog):
         helpstate = 'To use: `!login update '\
                     '[-role=<id>] [-user=<name>] [-pswd=<pswd>] [-site=<url>] [-folder=<url>] [-nexus=<url>]`'\
                         '\nCan use any or all flags. Role must be 18 digit discord ID. Need "Developer Mode" enabled to find.'
-        guildID = str(ctx.guild.id)
 
         # fetch hunt info
         if not query:
-            await self.infofetch(ctx,guildID)
+            await self.infofetch(ctx)
             return
 
         # update hunt info
@@ -149,7 +146,7 @@ class HuntCog(commands.Cog):
                 await ctx.send(helpstate)
                 return
 
-            await self.infoupdate(ctx,quers[1:],guildID)
+            await self.infoupdate(ctx,quers[1:])
             
         else:
             await ctx.send('I don\'t understand that...\n'+helpstate)
