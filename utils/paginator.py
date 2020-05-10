@@ -6,6 +6,10 @@ import asyncio
 # set up pagination of results
 
 class Pages:
+    ''' 
+    (self, ctx, *, solutions, weights=None, embedTemp, endflag=None)
+    solutions, weights: lists
+    '''
 
     def __init__(self, ctx, *, solutions, weights=None, embedTemp, endflag=None):
         self.bot = ctx.bot

@@ -372,24 +372,22 @@ class DebrisCog(commands.Cog):
                 await stop('cancel')
 
             elif query.content.upper() == self.masteranswer.upper():
-                prompt =    'Flying to **OPHIUCHUS** is correct! And is also (not coincidentally) where Voyager 1 is heading.\n'\
+                prompt =    'Flying to **OPHIUCHUS** is correct! And is also where Voyager 1 is currently heading.\n'\
                             'You have opened a portal into the Cosmere and escaped Detritus. Nice job :)\n'\
                             '\n'\
-                            'I now have a pre-recorded message from '+MoonID+':\n'\
-                            '>>> Well that was fun I hope! Or at least somewhat entertaining.\n'\
-                            'Since Mbot reached a state I am reasonably happy with, I pushed a copy to github. '\
-                            'Congratulations, you found the link: https://github.com/Moonrise55/Mbot (I couldn\'t rightly release the source code until you finished this, now could I?) '\
-                            'If you want to see :ramen: code, well, this game was probably it. '\
-                            'But if you are reading this, it presumably worked, eventually. https://i.imgur.com/ur9zW5O.jpg \n'\
+                            'Pre-recorded message from '+MoonID+':\n'\
+                            '>>> I hope that was at least somewhat entertaining! If you are reading this, it presumably worked, eventually. '\
+                            'If you want to peruse my :ramen: code in shock, here it is: https://github.com/Moonrise55/Mbot \n'\
+                            'I am sure there are more clever ways to do everything there. Oh well. \n'\
                             '\n'\
                             'Why did I do this?\n'\
                             '1) I was bored\n'\
-                            '2) I wanted to do something cool with Mbot, a little cherry on top\n'\
-                            '3) I wanted to mess around with new computer things\n'\
+                            '2) I wanted to do something fun with Mbot\n'\
+                            '3) Messing around with computer things is fun\n'\
                             '4) `Engage cytonic hyperdrive` was just asking for a text adventure game\n'\
                             '5) Meta\'s comment got me thinking :thinking: *spreadsheet you say... heh*\n'\
                             '\n'\
-                            'What\'s next for Mbot? Well, I am feeling a little tired from bot stuff, so no updates for a while. Unless you write them :wink: Maybe now I\'ll finally go and read Starsight.'
+                            'Maybe now I\'ll finally go and read Starsight.'
                 url = 'https://i.imgur.com/2XybUZ3.png'
                 embed=discord.Embed()
                 embed.set_image(url=url)

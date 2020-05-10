@@ -12,7 +12,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 
 
-bot = commands.Bot(command_prefix='!',case_insensitive=True)
+bot = commands.Bot(command_prefix='?',case_insensitive=True)
 MoonID = '<@416656299661459458>'
 
 initial_extensions = ['misc',
@@ -21,7 +21,7 @@ initial_extensions = ['misc',
                       'hunt',
                       'debris']
 
-#initial_extensions = ['debris']
+initial_extensions = ['hunt','admin','tags']
 
 
 @bot.event
@@ -29,8 +29,8 @@ async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
     for extension in initial_extensions:
         bot.load_extension('cogs.'+extension)
-    pfp = open('./misc/mush0_color.png', 'rb').read()
-    await bot.user.edit(avatar=pfp)
+    # pfp = open('./misc/mush0_color.png', 'rb').read()
+    # await bot.user.edit(avatar=pfp)
 
 
 # General #################################################################
@@ -47,55 +47,53 @@ async def help(ctx):
         '**!qq** *query key*: Quipqiup (opt. key(s))\n'\
         '**!cc** *query key*: Caesar cipher (opt. key)\n'\
         '**!let** *query*: Convert letters <-> numbers',inline=False)
-    embed.add_field(name='Other',value='**!info**: Current hunt login and links\n'\
-        '**!sz**: Szeth\n'\
-        '**!flip**: Toss a coin to your Witcher!\n'\
-        '**!dice** *N S*: Roll *N* dice of *S* sides\n'\
-        'What does Mbot need to engage to fly?\n',inline=False)
-    embed.set_footer(text='Created/hosted by @Moonrise')
+    embed.add_field(name='Hunt',value='**!login**: current hunt info\n'\
+        '**!login update**: update hunt info\n',inline=False)
+    embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*, engage cytonic hyperdrive',inline=False)
+    embed.set_footer(text='Hosted by @Moonrise#3554')
     await ctx.send(embed=embed)
 
 
 # Development Commands #######################################################
 
-# @bot.listen()
-# async def on_message(message):
-#     if message.author == bot.user:
-#         return
-#     if message.content.lower() =='pping':
-#         await message.channel.send('Pong!')
+@bot.listen()
+async def on_message(message):
+    if message.author == bot.user:
+        return
+    if message.content.lower() =='pping':
+        await message.channel.send('Pong!')
 
 @bot.command(name='load')
 @commands.is_owner()
-async def load(ctx, cogname):
+async def load_cog(ctx, cogname):
     bot.load_extension('cogs.'+cogname)
     await ctx.send('Cog {} is loaded!'.format(cogname))
 
 @bot.command(name='reload')
 @commands.is_owner()
-async def reload(ctx, cogname):
+async def reload_cog(ctx, cogname):
     bot.reload_extension('cogs.'+cogname)
     await ctx.send('Cog {} is reloaded!'.format(cogname))
 
 @bot.command(name='unload')
 @commands.is_owner()
-async def unload(ctx, cogname):
+async def unload_cog(ctx, cogname):
     bot.unload_extension('cogs.'+cogname)
     await ctx.send('Cog {} is unloaded!'.format(cogname))
 
 @bot.command(name='restart')
 @commands.is_owner()
-async def restart(ctx,initial=initial_extensions):
-    for cogname in initial:
+async def restart_cog(ctx,initial_extensions=initial_extensions):
+    for extension in initial_extensions:
         try:
-            bot.reload_extension('cogs.'+cogname)
-            await ctx.send('Cog {} is reloaded!'.format(cogname))
+            bot.reload_extension('cogs.'+extension)
+            await ctx.send('Cog {} is reloaded!'.format(extension))
         except:
             try: 
-                bot.load_extension('cogs.'+cogname)
-                await ctx.send('Cog {} is loaded!'.format(cogname))
+                bot.load_extension('cogs.'+extension)
+                await ctx.send('Cog {} is loaded!'.format(extension))
             except:
-                await ctx.send('Cog {} not loaded :('.format(cogname))
+                await ctx.send('Cog {} not loaded :('.format(extension))
 
     
 
