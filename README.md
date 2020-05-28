@@ -1,4 +1,4 @@
-A discord bot with puzzlehunt solving tools, partly themed around the works of Brandon Sanderson
+A discord bot with puzzlehunt solving tools, Sanderson works themed
 
 ### Toolbox
 * [Nutrimatic](https://nutrimatic.org/) query for anagrams, regex search, patterns, etc
@@ -12,12 +12,7 @@ A discord bot with puzzlehunt solving tools, partly themed around the works of B
 * A Cosmere-themed text adventure game with mini puzzles, interfaced to run within discord
 
 ### TODO
-* ~~[Quipqiup](https://quipqiup.com/) cryptograms~~
-* ~~Letter <-> number converter in alphabetical order~~
-* ~~Paginate nutrimatic and quipqiup commands~~
-* ~~Connect to postgresql database~~
-* Integrate with google sheets (gspread)
-* Puzzle management command (make channels, update solutions, etc)
+* Puzzle management command using gspread (make channels, update solutions, etc)
 
 
 
