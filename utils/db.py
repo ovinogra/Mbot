@@ -49,7 +49,7 @@ class DBase:
     # date_update
 
 
-    async def gethuntdata(self,query):
+    async def hunt_get_row(self,query):
         ''' query, guildID: string '''
         
         query1 = "SELECT "+query+" FROM hunt WHERE guild_id = '"+self.guildID+"';"
@@ -66,7 +66,7 @@ class DBase:
             return 0 # have to return not None
 
     
-    async def updatehuntdata(self,query):
+    async def hunt_update_row(self,query):
         ''' query: string '''
 
         query1 = "UPDATE hunt SET "+query+" WHERE guild_id = '"+self.guildID+"';"
@@ -83,10 +83,10 @@ class DBase:
 
     
     ################ TABLE hunt ################
-    # db owner only
+    # for db owner
 
 
-    async def inserthuntdata(self,guildname,guildID):
+    async def hunt_insert_row(self,guildname,guildID):
         ''' guildname, guildID: string of guild info '''
 
         query1 = "INSERT INTO hunt (guild_name, guild_id) VALUES ('"+guildname+"','"+guildID+"');" 
@@ -101,7 +101,7 @@ class DBase:
             await self.ctx.send(error)
 
 
-    async def deletehuntdata(self,guildID):
+    async def hunt_delete_row(self,guildID):
         ''' guildID: string of guild ID '''
 
         query1 = "DELETE FROM hunt WHERE guild_id = '"+guildID+"';" 
@@ -127,7 +127,7 @@ class DBase:
     # date_update
 
 
-    async def gettagall(self):
+    async def tag_get_all(self):
         
         query1 = "SELECT tag_name FROM tags WHERE guild_id = '"+self.guildID+"';"
         
@@ -142,7 +142,7 @@ class DBase:
             await self.ctx.send(error)
     
 
-    async def gettagsingle(self,tagname):
+    async def tag_get_row(self,tagname):
         ''' tagname: string '''
         
         query1 = "SELECT tag_content FROM tags WHERE guild_id = '"+self.guildID+"' AND tag_name = '"+tagname+"';"
@@ -158,7 +158,7 @@ class DBase:
             await self.ctx.send(error)
 
 
-    async def inserttag(self,tagname,tagcontent):
+    async def tag_insert_row(self,tagname,tagcontent):
         ''' tagname, tagcontent: string '''
 
         query1 = "INSERT INTO tags (guild_id, tag_name, tag_content) VALUES ('"+self.guildID+"','"+tagname+"','"+tagcontent+"');" 
@@ -173,7 +173,7 @@ class DBase:
             await self.ctx.send(error)
 
 
-    async def updatetag(self,tagname,tagcontent):
+    async def tag_update_row(self,tagname,tagcontent):
         ''' tagname, tagcontent: string '''
 
         query1 = "UPDATE tags SET guild_ID = '"+self.guildID+"', tag_content = '"+tagcontent+"' WHERE tag_name = '"+tagname+"';"
@@ -188,7 +188,7 @@ class DBase:
             await self.ctx.send(error)
 
 
-    async def deletetag(self,tagname):
+    async def tag_delete_row(self,tagname):
         ''' tagname: string '''
 
         query1 = "DELETE FROM tags WHERE guild_id = '"+self.guildID+"' AND tag_name = '"+tagname+"';" 

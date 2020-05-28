@@ -39,7 +39,7 @@ class HuntCog(commands.Cog):
         # set up query, pull db entry
         query = 'hunt_url, hunt_username, hunt_password, hunt_folder, hunt_nexus, hunt_role_id'
         db = DBase(ctx)
-        results = await db.gethuntdata(query)
+        results = await db.hunt_get_row(query)
 
         # check for errors
         if not results:
@@ -120,7 +120,7 @@ class HuntCog(commands.Cog):
 
         # update db
         db = DBase(ctx)
-        await db.updatehuntdata(updatestring)
+        await db.hunt_update_row(updatestring)
             
 
 
@@ -130,7 +130,7 @@ class HuntCog(commands.Cog):
     async def huntinfo(self, ctx, *, query=None):
         helpstate = 'To use: `!login update '\
                     '[-role=<id>] [-user=<name>] [-pswd=<pswd>] [-site=<url>] [-folder=<url>] [-nexus=<url>]`'\
-                        '\nCan use any or all flags. Role must be 18 digit discord ID. Need "Developer Mode" enabled to find.'
+                        '\nUse any or all flags. Role must be 18 digit discord ID. Need "Developer Mode" enabled to find.'
 
         # fetch hunt info
         if not query:

@@ -14,8 +14,8 @@ class AdminCog(commands.Cog):
 
     @commands.command(aliases=['ins'])
     @commands.is_owner()
-    async def insertlogin(self, ctx, *, query=None):
-        helpstate = 'To use: `!insertlogin <guildName> <guildID>'
+    async def logininsert(self, ctx, *, query=None):
+        helpstate = 'To use: `!logininsert <guildName> <guildID>'
 
         if not query:
             await ctx.send(helpstate)
@@ -23,20 +23,20 @@ class AdminCog(commands.Cog):
 
         guildname,guildID = query.split(' ')
         db = DBase(ctx)
-        await db.inserthuntdata(guildname,guildID)
+        await db.hunt_insert_row(guildname,guildID)
 
 
     @commands.command(aliases=['del'])
     @commands.is_owner()
-    async def deletelogin(self, ctx, *, guildID=None):
-        helpstate = 'To use: `!deletelogin <guildID>'
+    async def logindelete(self, ctx, *, guildID=None):
+        helpstate = 'To use: `!logindelete <guildID>'
 
         if not guildID:
             await ctx.send(helpstate)
             return
 
         db = DBase(ctx)
-        await db.deletehuntdata(guildID)
+        await db.hunt_delete_row(guildID)
 
 
 

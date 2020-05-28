@@ -16,14 +16,14 @@ class TagsCog(commands.Cog):
 
     def checkguild(self,guildID):
         ''' guildID: string '''
-        return guildID in ['669061724569206784']
+        return guildID in ['669061724569206784','555663169612283904']
 
 
     @commands.command(aliases=['tag'])
     @commands.guild_only()
     async def taginfo(self, ctx, *, query=None):
-        helpstate = 'To use:\n`!tag list` will list all tags\n`!tag <name>` fetches a stored message\n`!tag <name> -new` saves your next message\n'\
-            '`!tag <name> -update` overwrites existing tag with your next message\n`!tag <name> -delete`' \
+        helpstate = 'To use:\n`!tag list`\n`!tag <name>`\n`!tag <name> -create` saves your next message\n'\
+            '`!tag <name> -update` overwrites existing message\n`!tag <name> -delete`' \
 
         guildID = str(ctx.guild.id)
 
@@ -31,7 +31,7 @@ class TagsCog(commands.Cog):
             return m.channel == ctx.channel and m.author == ctx.author
 
         if not self.checkguild(guildID):
-            await ctx.send('Nope')
+            await ctx.send('Nope, not here.')
             return
 
         if not query:
@@ -41,7 +41,7 @@ class TagsCog(commands.Cog):
 
         if query == 'list':
             db = DBase(ctx)
-            result = await db.gettagall()
+            result = await db.tag_get_all()
             if result:
                 final = []
                 for item in result:
@@ -59,7 +59,7 @@ class TagsCog(commands.Cog):
 
 
         if '-' not in query:
-            result = await db.gettagsingle(query)
+            result = await db.tag_get_row(query)
             if result:
                 tagcontent = result[0][0].replace('qqq',"'")
                 await ctx.send('>>> '+tagcontent)
@@ -69,9 +69,9 @@ class TagsCog(commands.Cog):
     
         # unpack modifiers
         tagname, action = query.split(' -',1)
-        result = await db.gettagsingle(tagname)
+        result = await db.tag_get_row(tagname)
 
-        if action == 'new':
+        if action == 'create':
             if result:
                 await ctx.send('Tag already exists: `'+tagname+'`.')
                 return
@@ -79,26 +79,26 @@ class TagsCog(commands.Cog):
             try: 
                 response = await self.bot.wait_for('message',check=check,timeout=900.0)
             except asyncio.TimeoutError:
-                await ctx.send('You timed out to add a tag. That was 15 min.')
+                await ctx.send('You timed out to add a tag. That was 15 min you know.')
                 return
 
             tagcontent = response.content.replace("'",'qqq')
-            await db.inserttag(tagname,tagcontent)
+            await db.tag_insert_row(tagname,tagcontent)
 
             
         elif action == 'update':
             if not result:
-                await ctx.send('No tag found: `'+tagname+'`. Make a new tag first.')
+                await ctx.send('No tag found: `'+tagname+'`')
                 return
             await ctx.send('Your next message will be saved under `'+tagname+'`.')
             try: 
                 response = await self.bot.wait_for('message',check=check,timeout=900.0)
             except asyncio.TimeoutError:
-                await ctx.send('You timed out to add a tag. That was 15 min.')
+                await ctx.send('You timed out to add a tag. That was 15 min you know.')
                 return
 
             tagcontent = response.content.replace("'",'qqq')
-            await db.updatetag(tagname,tagcontent)
+            await db.tag_update_row(tagname,tagcontent)
 
         
         elif action == 'delete':
@@ -106,7 +106,7 @@ class TagsCog(commands.Cog):
                 await ctx.send('No tag found: `'+tagname+'`. Make a tag before you delete it.')
                 return
             
-            await db.deletetag(tagname)
+            await db.tag_delete_row(tagname)
 
 
         else:

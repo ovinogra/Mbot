@@ -12,16 +12,17 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 
 
-bot = commands.Bot(command_prefix='?',case_insensitive=True)
-MoonID = '<@416656299661459458>'
+bot = commands.Bot(command_prefix='!',case_insensitive=True)
 
 initial_extensions = ['misc',
                       'toolbox',
                       'noncommand',
                       'hunt',
-                      'debris']
+                      'debris',
+                      'admin',
+                      'tags']
 
-initial_extensions = ['hunt','admin','tags']
+#initial_extensions = ['hunt']
 
 
 @bot.event
@@ -43,25 +44,25 @@ async def help(ctx):
         title='Commands',
         colour=discord.Colour.dark_grey()
     )
-    embed.add_field(name='Tools',value='**!nut** *query*: Nutrimatic\n'\
-        '**!qq** *query key*: Quipqiup (opt. key(s))\n'\
-        '**!cc** *query key*: Caesar cipher (opt. key)\n'\
-        '**!let** *query*: Convert letters <-> numbers',inline=False)
-    embed.add_field(name='Hunt',value='**!login**: current hunt info\n'\
-        '**!login update**: update hunt info\n',inline=False)
-    embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*, engage cytonic hyperdrive',inline=False)
+    embed.add_field(name='Tools',value='**!nut**: Nutrimatic\n'\
+        '**!qq**: Quipqiup\n'\
+        '**!cc**: Caesar cipher\n'\
+        '**!let**: Convert letters <-> numbers',inline=False)
+    embed.add_field(name='Hunt',value='**!login [update]**: Hunt info\n'\
+        '**!tag**: Storing other info\n',inline=False)
+    embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*,\nengage cytonic hyperdrive',inline=False)
     embed.set_footer(text='Hosted by @Moonrise#3554')
     await ctx.send(embed=embed)
 
 
 # Development Commands #######################################################
 
-@bot.listen()
-async def on_message(message):
-    if message.author == bot.user:
-        return
-    if message.content.lower() =='pping':
-        await message.channel.send('Pong!')
+# @bot.listen()
+# async def on_message(message):
+#     if message.author == bot.user:
+#         return
+#     if message.content.lower() =='pping':
+#         await message.channel.send('Pong!')
 
 @bot.command(name='load')
 @commands.is_owner()
