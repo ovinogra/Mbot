@@ -128,9 +128,9 @@ class HuntCog(commands.Cog):
     @commands.command(aliases=['info','login'])
     @commands.guild_only()
     async def huntinfo(self, ctx, *, query=None):
-        helpstate = 'To use: `!login update '\
+        helpstate = '`!login update '\
                     '[-role=<id>] [-user=<name>] [-pswd=<pswd>] [-site=<url>] [-folder=<url>] [-nexus=<url>]`'\
-                        '\nUse any or all flags. Role must be 18 digit discord ID. Need "Developer Mode" enabled to find.'
+                        '\nNeed "Developer Mode" enabled on desktop to find role IDs.'
 
         # fetch hunt info
         if not query:

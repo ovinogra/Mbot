@@ -2,6 +2,7 @@
 import discord
 from discord.ext import commands
 import random
+import os
 
 
 # A cog with some simple practice commands
@@ -61,6 +62,25 @@ class MiscCog(commands.Cog):
     @commands.command(aliases=['sz'])
     async def szeth(self,ctx):
         await ctx.send('<:szeth:667773296896507919>')
+
+
+    @commands.command()
+    @commands.is_owner()
+    async def emote(self,ctx,query):
+
+        await ctx.message.delete()
+
+        if query == 'list':
+            all_emotes = os.listdir('./misc/emotes/')
+            final = ''
+            for item in all_emotes:
+                final = final + item + '\n'
+            await ctx.send(final)
+            return
+
+        
+        filepath = './misc/emotes/'+query+'.png'
+        await ctx.send(file=discord.File(filepath))
 
 
 

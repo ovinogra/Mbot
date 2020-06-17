@@ -14,15 +14,17 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 bot = commands.Bot(command_prefix='!',case_insensitive=True)
 
+
 initial_extensions = ['misc',
                       'toolbox',
                       'noncommand',
                       'hunt',
                       'debris',
                       'admin',
-                      'tags']
+                      'tags',
+                      'puzzle']
 
-#initial_extensions = ['hunt']
+#initial_extensions = ['puzzle','hunt','tags','misc']
 
 
 @bot.event
@@ -48,8 +50,9 @@ async def help(ctx):
         '**!qq**: Quipqiup\n'\
         '**!cc**: Caesar cipher\n'\
         '**!let**: Convert letters <-> numbers',inline=False)
-    embed.add_field(name='Hunt',value='**!login [update]**: Hunt info\n'\
-        '**!tag**: Storing other info\n',inline=False)
+    embed.add_field(name='Hunt',value='**!login**: Stored hunt info\n'\
+        '**!tag**: Stored other info\n'\
+        '**!puzz**: Puzzle management',inline=False)
     embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*,\nengage cytonic hyperdrive',inline=False)
     embed.set_footer(text='Hosted by @Moonrise#3554')
     await ctx.send(embed=embed)

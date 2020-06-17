@@ -39,6 +39,17 @@ class AdminCog(commands.Cog):
         await db.hunt_delete_row(guildID)
 
 
+    @commands.command(aliases=['stat'])
+    async def serverstatus(self, ctx):
+        final = []
+        final.append('Number of Text Channels: '+str(len(ctx.message.guild.text_channels)))
+        final.append('Number of Channels Against Limit: '+str(len(ctx.message.guild.channels)))
+        final.append('Number of Members: '+str(len(ctx.message.guild.members)))
+        final = '\n'.join(final)
+        await ctx.send(final)
+
+
+
 
 
 
