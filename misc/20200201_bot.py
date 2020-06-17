@@ -98,8 +98,8 @@ async def nexus(ctx):
 async def login(ctx):
     await ctx.send(
         'Website:  https://www.puzzlesaremagic.com/\n'\
-        'Username: 17thshardteam\n'\
-        'Password: ryshadium'
+        'Username: teamname\n'\
+        'Password: password'
     )
 
 
