@@ -27,6 +27,7 @@ DISCORD_TOKEN= ...   # your discord bot token
 DB_ADDRESS= ...     # address as postgres:yourdbconnectionURI
 ```
 Database connection needed for the puzzle manager only. Additionally, you would need to:
+
 2. Enable Google API following instructions on [gspread documentation](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) to get a `client_secrets.json` for a service account.
 3. Run `python3.6 db_launcher.py` to setup some simple db tables and hope nothing breaks.
 4. Set up a google folder (shared w/ google service account) with Nexus and Puzzle Template sheets. 
