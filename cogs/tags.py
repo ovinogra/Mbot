@@ -15,8 +15,10 @@ class TagsCog(commands.Cog):
 
 
     def checkguild(self,guildID):
-        ''' guildID: string '''
-        return guildID in ['669061724569206784','555663169612283904']
+        ''' guildID: string, this function exists mostly for testing '''
+
+        #return guildID in ['669061724569206784','555663169612283904']
+        return True
 
 
     @commands.command(aliases=['tag'])

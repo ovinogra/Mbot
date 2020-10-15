@@ -6,34 +6,29 @@ from dotenv import load_dotenv
 from discord.ext import commands
 
 
-
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
+intents = discord.Intents.default()
+intents.members = True
 
-
-bot = commands.Bot(command_prefix='!',case_insensitive=True)
-
+bot = commands.Bot(command_prefix='!',case_insensitive=True,intents=intents)
 
 initial_extensions = ['misc',
                       'toolbox',
-                      'noncommand',
                       'hunt',
                       'debris',
                       'admin',
                       'tags',
                       'puzzle']
 
-#initial_extensions = ['puzzle','hunt','tags','misc']
-
+#initial_extensions = ['puzzle','hunt','tags','misc','admin']
 
 @bot.event
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
     for extension in initial_extensions:
         bot.load_extension('cogs.'+extension)
-    # pfp = open('./misc/mush0_color.png', 'rb').read()
-    # await bot.user.edit(avatar=pfp)
 
 
 # General #################################################################
@@ -46,15 +41,18 @@ async def help(ctx):
         title='Commands',
         colour=discord.Colour.dark_grey()
     )
-    embed.add_field(name='Tools',value='**!nut**: Nutrimatic\n'\
-        '**!qq**: Quipqiup\n'\
-        '**!cc**: Caesar cipher\n'\
-        '**!let**: Convert letters <-> numbers',inline=False)
-    embed.add_field(name='Hunt',value='**!login**: Stored hunt info\n'\
-        '**!tag**: Stored other info\n'\
-        '**!puzz**: Puzzle management',inline=False)
-    embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*,\nengage cytonic hyperdrive',inline=False)
-    embed.set_footer(text='Hosted by @Moonrise#3554')
+    embed.add_field(name='Tools',value=
+        '**!nut**: Nutrimatic\n**!qq**: Quipqiup\n'\
+        '**!cc**: Caesar cipher\n**!vig**: Vigenere cipher\n'\
+        '**!alpha**: A1Z26\n**!atbash**: atbash cipher\n'\
+        '**!atom**: Periodic table\n'\
+        '**!tag**: Other resources',inline=True)
+    embed.add_field(name='Puzzle Manager',value=
+        '**!login [update]**: General info\n'\
+        '**!nexus**, **!create**, **!solve**,\n**!update**, **!undosolve**\n'\
+        '**!checksetup**',inline=True)
+    embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*, engage',inline=False)
+    embed.set_footer(text='@Moonrise#3554')
     await ctx.send(embed=embed)
 
 

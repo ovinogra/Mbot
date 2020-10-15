@@ -5,7 +5,7 @@ import re
 import urllib.request
 import requests
 import json
-import mechanize
+import numpy as np 
 from utils.paginator import Pages
 
 
@@ -21,7 +21,7 @@ class ToolboxCog(commands.Cog):
     async def nutrimatic(self, ctx, *, query=None):
 
         if not query:
-            await ctx.send('Send `!nut input` with the same **input** as you would use on nutrimatic.org\nExample: `!nut "<asympote_>"`')
+            await ctx.send('Example regex: `!nut "<asympote_>"`')
             return
 
         # get html page - TODO change requests to aiohttp?
@@ -79,80 +79,47 @@ class ToolboxCog(commands.Cog):
 
 
 
-    def shift(self,query,cluenumber,final):
-        tempq = 'a'*len(query)
-        tempk = cluenumber
-        for n in range(0,len(query)):
-            if query[n] == ' ':
-                tempq = tempq[:n] + ' ' + tempq[n+1:]
-            else: 
-                num = ord(query[n])+tempk
-                if num < 123:
-                    tempq = tempq[:n] + chr(num) + tempq[n+1:]
-                else:
-                    tempq = tempq[:n] + chr(num-26) + tempq[n+1:]
-        final.append(tempq)
-        return final
 
+    def shift_cc(self,wordin,key):
+        wordout = list('a'*len(wordin))
+        for n in range(0,len(wordout)):
+            if wordin[n] == ' ':
+                wordout[n] = ' '
+            else: 
+                numnew = ord(wordin[n])+key
+                if numnew < 123:
+                    wordout[n] = chr(numnew)
+                else:
+                    wordout[n] = chr(numnew-26)
+        return ''.join(wordout)
 
     @commands.command(aliases=['cc','caesar'])
     async def caesar_cipher(self, ctx, *, query0=None):
 
         if not query0:
-            await ctx.send('Send `!cc input key` with a text **input** with an optional **key** shift between 1 to 25 or in the form of `x=y` (or choose 0 to guess a key)\n'\
-                'Example: `!cc irargvna` or `!cc qvntenz 13` or `!cc qvntenz q=d`')
+            await ctx.send('Example: `!cc irargvna` or `!cc qvntenz -key=13`')
             return 
 
-        # set up query - TODO fix the mess
+        # parse input
         query0 = query0.lower()
-        if query0[-1:].isnumeric() == True and query0[-2].isspace() == True:
-            query = query0[:-2]
-            key = int(query0[-1:])
-        elif query0[-2:].isnumeric() == True and query0[-3].isspace() == True:
-            query = query0[:-3]
-            key = int(query0[-2:])
-        elif query0[-2] == '=':
-            cluefrom = query0[-3]
-            clueto = query0[-1]
-            query = query0[:-4]
-            key = int(abs(ord(clueto)-ord(cluefrom)))
-        else:
+        if '-key=' in query0:
+            query,key = query0.split(' -key=')
+            key = int(key)%26
+        else: 
             query = query0
-            key = -1
-        
-        # extract result
-        final = []
-        if key > 25 or key < -1:
-            final = 'Choose a key between 1 and 25 or choose 0 for function to guess a key.'
-        elif key > 0 and key < 26:
-            self.shift(query,key,final)    
-            final = '\n'.join(final).upper()
-        elif key == 0:
+            key = []
 
-            # TODO replace mechanize, with aiohttp?
-            br = mechanize.Browser() 
-            url = 'https://www.xarg.org/tools/caesar-cipher/'
-            br.open(url)
-            br.select_form(nr=0)
-            br.form['text'] = query
-            br.form['key'] = [str(key)]
-            response = br.submit().read().decode("utf-8") 
-            key = list(br.forms())[0].get_value('key')
-            key = key[0]
-            start = response.find('Output')
-            end = response.find('</p>',start)
-            final = response[start+22:end].upper()
+        # do the shift(s)
+        final = ''
+        if key:
+            wordout = self.shift_cc(query,key)
+            final = str(key)+': '+wordout.upper()
         else:
-            for m in range(0,26):
-                self.shift(query,m,final)
-            final = '\n'.join(final).upper()
-        embed = discord.Embed(
-            title='Caesar cipher',
-            description=final,
-            colour=discord.Colour.dark_teal()
-        )
-        embed.set_footer(text='Query: {} \nKey: {}'.format(query,key))
-        await ctx.send(embed=embed)
+            for key in range(1,26):
+                wordout = self.shift_cc(query,key)
+                final += str(key)+': '+wordout.upper()+'\n'
+
+        await ctx.send(final)
 
 
 
@@ -160,8 +127,7 @@ class ToolboxCog(commands.Cog):
     async def quipqiup(self, ctx, *, query=None):
 
         if not query:
-            await ctx.send('Send `!qq input key` with an **input** same as you would use on quipqiup.com with optional **key(s)** in the form of `x=y n=m`.\n'\
-                'Example: `!qq cbg bfabdbebfab` or `!qq cbg bfabdbebfab c=s b=a`')
+            await ctx.send('Example: `!qq cbg bfabdbebfab` or `!qq cbg bfabdbebfab c=s b=a`')
             return
 
         # set up query
@@ -209,11 +175,11 @@ class ToolboxCog(commands.Cog):
 
 
 
-    @commands.command(aliases=['letnum','let'])
-    async def letternumber(self, ctx, *, query=None):
+    @commands.command(aliases=['alpha'])
+    async def alpha_numeric(self, ctx, *, query=None):
 
         if not query:
-            await ctx.send('Send `!letnum input` with an **input** of either letters or numbers. Space separation needed for numeric input.\nExample: `!let ferROUs` or `!let 58 31 18 18 15 47 19`')
+            await ctx.send('Example: `!alpha ferROUs` or `!alpha 58 31 18 18 15 47 19` (includes mod26)')
             return
 
         alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
@@ -235,6 +201,115 @@ class ToolboxCog(commands.Cog):
                 final.append(str(pos+1))
             final = ' '.join(final)
         await ctx.send(final)
+
+
+    @commands.command(aliases=['atom'])
+    async def periodic_table(self, ctx, *, query=None):
+
+        if not query:
+            await ctx.send('Example: `!atom 1 45 22 34 1212` or `!atom Ti Pt Ni` or `!atom Ti`')
+            return
+
+        def find_by_abbrev(element):
+            # return atomic number of element, if exists
+            idx = False
+            for n in range(0,len(elementlist)):
+                if elementlist[n] == element.title():
+                    idx = n 
+            return idx
+
+        f = open('./misc/periodicTable.json','r')
+        data = json.load(f)
+        headings = data['0']
+        headings.insert(0,'Atomic Number')
+
+        # convert atomic number to element abbrev
+        if query.replace(' ','').isnumeric():
+            query = query.split(' ')
+            collect = []
+            for item in query:
+                try:
+                    collect.append(data[item][0])
+                except:
+                    collect.append('nan')
+            final = ' '.join(collect)
+
+        # convert element abbrev to atomic number
+        else:
+            elements = query.split(' ')
+            elementlist = [item[0] for item in list(data.values())]
+
+            final = []
+            for element in elements:
+                final.append(str(find_by_abbrev(element)))
+            final = ' '.join(final)
+                
+            if len(elements) == 1 and final != False:
+                dataout = data[final]
+                dataout.insert(0,final)
+                final = ''
+                for n in range(0,len(headings)):
+                    final += headings[n]+': '+str(dataout[n])+'\n'
+
+        await ctx.send(final)
+
+
+
+    @commands.command(aliases=['atbash','atb','ab'])
+    async def atbash_cipher(self, ctx, *, query=None):
+
+        if not query:
+            await ctx.send('Example: `!atbash uVIiLfh`')
+            return
+
+        alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        key = ''.join(np.flipud(list(alpha)))
+        final = []
+        for letter in list(query.upper()):
+            if letter == ' ':
+                newletter = ' '
+            else:
+                newletter = key[alpha.find(letter)]
+            final.append(newletter)
+        final = ''.join(final)
+        await ctx.send(final)
+
+
+
+    @commands.command(aliases=['vig','v'])
+    async def vigenere_cipher(self, ctx, *, query=None):
+
+        if not query:
+            await ctx.send('Example: `!v encrypt ferrous -key=lemon` or `!v decrypt QIDFBFW -key=lemon`')
+            return
+
+        # assume 0 indexing (A1Z26)
+        def char_to_idx(letter):
+            return ord(letter.lower()) - 97
+
+        def idx_to_char(pos):
+            return chr(pos + 97).upper()
+
+        action = query.split(' ')[0]
+        key = query.split('-key=')[1].upper()
+        key = key * round(200/len(key))
+        message = ' '.join(query.split(' ')[1:-1])
+
+        final = ''
+        if action == 'encrypt':
+            for n in range(0,len(message)):
+                newletter = idx_to_char((char_to_idx(message[n])+char_to_idx(key[n]))%26)
+                final += newletter
+
+        elif action == 'decrypt':
+            for n in range(0,len(message)):
+                newletter = idx_to_char((char_to_idx(message[n])-char_to_idx(key[n])+26)%26)
+                final += newletter
+        
+
+        await ctx.send(final)
+
+
 
 
 

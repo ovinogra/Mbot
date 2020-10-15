@@ -1,0 +1,954 @@
+{
+    "0": [
+        "Abbrev",
+        "Name",
+        "Group",
+        "Period",
+        "Mass",
+        "Category"
+    ],
+    "1": [
+        "H",
+        "Hydrogen",
+        "1",
+        "1",
+        "1.008",
+        "Reactive Nonmetal"
+    ],
+    "2": [
+        "He",
+        "Helium",
+        "18",
+        "1",
+        "4.002602",
+        "Noble Gas"
+    ],
+    "3": [
+        "Li",
+        "Lithium",
+        "1",
+        "2",
+        "6.94",
+        "Alkali Metal"
+    ],
+    "4": [
+        "Be",
+        "Beryllium",
+        "2",
+        "2",
+        "9.0121831",
+        "Alkaline Earth Metal"
+    ],
+    "5": [
+        "B",
+        "Boron",
+        "13",
+        "2",
+        "10.81",
+        "Metalloid"
+    ],
+    "6": [
+        "C",
+        "Carbon",
+        "14",
+        "2",
+        "12.011",
+        "Reactive Nonmetal"
+    ],
+    "7": [
+        "N",
+        "Nitrogen",
+        "15",
+        "2",
+        "14.007",
+        "Reactive Nonmetal"
+    ],
+    "8": [
+        "O",
+        "Oxygen",
+        "16",
+        "2",
+        "15.999",
+        "Reactive Nonmetal"
+    ],
+    "9": [
+        "F",
+        "Fluorine",
+        "17",
+        "2",
+        "18.99840316",
+        "Reactive Nonmetal"
+    ],
+    "10": [
+        "Ne",
+        "Neon",
+        "18",
+        "2",
+        "20.1797",
+        "Noble Gas"
+    ],
+    "11": [
+        "Na",
+        "Sodium",
+        "1",
+        "3",
+        "22.98976928",
+        "Alkali Metal"
+    ],
+    "12": [
+        "Mg",
+        "Magnesium",
+        "2",
+        "3",
+        "24.305",
+        "Alkaline Earth Metal"
+    ],
+    "13": [
+        "Al",
+        "Aluminium",
+        "13",
+        "3",
+        "26.9815384",
+        "Post Transition Metal"
+    ],
+    "14": [
+        "Si",
+        "Silicon",
+        "14",
+        "3",
+        "28.085",
+        "Metalloid"
+    ],
+    "15": [
+        "P",
+        "Phosphorus",
+        "15",
+        "3",
+        "30.973762",
+        "Reactive Nonmetal"
+    ],
+    "16": [
+        "S",
+        "Sulfur",
+        "16",
+        "3",
+        "32.06",
+        "Reactive Nonmetal"
+    ],
+    "17": [
+        "Cl",
+        "Chlorine",
+        "17",
+        "3",
+        "35.45",
+        "Reactive Nonmetal"
+    ],
+    "18": [
+        "Ar",
+        "Argon",
+        "18",
+        "3",
+        "39.95",
+        "Noble Gas"
+    ],
+    "19": [
+        "K",
+        "Potassium",
+        "1",
+        "4",
+        "39.0983",
+        "Alkali Metal"
+    ],
+    "20": [
+        "Ca",
+        "Calcium",
+        "2",
+        "4",
+        "40.078",
+        "Alkaline Earth Metal"
+    ],
+    "21": [
+        "Sc",
+        "Scandium",
+        "3",
+        "4",
+        "44.955908",
+        "Transition Metal"
+    ],
+    "22": [
+        "Ti",
+        "Titanium",
+        "4",
+        "4",
+        "47.867",
+        "Transition Metal"
+    ],
+    "23": [
+        "V",
+        "Vanadium",
+        "5",
+        "4",
+        "50.9415",
+        "Transition Metal"
+    ],
+    "24": [
+        "Cr",
+        "Chromium",
+        "6",
+        "4",
+        "51.9961",
+        "Transition Metal"
+    ],
+    "25": [
+        "Mn",
+        "Manganese",
+        "7",
+        "4",
+        "54.938043",
+        "Transition Metal"
+    ],
+    "26": [
+        "Fe",
+        "Iron",
+        "8",
+        "4",
+        "55.845",
+        "Transition Metal"
+    ],
+    "27": [
+        "Co",
+        "Cobalt",
+        "9",
+        "4",
+        "58.933194",
+        "Transition Metal"
+    ],
+    "28": [
+        "Ni",
+        "Nickel",
+        "10",
+        "4",
+        "58.6934",
+        "Transition Metal"
+    ],
+    "29": [
+        "Cu",
+        "Copper",
+        "11",
+        "4",
+        "63.546",
+        "Transition Metal"
+    ],
+    "30": [
+        "Zn",
+        "Zinc",
+        "12",
+        "4",
+        "65.38",
+        "Post Transition Metal"
+    ],
+    "31": [
+        "Ga",
+        "Gallium",
+        "13",
+        "4",
+        "69.723",
+        "Post Transition Metal"
+    ],
+    "32": [
+        "Ge",
+        "Germanium",
+        "14",
+        "4",
+        "72.63",
+        "Metalloid"
+    ],
+    "33": [
+        "As",
+        "Arsenic",
+        "15",
+        "4",
+        "74.921595",
+        "Metalloid"
+    ],
+    "34": [
+        "Se",
+        "Selenium",
+        "16",
+        "4",
+        "78.971",
+        "Reactive Nonmetal"
+    ],
+    "35": [
+        "Br",
+        "Bromine",
+        "17",
+        "4",
+        "79.904",
+        "Reactive Nonmetal"
+    ],
+    "36": [
+        "Kr",
+        "Krypton",
+        "18",
+        "4",
+        "83.798",
+        "Noble Gas"
+    ],
+    "37": [
+        "Rb",
+        "Rubidium",
+        "1",
+        "5",
+        "85.4678",
+        "Alkali Metal"
+    ],
+    "38": [
+        "Sr",
+        "Strontium",
+        "2",
+        "5",
+        "87.62",
+        "Alkaline Earth Metal"
+    ],
+    "39": [
+        "Y",
+        "Yttrium",
+        "3",
+        "5",
+        "88.90584",
+        "Transition Metal"
+    ],
+    "40": [
+        "Zr",
+        "Zirconium",
+        "4",
+        "5",
+        "91.224",
+        "Transition Metal"
+    ],
+    "41": [
+        "Nb",
+        "Niobium",
+        "5",
+        "5",
+        "92.90637",
+        "Transition Metal"
+    ],
+    "42": [
+        "Mo",
+        "Molybdenum",
+        "6",
+        "5",
+        "95.95",
+        "Transition Metal"
+    ],
+    "43": [
+        "Tc",
+        "Technetium",
+        "7",
+        "5",
+        "nan",
+        "Transition Metal"
+    ],
+    "44": [
+        "Ru",
+        "Ruthenium",
+        "8",
+        "5",
+        "101.07",
+        "Transition Metal"
+    ],
+    "45": [
+        "Rh",
+        "Rhodium",
+        "9",
+        "5",
+        "102.90549",
+        "Transition Metal"
+    ],
+    "46": [
+        "Pd",
+        "Palladium",
+        "10",
+        "5",
+        "106.42",
+        "Transition Metal"
+    ],
+    "47": [
+        "Ag",
+        "Silver",
+        "11",
+        "5",
+        "107.8682",
+        "Transition Metal"
+    ],
+    "48": [
+        "Cd",
+        "Cadmium",
+        "12",
+        "5",
+        "112.414",
+        "Post Transition Metal"
+    ],
+    "49": [
+        "In",
+        "Indium",
+        "13",
+        "5",
+        "114.818",
+        "Post Transition Metal"
+    ],
+    "50": [
+        "Sn",
+        "Tin",
+        "14",
+        "5",
+        "118.71",
+        "Post Transition Metal"
+    ],
+    "51": [
+        "Sb",
+        "Antimony",
+        "15",
+        "5",
+        "121.76",
+        "Metalloid"
+    ],
+    "52": [
+        "Te",
+        "Tellurium",
+        "16",
+        "5",
+        "127.6",
+        "Metalloid"
+    ],
+    "53": [
+        "I",
+        "Iodine",
+        "17",
+        "5",
+        "126.90447",
+        "Reactive Nonmetal"
+    ],
+    "54": [
+        "Xe",
+        "Xenon",
+        "18",
+        "5",
+        "131.293",
+        "Noble Gas"
+    ],
+    "55": [
+        "Cs",
+        "Caesium",
+        "1",
+        "6",
+        "132.905452",
+        "Alkali Metal"
+    ],
+    "56": [
+        "Ba",
+        "Barium",
+        "2",
+        "6",
+        "137.327",
+        "Alkaline Earth Metal"
+    ],
+    "57": [
+        "La",
+        "Lanthanum",
+        "3",
+        "6",
+        "138.90547",
+        "Lanthanide"
+    ],
+    "58": [
+        "Ce",
+        "Cerium",
+        "nan",
+        "6",
+        "140.116",
+        "Lanthanide"
+    ],
+    "59": [
+        "Pr",
+        "Praseodymium",
+        "nan",
+        "6",
+        "140.90766",
+        "Lanthanide"
+    ],
+    "60": [
+        "Nd",
+        "Neodymium",
+        "nan",
+        "6",
+        "144.242",
+        "Lanthanide"
+    ],
+    "61": [
+        "Pm",
+        "Promethium",
+        "nan",
+        "6",
+        "nan",
+        "Lanthanide"
+    ],
+    "62": [
+        "Sm",
+        "Samarium",
+        "nan",
+        "6",
+        "150.36",
+        "Lanthanide"
+    ],
+    "63": [
+        "Eu",
+        "Europium",
+        "nan",
+        "6",
+        "151.964",
+        "Lanthanide"
+    ],
+    "64": [
+        "Gd",
+        "Gadolinium",
+        "nan",
+        "6",
+        "157.25",
+        "Lanthanide"
+    ],
+    "65": [
+        "Tb",
+        "Terbium",
+        "nan",
+        "6",
+        "158.925354",
+        "Lanthanide"
+    ],
+    "66": [
+        "Dy",
+        "Dysprosium",
+        "nan",
+        "6",
+        "162.5",
+        "Lanthanide"
+    ],
+    "67": [
+        "Ho",
+        "Holmium",
+        "nan",
+        "6",
+        "164.930328",
+        "Lanthanide"
+    ],
+    "68": [
+        "Er",
+        "Erbium",
+        "nan",
+        "6",
+        "167.259",
+        "Lanthanide"
+    ],
+    "69": [
+        "Tm",
+        "Thulium",
+        "nan",
+        "6",
+        "168.934218",
+        "Lanthanide"
+    ],
+    "70": [
+        "Yb",
+        "Ytterbium",
+        "nan",
+        "6",
+        "173.045",
+        "Lanthanide"
+    ],
+    "71": [
+        "Lu",
+        "Lutetium",
+        "nan",
+        "6",
+        "174.9668",
+        "Lanthanide"
+    ],
+    "72": [
+        "Hf",
+        "Hafnium",
+        "4",
+        "6",
+        "178.49",
+        "Transition Metal"
+    ],
+    "73": [
+        "Ta",
+        "Tantalum",
+        "5",
+        "6",
+        "180.94788",
+        "Transition Metal"
+    ],
+    "74": [
+        "W",
+        "Tungsten",
+        "6",
+        "6",
+        "183.84",
+        "Transition Metal"
+    ],
+    "75": [
+        "Re",
+        "Rhenium",
+        "7",
+        "6",
+        "186.207",
+        "Transition Metal"
+    ],
+    "76": [
+        "Os",
+        "Osmium",
+        "8",
+        "6",
+        "190.23",
+        "Transition Metal"
+    ],
+    "77": [
+        "Ir",
+        "Iridium",
+        "9",
+        "6",
+        "192.217",
+        "Transition Metal"
+    ],
+    "78": [
+        "Pt",
+        "Platinum",
+        "10",
+        "6",
+        "195.084",
+        "Transition Metal"
+    ],
+    "79": [
+        "Au",
+        "Gold",
+        "11",
+        "6",
+        "196.96657",
+        "Transition Metal"
+    ],
+    "80": [
+        "Hg",
+        "Mercury",
+        "12",
+        "6",
+        "200.592",
+        "Post Transition Metal"
+    ],
+    "81": [
+        "Tl",
+        "Thallium",
+        "13",
+        "6",
+        "204.38",
+        "Post Transition Metal"
+    ],
+    "82": [
+        "Pb",
+        "Lead",
+        "14",
+        "6",
+        "207.2",
+        "Post Transition Metal"
+    ],
+    "83": [
+        "Bi",
+        "Bismuth",
+        "15",
+        "6",
+        "208.9804",
+        "Post Transition Metal"
+    ],
+    "84": [
+        "Po",
+        "Polonium",
+        "16",
+        "6",
+        "nan",
+        "Post Transition Metal"
+    ],
+    "85": [
+        "At",
+        "Astatine",
+        "17",
+        "6",
+        "nan",
+        "Post Transition Metal"
+    ],
+    "86": [
+        "Rn",
+        "Radon",
+        "18",
+        "6",
+        "nan",
+        "Noble Gas"
+    ],
+    "87": [
+        "Fr",
+        "Francium",
+        "1",
+        "7",
+        "nan",
+        "Alkali Metal"
+    ],
+    "88": [
+        "Ra",
+        "Radium",
+        "2",
+        "7",
+        "nan",
+        "Alkaline Earth Metal"
+    ],
+    "89": [
+        "Ac",
+        "Actinium",
+        "3",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "90": [
+        "Th",
+        "Thorium",
+        "nan",
+        "7",
+        "232.0377",
+        "Actinide"
+    ],
+    "91": [
+        "Pa",
+        "Protactinium",
+        "nan",
+        "7",
+        "231.03588",
+        "Actinide"
+    ],
+    "92": [
+        "U",
+        "Uranium",
+        "nan",
+        "7",
+        "238.02891",
+        "Actinide"
+    ],
+    "93": [
+        "Np",
+        "Neptunium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "94": [
+        "Pu",
+        "Plutonium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "95": [
+        "Am",
+        "Americium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "96": [
+        "Cm",
+        "Curium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "97": [
+        "Bk",
+        "Berkelium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "98": [
+        "Cf",
+        "Californium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "99": [
+        "Es",
+        "Einsteinium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "100": [
+        "Fm",
+        "Fermium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "101": [
+        "Md",
+        "Mendelevium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "102": [
+        "No",
+        "Nobelium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "103": [
+        "Lr",
+        "Lawrencium",
+        "nan",
+        "7",
+        "nan",
+        "Actinide"
+    ],
+    "104": [
+        "Rf",
+        "Rutherfordium",
+        "4",
+        "7",
+        "nan",
+        "Transition Metal"
+    ],
+    "105": [
+        "Db",
+        "Dubnium",
+        "5",
+        "7",
+        "nan",
+        "Transition Metal"
+    ],
+    "106": [
+        "Sg",
+        "Seaborgium",
+        "6",
+        "7",
+        "nan",
+        "Transition Metal"
+    ],
+    "107": [
+        "Bh",
+        "Bohrium",
+        "7",
+        "7",
+        "nan",
+        "Transition Metal"
+    ],
+    "108": [
+        "Hs",
+        "Hassium",
+        "8",
+        "7",
+        "nan",
+        "Transition Metal"
+    ],
+    "109": [
+        "Mt",
+        "Meitnerium",
+        "9",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "110": [
+        "Ds",
+        "Darmstadtium",
+        "10",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "111": [
+        "Rg",
+        "Roentgenium",
+        "11",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "112": [
+        "Cn",
+        "Copernicium",
+        "12",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "113": [
+        "Nh",
+        "Nihonium",
+        "13",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "114": [
+        "Fl",
+        "Flerovium",
+        "14",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "115": [
+        "Mc",
+        "Moscovium",
+        "15",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "116": [
+        "Lv",
+        "Livermorium",
+        "16",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "117": [
+        "Ts",
+        "Tennessine",
+        "17",
+        "7",
+        "nan",
+        "Unknown"
+    ],
+    "118": [
+        "Og",
+        "Oganesson",
+        "18",
+        "7",
+        "nan",
+        "Unknown"
+    ]
+}

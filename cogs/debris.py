@@ -8,7 +8,13 @@ import asyncio
 import random
 
 
-# A cog with an interesting noncommand
+'''
+A cog with a text adventure with five minipuzzles
+Made mostly for practice because I was bored
+Requires some Cosmere knowledge...
+Command is `engage cytonic hyperdrive` or just `engage`
+'''
+
 
 class DebrisCog(commands.Cog):
 

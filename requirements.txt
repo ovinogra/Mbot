@@ -1,4 +1,4 @@
-discord.py==1.2.5
+discord.py==1.5.0
 python-dotenv
 asyncio
 regex
@@ -7,3 +7,4 @@ mechanize==0.4.5
 requests==2.22.0
 psycopg2==2.8.4
 gspread==3.6.0
+datetime
