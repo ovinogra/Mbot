@@ -16,7 +16,8 @@ Puzzle progress stored in a master "Nexus" google sheet.
 *  Store and view `!login` info for team
 *  View puzzle progress in `!nexus`
 *  Store common resources in `!tag`
-*Example of auto-generated nexus sheet (answers removed)*
+
+Example of auto-generated nexus sheet (answers removed)
 ![example](https://github.com/Moonrise55/Mbot/blob/master/misc/nexus_example.PNG)
 
 ### Bot setup
