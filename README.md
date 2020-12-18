@@ -12,7 +12,7 @@ A discord bot with tools and automatic puzzle progress tracking for puzzlehunts.
 ### Puzzle Manager
 Puzzle progress stored in a master "Nexus" google sheet.
 * With one puzzle `!create` command: create channel, duplicate template google sheet, update nexus sheet, send links to discord server
-* `!update` nexus sheet from discord (name, answer, priority, notes)
+* `!solve` log answer in nexus sheet
 *  Store and view `!login` info for team
 *  View puzzle progress in `!nexus`
 *  Store common resources in `!tag`
