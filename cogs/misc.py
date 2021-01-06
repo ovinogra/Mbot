@@ -135,11 +135,14 @@ class MiscCog(commands.Cog):
         if 'quote' in message.content.lower():
             quotes = [
                 "What's the most important step a man can take? The next one.",
-                "What's the most important drink a man can take? The next one.",
+                "What's the most important ~~step~~drink a man can take? The next one.",
+                "What's the most important ~~step~~puzzle a man can ~~take~~solve? The next one.",
                 "What's the most important puzzle a man can solve? The next one.",
                 'There is always another secret.',
+                'There is always another puzzle.',
                 "Life before Death. Strength before Weakness. Journey before Destination.",
-                "Elend: I kind of lost track of time.\nBreeze: For two hours?\nElend: There were books involved...",
+                "Life before Death. Strength before Weakness. Journey before Pancakes.",
+                "Elend: I kind of lost track of time.\nBreeze: For two hours?\nElend: There were ~~books~~puzzles involved...",
                 "I've always been very confident in my immaturity.",
                 "Puzzles are hard. But I'll see what I can do.",
                 "Sometimes our conversations remind me of a broken sword. Sharp as hell... but lacking a point.",
@@ -150,7 +153,8 @@ class MiscCog(commands.Cog):
                 "Power is an illusion of perception.",
                 "I’m so storming pure I practically belch rainbows.",
                 "Mocking a woman is like drinking too much wine. It may be fun for a short time, but the hangover is hell.",
-                "Inappropriate... like dividing by zero?"
+                "Inappropriate... like dividing by zero?",
+                "Women are fickle, but men are fools."
             ]
             response = random.choice(quotes)
             await message.channel.send(response)

@@ -1,21 +1,17 @@
-	0	0	0	0	0	0	0	0	0	0	0	0	0		
-0	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Haven	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Space	Space	Ship	Space	Space	Space	Space	0	
-0	Space	Space	Space	Ship	Space	Ship	Space	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Haven	Space	Space	Space	Space	Space	Space	Ship	Haven	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Space	Ship	Space	Ship	Space	Space	Space	0	
-0	Space	Space	Space	Ship	Space	Ship	Ship	Ship	Ship	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Ship	Space	Space	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Start	Space	Space	Ship	Kress	Ship	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Ship	Space	Space	Space	Space	Ship	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Ship	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Haven	Space	Ship	Space	Ship	Space	Space	Space	Haven	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Space	Ship	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Ship	Space	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Haven	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	0	
-0	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	Space	0	
-	0	0	0	0	0	0	0	0	0	0	0	0	0		
+	0	0	0	0	0	0	0	0	0	
+0	Space	Space	Space	Space	Haven	Space	Space	Space	Space	0
+0	Space	Space	Space	Space	Space	Space	Ship	Space	Space	0
+0	Space	Ship	Space	Ship	Space	Space	Space	Space	Space	0
+0	Haven	Space	Space	Space	Space	Space	Space	Ship	Haven	0
+0	Space	Space	Space	Space	Space	Ship	Space	Ship	Space	0
+0	Space	Ship	Space	Ship	Ship	Ship	Ship	Space	Space	0
+0	Space	Space	Ship	Space	Space	Space	Space	Space	Space	0
+0	Start	Space	Space	Ship	Kress	Ship	Space	Space	Space	0
+0	Space	Ship	Space	Space	Space	Space	Ship	Space	Space	0
+0	Space	Space	Space	Space	Space	Space	Space	Space	Space	0
+0	Space	Space	Space	Space	Ship	Space	Space	Space	Space	0
+0	Haven	Space	Ship	Space	Ship	Space	Space	Space	Haven	0
+0	Space	Space	Space	Space	Space	Ship	Space	Space	Space	0
+0	Space	Space	Space	Ship	Space	Space	Space	Space	Space	0
+0	Space	Space	Space	Space	Haven	Space	Space	Space	Space	0
+	0	0	0	0	0	0	0	0	0	

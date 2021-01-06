@@ -68,6 +68,7 @@ class AdminCog(commands.Cog):
             final.append('>>> '+str(msg.content))
             final = '\n'.join(final)
             await ctx.send(final)
+            await ctx.send('All metadata:\n'+str(msg))
         else:
             await ctx.send('Message not found. ')
 

@@ -9,9 +9,8 @@ import random
 
 
 '''
-A cog with a text adventure with five minipuzzles
-Made mostly for practice because I was bored
-Requires some Cosmere knowledge...
+A cog with a text adventure with five minipuzzles, made mostly for practice because I was bored. Requires some cosmere knowledge. 
+Yes, code is a mess but making it was fun.  
 Command is `engage cytonic hyperdrive` or just `engage`
 '''
 
@@ -299,8 +298,9 @@ class DebrisCog(commands.Cog):
             else:
                 r,c = stepxy(r0,c0,direction.content)
                 try:
-                    if self.world == 'sel' and getTile(r,c) == '0':
-                        prompt = 'We can\'t go there. Krell ships are blocking the way. Choose another direction.' 
+                    #if self.world == 'sel' and getTile(r,c) == '0':
+                    if getTile(r,c) == '0':
+                        prompt = 'We can\'t go there. Krell ships block the way on the edge of space. Choose another direction.' 
                         await message.channel.send(prompt)
                         r,c = await timeanswer(r0,c0)
                         return r,c
@@ -380,28 +380,14 @@ class DebrisCog(commands.Cog):
             elif query.content.upper() == self.masteranswer.upper():
                 prompt =    'Flying to **OPHIUCHUS** is correct! And is also where Voyager 1 is currently heading.\n'\
                             'You have opened a portal into the Cosmere and escaped Detritus. Nice job :)\n'\
-                            '\n'\
-                            'Pre-recorded message from '+MoonID+':\n'\
-                            '>>> I hope that was at least somewhat entertaining! If you are reading this, it presumably worked, eventually. '\
-                            'If you want to peruse my :ramen: code in shock, here it is: https://github.com/Moonrise55/Mbot \n'\
-                            'I am sure there are more clever ways to do everything there. Oh well. \n'\
-                            '\n'\
-                            'Why did I do this?\n'\
-                            '1) I was bored\n'\
-                            '2) I wanted to do something fun with Mbot\n'\
-                            '3) Messing around with computer things is fun\n'\
-                            '4) `Engage cytonic hyperdrive` was just asking for a text adventure game\n'\
-                            '5) Meta\'s comment got me thinking :thinking: *spreadsheet you say... heh*\n'\
-                            '\n'\
-                            'Maybe now I\'ll finally go and read Starsight.'
-                url = 'https://i.imgur.com/2XybUZ3.png'
+                            'If you are reading this, presumably my spagetti:ramen: text adventure worked.'                
                 embed=discord.Embed()
                 embed.set_image(url=url)
                 await message.channel.send(prompt,embed=embed)  
 
             else: 
                 prompt = '**ERROR: CYTONIC HYPERDRIVE OFFLINE**'
-                directionprompt =   'Navigate me by sending directions **forward**, **backward**, **left**, **right** [or **F**,**B**,**L**,**R**/**W**,**S**,**A**,**D** case insen.]. Movements are relative to our initial starting position.\n'\
+                directionprompt =   'Navigate me by sending directions **W**,**S**,**A**,**D** (case insen.)\n'\
                                     'Be careful and do not fly me into a Krell station or floating space junk! \n'\
                                     'You can exit the trip at any time by sending **stop**\n'\
                                     'Send **yes** if ready!'

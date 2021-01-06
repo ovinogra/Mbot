@@ -24,7 +24,7 @@ class ToolboxCog(commands.Cog):
             await ctx.send('Example regex: `!nut "<asympote_>"`')
             return
 
-        # get html page - TODO change requests to aiohttp?
+        # get html page - TODO change to requests?
         query_initial = query[:]
         query = query_initial.replace('&','%26').replace('+','%2B').replace('#','%23').replace(' ','+') # html syntax
         url = 'https://nutrimatic.org/?q='+query+'&go=Go'
@@ -123,8 +123,10 @@ class ToolboxCog(commands.Cog):
 
 
 
-    @commands.command(aliases=['qq'])
-    async def quipqiup(self, ctx, *, query=None):
+    # TODO: does not work since quipqiup upgraded to beta3
+    @commands.command()
+    @commands.is_owner()
+    async def quipqiup_beta2(self, ctx, *, query=None):
 
         if not query:
             await ctx.send('Example: `!qq cbg bfabdbebfab` or `!qq cbg bfabdbebfab c=s b=a`')
@@ -149,6 +151,7 @@ class ToolboxCog(commands.Cog):
         body = {"ciphertext": query,"clues": clues,"time": 5}
         rawresult = client.post("https://6n9n93nlr5.execute-api.us-east-1.amazonaws.com/prod/dict",json.dumps(body)).content
         obj = json.loads(rawresult.decode())
+        print(obj)
 
         # set up embed template
         embed = discord.Embed(title='Quipqiup',colour=discord.Colour.dark_orange())
@@ -182,6 +185,7 @@ class ToolboxCog(commands.Cog):
             await ctx.send('Example: `!alpha ferROUs` or `!alpha 58 31 18 18 15 47 19` (includes mod26)')
             return
 
+        #...why did I not use chr and ord?
         alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         final = []
         if query[0].isnumeric():

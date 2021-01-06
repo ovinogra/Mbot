@@ -22,7 +22,7 @@ initial_extensions = ['misc',
                       'tags',
                       'puzzle']
 
-#initial_extensions = ['puzzle','hunt','tags','misc','admin']
+#initial_extensions = ['puzzle','hunt','admin']
 
 @bot.event
 async def on_ready():
@@ -42,15 +42,18 @@ async def help(ctx):
         colour=discord.Colour.dark_grey()
     )
     embed.add_field(name='Tools',value=
-        '**!nut**: Nutrimatic\n**!qq**: Quipqiup\n'\
-        '**!cc**: Caesar cipher\n**!vig**: Vigenere cipher\n'\
-        '**!alpha**: A1Z26\n**!atbash**: atbash cipher\n'\
+        '**!nut**: Nutrimatic\n'\
+#        '**!qq**: Quipqiup\n'\
+        '**!cc**: Caesar cipher\n'\
+        '**!vig**: Vigenere cipher\n'\
+        '**!alpha**: A1Z26\n'\
+        '**!atbash**: atbash cipher\n'\
         '**!atom**: Periodic table\n'\
         '**!tag**: Other resources',inline=True)
     embed.add_field(name='Puzzle Manager',value=
-        '**!login [update]**: General info\n'\
-        '**!nexus**, **!create**, **!solve**,\n**!update**, **!undosolve**\n'\
-        '**!checksetup**',inline=True)
+        '**!login** [update]\n'\
+        '**!nexus** [-unsolved] [-round=1]\n**!create** Name [-round=1]\n**!solve** ANSWER\n**!note** backsolve\n**!update** [-name=Name]\n**!undosolve**\n'\
+        '**!check** (setup only)',inline=True)
     embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*, engage',inline=False)
     embed.set_footer(text='@Moonrise#3554')
     await ctx.send(embed=embed)

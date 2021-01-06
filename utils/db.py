@@ -20,8 +20,8 @@ class DBase:
 
     def connect(self):
         load_dotenv()
-        DB_ADDRESS = os.getenv('DB_ADDRESS')
-        connection = psycopg2.connect(DB_ADDRESS, sslmode='prefer')
+        DATABASE_URL = os.getenv('DATABASE_URL')
+        connection = psycopg2.connect(DATABASE_URL, sslmode='prefer')
         cursor = connection.cursor()        
         return connection, cursor
 

@@ -10,6 +10,7 @@ import json
 import numpy as np
 import datetime
 from utils.db import DBase
+from google.oauth2 import service_account
 
 
 # A cog for puzzle management
@@ -19,7 +20,6 @@ from utils.db import DBase
 # !update
 # !checksetup
 
-# Dependencies:
 # 1) The "hunt" db table must be updated with nexus and folder links (through !login update in cogs/hunt.py)
 # 2) Nexus sheet must have correct formatting
 #      -columns: Channel ID, Round, Number, Puzzle Name, Answer, Spreadsheet Link, Priority, Notes, Created At, Solved At
@@ -31,18 +31,26 @@ class PuzzCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        self.mark = '✅'
+        #self.mark = '✔'
+
+        # TODO: has to be a less silly way to organize this
+        load_dotenv()
+        self.key = os.getenv('GOOGLE_CLIENT_SECRETS')
+        self.googledata = json.loads(self.key)
+        self.googledata['private_key'] = self.googledata['private_key'].replace("\\n","\n")
+        scopes = [
+            'https://www.googleapis.com/auth/spreadsheets',
+            'https://www.googleapis.com/auth/drive'
+        ]
+        self.credentials = service_account.Credentials.from_service_account_info(self.googledata,scopes=scopes)
 
 
 
 
-    def client_email(self):
-        g = open('client_secrets.json','r')
-        data = json.load(g)
-        email = data['client_email']
-        return email
 
     def gclient(self):
-        client = gspread.service_account('client_secrets.json')
+        client = gspread.authorize(self.credentials)
         return client
 
     def channel_get_by_id(self,ctx,channelid):
@@ -103,9 +111,9 @@ class PuzzCog(commands.Cog):
 
 
 
-    async def channel_create(self,ctx,name):
+    async def channel_create(self,ctx,name,position):
         category = ctx.message.channel.category        
-        newchannnel = await category.create_text_channel(name)
+        newchannnel = await category.create_text_channel(name=name,position=position)
         return newchannnel
 
     async def channel_rename(self,ctx,channel,newname):
@@ -149,7 +157,7 @@ class PuzzCog(commands.Cog):
 
         return lib
 
-    def nexus_add_row(self,nexussheet,puzzlechannel,puzzlename,puzzlesheeturl):
+    def nexus_add_row(self,nexussheet,puzzlechannel,puzzlename,puzzlesheeturl,roundname):
         """ add channel id, puzzle name, link, priority=New """
 
         # fetch nexus data and sort headings
@@ -162,6 +170,9 @@ class PuzzCog(commands.Cog):
         temp[lib['Priority'][0]] = 'New'
         temp[lib['Puzzle Name'][0]] = puzzlename
         temp[lib['Spreadsheet Link'][0]] = puzzlesheeturl
+        if roundname:
+            temp[lib['Round'][0]] = roundname
+
 
         rownum = len(data_all)+1
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(headings))
@@ -245,15 +256,13 @@ class PuzzCog(commands.Cog):
                 return
             
             if '-round=' in query:
-                print(query)
-                print(data_round)
                 roundnumber = query.split('=')[1]
                 names = ''
                 if roundnumber in data_round:
                     for n in range(0,len(data_name)):
                         if data_round[n] == query.split('=')[1]:
                             names += data_number[n]+': '+data_name[n]+' ('+data_answer[n]+')'+'\n'
-                    embed.add_field(name='Round '+query.split('=')[1],value=names,inline=True)
+                    embed.add_field(name='Round: '+query.split('=')[1],value=names,inline=False)
                     await ctx.send(embed=embed)
                 else:
                     await ctx.send('No such round found.')
@@ -268,7 +277,7 @@ class PuzzCog(commands.Cog):
             for n in range(0,len(data_name)):
                 if data_round[n] == level:
                     names += data_number[n]+': '+data_name[n]+' ('+data_answer[n]+')'+'\n'
-            embed.add_field(name='Round '+str(level),value=names,inline=False)
+            embed.add_field(name='Round: '+str(level),value=names,inline=False)
 
         await ctx.send(embed=embed)
 
@@ -290,10 +299,14 @@ class PuzzCog(commands.Cog):
             return
 
         if not query:
-            await ctx.send('`!create Some Puzzle Name Here`')
+            await ctx.send('`!create Some Puzzle Name Here -round=1`')
             return
 
-        puzzlename = query
+        if '-round=' in query:
+            puzzlename, roundname = query.split(' -round=')
+        else:
+            puzzlename = query
+            roundname = False
         nexus_url = await self.nexus_get_url(ctx)
         nexussheet = self.nexus_get_sheet(nexus_url)
 
@@ -305,13 +318,15 @@ class PuzzCog(commands.Cog):
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
             return
 
+        position = ctx.message.channel.category.channels[0].position
+
         # puzzle creation sequence
         infomsg = await ctx.send('Creating puzzle {}'.format(puzzlename))
-        newchannel = await self.channel_create(ctx,puzzlename)
+        newchannel = await self.channel_create(ctx,puzzlename,position)
         newsheet_url = self.puzzle_sheet_make(nexussheet,puzzlename)
         msg = await newchannel.send(newsheet_url)
         await msg.pin()
-        self.nexus_add_row(nexussheet,newchannel,puzzlename,newsheet_url)
+        self.nexus_add_row(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundname=roundname)
         await infomsg.edit(content='Puzzle created at {}'.format(newchannel.mention))
 
 
@@ -348,16 +363,29 @@ class PuzzCog(commands.Cog):
         col_select = lib['Solved At'][0]+1
         nexussheet.update_cell(row_select, col_select, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
+        # move channel down
+        channels = ctx.message.channel.category.channels
+        idx = channels[-1].position+1
+        for channel in channels:
+            if self.mark in channel.name:
+                idx = channel.position 
+                break
+        await ctx.channel.edit(position=idx)
+
         # update user of solve
         puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
-        if '✔' not in ctx.channel.name:
+        if self.mark not in ctx.channel.name:
             emote = random.choice(['gemheart','bang','face_explode','face_hearts','face_openmouth','face_party','face_stars','party','rocket','star','mbot','slug'])
             filepath = './misc/emotes/'+emote+'.png'
             await ctx.send(content='`{}` marked as solved!'.format(puzzlename),file=discord.File(filepath))
-            await self.channel_rename(ctx,ctx.channel,'✔'+ctx.channel.name)
+            await ctx.channel.edit(name=self.mark+ctx.channel.name)
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
+        
+
+
             
+    
 
     @commands.command(aliases=['undosolve','imessedup'])
     @commands.guild_only()
@@ -386,11 +414,52 @@ class PuzzCog(commands.Cog):
         nexussheet.update_cell(row_select, col_select, '')
 
         # update user of undosolve
-        if '✔' in ctx.channel.name:
-            await self.channel_rename(ctx,ctx.channel,ctx.channel.name.replace('✔',''))
+        await ctx.channel.edit(name=ctx.channel.name.replace(self.mark,''))
+
+            
+
             
         filepath = './misc/emotes/szeth.png'
         await ctx.send(content='Fixed.',file=discord.File(filepath))
+
+
+    @commands.command(aliases=['note'])
+    @commands.guild_only()
+    async def update_nexus_note(self,ctx,*,query=None):
+        """ update nexus row by flag of column name """
+
+        if not await self.check_hunt_role(ctx):
+            return
+
+        if not query:
+            await ctx.send('`!note backsolve` in appropriate channel')
+            return
+
+        # fetch nexus data and sort headings
+        nexus_url = await self.nexus_get_url(ctx)
+        nexussheet = self.nexus_get_sheet(nexus_url)
+        data_all = nexussheet.get_all_values()
+        headings = data_all[0]
+        lib = self.nexus_sort_columns(headings)
+
+        # select row of current channel
+        # 1) assume command was run in correct channel
+        # 2) assume channel ID exists in nexus 
+        data_id = [item[lib['Channel ID'][0]] for item in data_all]
+        row_select = data_id.index(str(ctx.channel.id))+1
+
+        # update requested columns/fields
+        puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
+
+        col_select = lib['Notes'][0]+1
+        data_notes = [item[lib['Notes'][0]] for item in data_all[2:]]
+        if data_notes[row_select-3]:
+            nexussheet.update_cell(row_select, col_select, data_notes[row_select-3]+'; '+query)
+        else:
+            nexussheet.update_cell(row_select, col_select, query)
+
+        await ctx.send('Updated column Notes for puzzle: {}'.format(puzzlename))
+
 
 
 
@@ -460,13 +529,13 @@ class PuzzCog(commands.Cog):
                 await ctx.send('Updated column Notes for puzzle: {}'.format(puzzlename))
 
             else:
-                await ctx.send('Column {} not updateable via bot.'.format(item))
+                await ctx.send('Check key name. Column {} not updateable via bot.'.format(item))
 
 
 
 
 
-    @commands.command(aliases=['setup','check','checksetup'])
+    @commands.command(aliases=['check','checksetup'])
     @commands.guild_only()
     async def hunt_setup(self,ctx):
         """
@@ -541,7 +610,7 @@ class PuzzCog(commands.Cog):
         embed = discord.Embed(
             title='Checks',
             colour=discord.Colour(0xfffff0),
-            description='Share hunt folder with\n`'+self.client_email()+'`\n')
+            description='Share hunt folder with\n`'+self.googledata['client_email']+'`\n')
         embed.add_field(name='Topic',value=topic,inline=True)
         embed.add_field(name='Status',value=status,inline=True)
 
