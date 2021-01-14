@@ -54,8 +54,11 @@ class PuzzCog(commands.Cog):
         return client
 
     def channel_get_by_id(self,ctx,channelid):
-        channel = discord.utils.get(ctx.guild.channels, id=channelid)
-        return channel
+        try:
+            channel = discord.utils.get(ctx.guild.channels, id=channelid)
+            return channel
+        except:
+            return False
 
     def check_puzzle_list(self,nexussheet,newpuzzle):
         ''' check if puzzle name already exists in nexus '''
@@ -224,8 +227,22 @@ class PuzzCog(commands.Cog):
         data_channel = [item[lib['Channel ID'][0]] for item in data_all[2:]]
         data_round = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] for item in data_all[2:]]
         data_number = ['-' if item[lib['Number'][0]] == '' else item[lib['Number'][0]] for item in data_all[2:]]
-        data_name = ['-' if item == '' else self.channel_get_by_id(ctx,int(item)).mention for item in data_channel]
+        #data_name = ['-' if item == '' else self.channel_get_by_id(ctx,int(item)).mention for item in data_channel]
         data_answer = ['-' if item[lib['Answer'][0]] == '' else item[lib['Answer'][0]] for item in data_all[2:]]
+
+        print('start')
+        data_name = []
+        for j, item in enumerate(data_channel):
+            if item == '':
+                data_name.append('-')
+            else:
+                channelpick = self.channel_get_by_id(ctx,int(item))
+                if channelpick:
+                    data_name.append(channelpick.mention)
+                else:
+                    nameidx = lib['Puzzle Name'][0]
+                    datatemp = data_all[2:][j]
+                    data_name.append(datatemp[int(nameidx)])
 
         # remove empty rows
         while '' in data_channel:
