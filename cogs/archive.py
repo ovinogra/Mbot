@@ -1,4 +1,4 @@
-# puzzle.py
+# archive.py
 
 import discord
 from discord.ext import commands
@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 import os
 import gspread
 import json
+import asyncio
 
 from gspread import WorksheetNotFound
 from gspread.exceptions import APIError
@@ -51,8 +52,17 @@ class ArchiveCog(commands.Cog):
                 await self.archive_category(ctx, args[1])
             else:
                 await ctx.send('`!archive <channel|category> <sheet>`')
-        except APIError:
-            await ctx.send('An error occurred during archiving: sheet does not exist, or M-Bot does not have access.')
+        # handle most common errors
+        except APIError as e:
+            code = json.loads(e.response.text)['error']['code']
+            if code == 404:
+                await ctx.send('An error occurred during archiving: Sheet does not exist.')
+            elif code == 403:
+                await ctx.send('An error occurred during archiving: M-Bot does not have access to the archive sheet.')
+            elif code == 429:
+                await ctx.send('An error occurred during archiving: Data quota exceeded.')
+            else:
+                await ctx.send('An unknown error occurred during archiving.')
 
     async def archive_category(self, ctx, sheet_url):
         category = ctx.message.channel.category
@@ -60,6 +70,8 @@ class ArchiveCog(commands.Cog):
         # only archive text channels
         for channel in category.text_channels:
             await self.archive_channel(ctx, channel, sheet_url, False)
+            # sleep for three seconds to dodge API data cap
+            await asyncio.sleep(3)
         await status.edit(content='Category {} archived!'.format(category))
 
     async def archive_channel(self, ctx, channel, sheet_url, log):
@@ -91,7 +103,6 @@ class ArchiveCog(commands.Cog):
         try:
             sheet = wkbook.worksheet(channel.name)
             sheet.delete_rows(1, sheet.row_count - 1)
-            sheet.clear()
         except WorksheetNotFound:
             sheet = wkbook.add_worksheet(channel.name, 1, 3)
 
@@ -116,6 +127,7 @@ class ArchiveCog(commands.Cog):
         await status.edit(content='Channel {} archived!'.format(channel.mention))
         if not log:
             await status.delete()
+
 
 def setup(bot):
     bot.add_cog(ArchiveCog(bot))
