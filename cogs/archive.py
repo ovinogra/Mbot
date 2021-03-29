@@ -5,15 +5,10 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 import gspread
-import random
 import json
-import numpy as np
-import datetime
 
 from gspread import WorksheetNotFound
 from gspread.exceptions import APIError
-
-from utils.db import DBase
 from google.oauth2 import service_account
 
 
@@ -24,8 +19,6 @@ class ArchiveCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.mark = '✅'
-        # self.mark = '✔'
 
         # TODO: has to be a less silly way to organize this
         load_dotenv()
@@ -42,20 +35,15 @@ class ArchiveCog(commands.Cog):
         client = gspread.authorize(self.credentials)
         return client
 
-    def channel_get_by_id(self, ctx, channelid):
-        try:
-            channel = discord.utils.get(ctx.guild.channels, id=channelid)
-            return channel
-        except:
-            return False
-
     @commands.command(aliases=['arc'])
     @commands.guild_only()
     async def archive(self, ctx, *args):
+        # ensure exactly two arguments
         if len(args) != 2:
             await ctx.send('`!archive <channel|category> <sheet>`')
             return
 
+        # attempt an archive, catch any errors with the sheet link
         try:
             if args[0] == 'channel':
                 await self.archive_channel(ctx, ctx.channel, args[1], True)
@@ -69,6 +57,7 @@ class ArchiveCog(commands.Cog):
     async def archive_category(self, ctx, sheet_url):
         category = ctx.message.channel.category
         status = await ctx.message.channel.send('Archiving category {}...'.format(category))
+        # only archive text channels
         for channel in category.text_channels:
             await self.archive_channel(ctx, channel, sheet_url, False)
         await status.edit(content='Category {} archived!'.format(category))
@@ -78,11 +67,14 @@ class ArchiveCog(commands.Cog):
 
         messages = []
         async for msg in channel.history(limit=None, oldest_first=True):
+            # record each message
             messages.append([
                 msg.created_at.strftime('%m-%d-%Y, %H:%M:%S'),
                 msg.author.display_name,
                 msg.clean_content
             ])
+
+            # record attachments for each message
             for attachment in msg.attachments:
                 messages.append([
                     '->',
@@ -90,15 +82,20 @@ class ArchiveCog(commands.Cog):
                     '=IMAGE("' + attachment.url + '")'
                 ])
 
+        # set up workbook information
         sheet_key = max(sheet_url.split('/'), key=len)
         gclient = self.gclient()
         wkbook = gclient.open_by_key(sheet_key)
+
+        # replace channel sheet if it exists
         try:
             sheet = wkbook.worksheet(channel.name)
             sheet.delete_rows(1, sheet.row_count - 1)
             sheet.clear()
         except WorksheetNotFound:
             sheet = wkbook.add_worksheet(channel.name, 1, 3)
+
+        # JSON request for resizing columns
         resize_cols_request = {
             'requests': [{
                 'autoResizeDimensions': {
@@ -112,6 +109,7 @@ class ArchiveCog(commands.Cog):
             }]
         }
 
+        # input data into workbook
         sheet.insert_rows(messages, value_input_option='USER_ENTERED')
         wkbook.batch_update(resize_cols_request)
 
