@@ -11,6 +11,7 @@ import numpy as np
 import datetime
 
 from gspread import WorksheetNotFound
+from gspread.exceptions import APIError
 
 from utils.db import DBase
 from google.oauth2 import service_account
@@ -55,18 +56,21 @@ class ArchiveCog(commands.Cog):
             await ctx.send('`!archive <channel|category> <sheet>`')
             return
 
-        if args[0] == 'channel':
-            await self.archive_channel(ctx.channel, args[1], True)
-        elif args[0] == 'category' or args[0] == 'cat':
-            await self.archive_category(ctx, args[1])
-        else:
-            await ctx.send('`!archive <channel|category> <sheet>`')
+        try:
+            if args[0] == 'channel':
+                await self.archive_channel(ctx, ctx.channel, args[1], True)
+            elif args[0] == 'category' or args[0] == 'cat':
+                await self.archive_category(ctx, args[1])
+            else:
+                await ctx.send('`!archive <channel|category> <sheet>`')
+        except APIError:
+            await ctx.send('An error occurred during archiving: sheet does not exist, or M-Bot does not have access.')
 
     async def archive_category(self, ctx, sheet_url):
         category = ctx.message.channel.category
         status = await ctx.message.channel.send('Archiving category {}...'.format(category))
         for channel in category.text_channels:
-            await self.archive_channel(channel, sheet_url, False)
+            await self.archive_channel(ctx, channel, sheet_url, False)
         await status.edit(content='Category {} archived!'.format(category))
 
     async def archive_channel(self, ctx, channel, sheet_url, log):
@@ -113,7 +117,7 @@ class ArchiveCog(commands.Cog):
 
         await status.edit(content='Channel {} archived!'.format(channel.mention))
         if not log:
-            status.delete()
+            await status.delete()
 
 def setup(bot):
     bot.add_cog(ArchiveCog(bot))
