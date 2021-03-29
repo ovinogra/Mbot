@@ -72,6 +72,12 @@ class ArchiveCog(commands.Cog):
                 msg.author.display_name,
                 msg.clean_content
             ])
+            for attachment in msg.attachments:
+                messages.append([
+                    '->',
+                    '->',
+                    '=IMAGE("' + attachment.url + '")'
+                ])
 
         sheet_key = max(sheet_url.split('/'), key=len)
         gclient = self.gclient()
@@ -82,8 +88,7 @@ class ArchiveCog(commands.Cog):
             sheet.clear()
         except WorksheetNotFound:
             sheet = wkbook.add_worksheet(channel.name, 1, 3)
-        sheet.insert_rows(messages)
-        request = {
+        resize_cols_request = {
             'requests': [{
                 'autoResizeDimensions': {
                     'dimensions': {
@@ -95,7 +100,14 @@ class ArchiveCog(commands.Cog):
                 }
             }]
         }
-        wkbook.batch_update(request)
+
+        sheet.insert_rows(messages, value_input_option='USER_ENTERED')
+        wkbook.batch_update(resize_cols_request)
+        #vals = sheet.get_all_values()
+        #for row in range(0, sheet.row_count + 2):
+        #    if vals[row][2].startswith('~ARCHIVE_IMG_URL~:'):
+        #        url = vals[row][2].replace('~ARCHIVE_IMG_URL~:', '')
+        #        sheet.insert
 
         await status.edit(content='Channel {} archived!'.format(channel.mention))
 
