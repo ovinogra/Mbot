@@ -51,19 +51,26 @@ class ArchiveCog(commands.Cog):
     @commands.command(aliases=['arc'])
     @commands.guild_only()
     async def archive(self, ctx, *args):
-        if len(args) < 2:
+        if len(args) != 2:
             await ctx.send('`!archive <channel|category> <sheet>`')
             return
 
         if args[0] == 'channel':
-            await self.archive_channel(ctx.channel, args[1])
+            await self.archive_channel(ctx.channel, args[1], True)
         elif args[0] == 'category' or args[0] == 'cat':
-            await ctx.send('archive category')
+            await self.archive_category(ctx, args[1])
         else:
             await ctx.send('`!archive <channel|category> <sheet>`')
 
-    async def archive_channel(self, channel, sheet_url):
-        status = await channel.send('Archiving channel {}...'.format(channel.mention))
+    async def archive_category(self, ctx, sheet_url):
+        category = ctx.message.channel.category
+        status = await ctx.message.channel.send('Archiving category {}...'.format(category))
+        for channel in category.text_channels:
+            await self.archive_channel(channel, sheet_url, False)
+        await status.edit(content='Category {} archived!'.format(category))
+
+    async def archive_channel(self, ctx, channel, sheet_url, log):
+        status = await ctx.message.channel.send('Archiving channel {}...'.format(channel.mention))
 
         messages = []
         async for msg in channel.history(limit=None, oldest_first=True):
@@ -103,13 +110,10 @@ class ArchiveCog(commands.Cog):
 
         sheet.insert_rows(messages, value_input_option='USER_ENTERED')
         wkbook.batch_update(resize_cols_request)
-        #vals = sheet.get_all_values()
-        #for row in range(0, sheet.row_count + 2):
-        #    if vals[row][2].startswith('~ARCHIVE_IMG_URL~:'):
-        #        url = vals[row][2].replace('~ARCHIVE_IMG_URL~:', '')
-        #        sheet.insert
 
         await status.edit(content='Channel {} archived!'.format(channel.mention))
+        if not log:
+            status.delete()
 
 def setup(bot):
     bot.add_cog(ArchiveCog(bot))
