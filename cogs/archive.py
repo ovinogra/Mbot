@@ -9,6 +9,9 @@ import random
 import json
 import numpy as np
 import datetime
+
+from gspread import WorksheetNotFound
+
 from utils.db import DBase
 from google.oauth2 import service_account
 
@@ -47,8 +50,54 @@ class ArchiveCog(commands.Cog):
 
     @commands.command(aliases=['arc'])
     @commands.guild_only()
-    async def archive(self, ctx, *, query=None):
-        await ctx.send('archive active')
+    async def archive(self, ctx, *args):
+        if len(args) < 2:
+            await ctx.send('`!archive <channel|category> <sheet>`')
+            return
+
+        if args[0] == 'channel':
+            await self.archive_channel(ctx.channel, args[1])
+        elif args[0] == 'category' or args[0] == 'cat':
+            await ctx.send('archive category')
+        else:
+            await ctx.send('`!archive <channel|category> <sheet>`')
+
+    async def archive_channel(self, channel, sheet_url):
+        status = await channel.send('Archiving channel {}...'.format(channel.mention))
+
+        messages = []
+        async for msg in channel.history(limit=None, oldest_first=True):
+            messages.append([
+                msg.created_at.strftime('%m-%d-%Y, %H:%M:%S'),
+                msg.author.display_name,
+                msg.clean_content
+            ])
+
+        sheet_key = max(sheet_url.split('/'), key=len)
+        gclient = self.gclient()
+        wkbook = gclient.open_by_key(sheet_key)
+        try:
+            sheet = wkbook.worksheet(channel.name)
+            sheet.delete_rows(1, sheet.row_count - 1)
+            sheet.clear()
+        except WorksheetNotFound:
+            sheet = wkbook.add_worksheet(channel.name, 1, 3)
+        sheet.insert_rows(messages)
+        request = {
+            'requests': [{
+                'autoResizeDimensions': {
+                    'dimensions': {
+                        'sheetId': sheet.id,
+                        'dimension': "COLUMNS",
+                        'startIndex': 0,
+                        'endIndex': 3
+                    }
+                }
+            }]
+        }
+        wkbook.batch_update(request)
+
+        await status.edit(content='Channel {} archived!'.format(channel.mention))
 
 def setup(bot):
     bot.add_cog(ArchiveCog(bot))
