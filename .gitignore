@@ -1,5 +1,10 @@
+# General
 *.pyc
 .*~
 __pycache__/*
 .env
 client_secrets.json
+**/venv
+
+# IDE-Specific
+**/.idea
