@@ -9,7 +9,7 @@ import os
 
 # check connection to database
 load_dotenv()
-DB_ADDRESS = os.getenv('DB_ADDRESS')
+DB_ADDRESS = os.getenv('DATABASE_URL')
 connection = psycopg2.connect(DB_ADDRESS, sslmode='prefer')
 print(connection.get_dsn_parameters(),"\n")
 

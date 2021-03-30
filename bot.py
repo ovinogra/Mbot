@@ -20,7 +20,8 @@ initial_extensions = ['misc',
                       'debris',
                       'admin',
                       'tags',
-                      'puzzle']
+                      'puzzle',
+                      'archive']
 
 # initial_extensions = ['puzzle','hunt']
 
