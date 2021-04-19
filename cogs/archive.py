@@ -98,7 +98,7 @@ class ArchiveCog(commands.Cog):
                 images_all.append('Image: <'+attachment.url+'>')
         
         # send links if attachments exist
-        if images:
+        if images_all:
             images_all = '\n'.join(images_all)
             await ctx.send(images_all)
 
