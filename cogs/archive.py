@@ -20,7 +20,7 @@ class ArchiveCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-
+        
         # TODO: has to be a less silly way to organize this
         load_dotenv()
         self.key = os.getenv('GOOGLE_CLIENT_SECRETS')
@@ -37,6 +37,7 @@ class ArchiveCog(commands.Cog):
         return client
 
     @commands.command(aliases=['arc'])
+    @commands.has_role('organiser')
     @commands.guild_only()
     async def archive(self, ctx, *args):
         # ensure exactly two arguments
@@ -78,6 +79,7 @@ class ArchiveCog(commands.Cog):
         status = await ctx.message.channel.send('Archiving channel {}...'.format(channel.mention))
 
         messages = []
+        images_all = []
         async for msg in channel.history(limit=None, oldest_first=True):
             # record each message
             messages.append([
@@ -93,6 +95,12 @@ class ArchiveCog(commands.Cog):
                     '->',
                     '=IMAGE("' + attachment.url + '")'
                 ])
+                images_all.append('Image: <'+attachment.url+'>')
+        
+        # send links if attachments exist
+        if images:
+            images_all = '\n'.join(images_all)
+            await ctx.send(images_all)
 
         # set up workbook information
         sheet_key = max(sheet_url.split('/'), key=len)
