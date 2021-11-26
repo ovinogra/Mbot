@@ -26,8 +26,10 @@ from google.oauth2 import service_account
 #      -first entry under Spreadsheet Link must be url to a puzzle template sheet
 # 3) Folder must be shared with google service account
 
+# This cog replaces 'hunt.py' for hunts where we care about organizing puzzles
+# by round. 'hunt.py' and 'bighunt.py' should not be run at the same time. 
 
-class PuzzCog(commands.Cog):
+class BigHuntCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
@@ -641,5 +643,5 @@ class PuzzCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(PuzzCog(bot))
+    bot.add_cog(BigHuntCog(bot))
 
