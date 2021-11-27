@@ -13,6 +13,9 @@ from utils.db import DBase
 from google.oauth2 import service_account
 
 
+# This cog replaces 'hunt.py' for hunts where we care about organizing puzzles by round. 
+# 'hunt.py' and 'bighunt.py' should not be run at the same time. Choose one. 
+
 # A cog for puzzle management
 # !nexus
 # !create
@@ -26,8 +29,7 @@ from google.oauth2 import service_account
 #      -first entry under Spreadsheet Link must be url to a puzzle template sheet
 # 3) Folder must be shared with google service account
 
-# This cog replaces 'hunt.py' for hunts where we care about organizing puzzles
-# by round. 'hunt.py' and 'bighunt.py' should not be run at the same time. 
+
 
 class BigHuntCog(commands.Cog):
 
@@ -35,8 +37,9 @@ class BigHuntCog(commands.Cog):
         self.bot = bot
         self.mark = '✅'
         #self.mark = '✔'
+        self.logfeed = 913855656694530059
 
-        # TODO: has to be a less silly way to organize this
+        # import credentials
         load_dotenv()
         self.key = os.getenv('GOOGLE_CLIENT_SECRETS')
         self.googledata = json.loads(self.key)
@@ -76,6 +79,20 @@ class BigHuntCog(commands.Cog):
         else:
             return False
 
+    def check_round_list(self,nexussheet,newround):
+        ''' check if round name already exists in nexus '''
+
+        # fetch nexus data and sort headings
+        data_all = nexussheet.get_all_values()
+        headings = data_all[0]
+        lib = self.nexus_sort_columns(headings)
+        
+        data_name = [item[lib['Round'][0]] for item in data_all[2:]]
+        if newround in data_name:
+            return True
+        else:
+            return False
+
     def check_channel_list(self,ctx,name):
         ''' check if channel name already exists in current category '''
 
@@ -86,35 +103,22 @@ class BigHuntCog(commands.Cog):
             return True
         else:
             return False
+        
+    def check_category_list(self,ctx,name):
+        ''' check if round name already exists in guild '''
 
-    async def check_hunt_role(self,ctx):
-        ''' check if user has role for current hunt '''
-
-        query = 'hunt_role_id'
-        db = DBase(ctx)
-        results = await db.hunt_get_row(query)
-
-        # guild does not exist in db
-        if not results:
-            await ctx.send('Not in this guild.')
-            return False
-
-        res = list(results)
-        # no hunt role set
-        if res[0] == 'none':
+        categoryall = ctx.guild.categories
+        names = [item.name for item in categoryall]
+        if name in names:
             return True
         else:
-            roleid = int(res[0])
-            status = discord.utils.get(ctx.author.roles, id=roleid)
-            # role is not correct
-            if not status:
-                await ctx.send('Missing role for current hunt. ')
-                return False
-            # role is correct
-            else: 
-                return True
+            return False
 
-
+    # @commands.command()
+    # @commands.is_owner()
+    # async def test(self,ctx):
+    #     test = ctx.guild.categories
+    #     print(list(test))
 
     async def channel_create(self,ctx,name,position):
         category = ctx.message.channel.category        
@@ -206,6 +210,7 @@ class BigHuntCog(commands.Cog):
         return newsheet_url
 
 
+    ##### begin bot commands #####
 
     @commands.command()
     @commands.guild_only()
@@ -214,9 +219,6 @@ class BigHuntCog(commands.Cog):
         display list of puzzles and solutions
         can flag by round or unsolved 
         """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
@@ -302,6 +304,39 @@ class BigHuntCog(commands.Cog):
 
 
 
+    @commands.command(aliases=['round','createround'])
+    @commands.guild_only()
+    async def create_round(self, ctx, *, query=None):
+        """ round creation script to 
+        1) make category named by round
+        2) make a general text channel
+        3) make a voice channel
+        4) add category id... somewhere in nexus?
+        """
+
+        if not query:
+            await ctx.send('`!round Some Round Name Here`')
+            return
+        
+        # check existence of round
+        nexus_url = await self.nexus_get_url(ctx)
+        nexussheet = self.nexus_get_sheet(nexus_url)
+
+        if self.check_category_list(ctx,query):
+            await ctx.send('Round named {} exists in server.'.format(query))
+            return
+        if self.check_round_list(nexussheet,query):
+            await ctx.send('Round named `{}` already exists in Nexus.'.format(query))
+            return
+
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        newcategory = await self.create_category(query)
+        newchannnel = await newcategory.create_text_channel(name=query+'-general')
+        newvoicechannnel = await newcategory.create_voice_channel(name=query+'-general')
+        
+        # send feedback on round creation
+        await ctx.send('Round created: {}'.format(newcategory.mention))
+        await logchannel.send('Round created: {} \nCreate new puzzles from {}'.format(newcategory.mention,newchannnel.mention))
 
 
 
@@ -313,9 +348,6 @@ class BigHuntCog(commands.Cog):
         2) copy template sheet
         3) add nexus entry
         """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         if not query:
             await ctx.send('`!create Some Puzzle Name Here -round=1`')
@@ -355,9 +387,6 @@ class BigHuntCog(commands.Cog):
     @commands.guild_only()
     async def solve_puzzle(self, ctx, *, query=None):
         """ update puzzle in nexus with answer and solved priority """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         if not query:
             await ctx.send('`!solve Red Herring` in appropriate channel')
@@ -411,9 +440,6 @@ class BigHuntCog(commands.Cog):
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
 
-        if not await self.check_hunt_role(ctx):
-            return
-
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
         nexussheet = self.nexus_get_sheet(nexus_url)
@@ -446,9 +472,6 @@ class BigHuntCog(commands.Cog):
     @commands.guild_only()
     async def update_nexus_note(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         if not query:
             await ctx.send('`!note backsolve` in appropriate channel')
@@ -486,9 +509,6 @@ class BigHuntCog(commands.Cog):
     @commands.guild_only()
     async def update_nexus(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         if not query:
             await ctx.send('`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` in appropriate channel')
@@ -561,9 +581,6 @@ class BigHuntCog(commands.Cog):
         This awful sequence of checks and API calls presumably makes sure stuff won't break later
         """
 
-        if not await self.check_hunt_role(ctx):
-            return
-
         checks = {}
 
         # channel category check
@@ -634,8 +651,6 @@ class BigHuntCog(commands.Cog):
         embed.add_field(name='Status',value=status,inline=True)
 
         await ctx.send(embed=embed)
-
-
 
 
 
