@@ -59,8 +59,9 @@ class BigHuntCog(commands.Cog):
         return client
 
     ### channel action functions
-    async def channel_create(self,ctx,name,position):
-        category = ctx.message.channel.category        
+    async def channel_create(self,ctx,name,position,category=None):
+        if not category:
+            category = ctx.message.channel.category        
         newchannnel = await category.create_text_channel(name=name,position=position)
         return newchannnel
 
@@ -72,18 +73,25 @@ class BigHuntCog(commands.Cog):
 
 
     ### check functions for puzzle or round name in nexus and server
-    def check_nexus_round_list(self,wkbook,query):
-        ''' check if category/round name exists in nexus round list sheet'''
+    def check_nexus_round_list(self,wkbook,nametest=None,idtest=None):
+        ''' bool: return [True] if round name exists in nexus '''
 
         data_all = wkbook.get_worksheet(2).get_all_values()
-        roundnames = [item[0] for item in data_all[3:]]
-        if query in roundnames:
-            return True
-        else:
-            return False
+        if nametest:
+            roundnames = [item[0] for item in data_all[3:]]
+            if nametest in roundnames:
+                return True
+            else:
+                return False
+        if idtest:
+            roundids = [item[1] for item in data_all[3:]]
+            if str(idtest) in roundids:
+                return True
+            else:
+                return False
 
     def check_nexus_puzzle_list(self,nexussheet,newpuzzle):
-        ''' check if puzzle name exists in nexus '''
+        ''' bool: return [True] if puzzle name exists in nexus '''
 
         data_all = nexussheet.get_all_values()
         headings = data_all[0]
@@ -95,7 +103,7 @@ class BigHuntCog(commands.Cog):
             return False
 
     def check_server_category_list(self,ctx,name):
-        ''' check if category/round name already exists in guild '''
+        ''' bool: return [True] if category/round name exists in server '''
 
         categoryall = ctx.guild.categories
         names = [item.name for item in categoryall]
@@ -105,7 +113,7 @@ class BigHuntCog(commands.Cog):
             return False
 
     def check_server_channel_list(self,ctx,name):
-        ''' check if channel name already exists in current category '''
+        ''' bool: return [True] if puzzle name exists in server '''
 
         channelall = ctx.message.channel.category.text_channels
         names = [item.name for item in channelall]
@@ -115,6 +123,16 @@ class BigHuntCog(commands.Cog):
             return False
         
 
+    def fetch_round_category(self,ctx,wkbook,roundid=None,roundname=None):
+        data_all = wkbook.get_worksheet(2).get_all_values()
+        allroundnames = [item[0] for item in data_all[3:]]
+        allroundidx = [item[1] for item in data_all[3:]]
+        if roundname:
+            category = discord.utils.get(ctx.guild.channels, id=int(allroundidx[allroundnames.index(roundname)]))
+            return category
+        if roundid:
+            category = discord.utils.get(ctx.guild.channels, id=int(roundid))
+            return category
 
 
 
@@ -194,7 +212,7 @@ class BigHuntCog(commands.Cog):
         nexussheet.append_row(temp,table_range=table_range)
 
         col_select = lib['Created At'][0]+1
-        nexussheet.update_cell(rownum, col_select, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        nexussheet.update_cell(rownum, col_select, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # @commands.command()
     # @commands.is_owner()
@@ -344,9 +362,9 @@ class BigHuntCog(commands.Cog):
         nexussheet = nexuswkbook.sheet1
 
         # check if round name exists in server
-        if self.check_server_category_list(ctx,query):
-            await ctx.send('Round named `{}` exists in server.'.format(query))
-            return
+        # if self.check_server_category_list(ctx,query):
+        #     await ctx.send('Round named `{}` already exists in server.'.format(query))
+        #     return
         # check if round name exists in nexus
         if self.check_nexus_round_list(nexuswkbook,query):
             await ctx.send('Round named `{}` already exists in Nexus.'.format(query))
@@ -362,13 +380,13 @@ class BigHuntCog(commands.Cog):
         # send feedback on round creation
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        await ctx.send('Round created: {} ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
-        await logchannel.send('['+dt_string+' EST] Round created: {} ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        await ctx.send(':green_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        await logchannel.send('['+dt_string+' EST] :green_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
         
 
 
 
-    @commands.command(aliases=['create'])
+    @commands.command(aliases=['create','createpuzzle'])
     @commands.guild_only()
     async def create_puzzle(self, ctx, *, query=None):
         """ puzzle creation script to 
@@ -381,34 +399,61 @@ class BigHuntCog(commands.Cog):
             await ctx.send('`!create Some Puzzle Name Here -round=1`')
             return
 
+        nexus_url = await self.nexus_get_url(ctx)
+        nexuswkbook = self.nexus_get_wkbook(nexus_url)
+
+
         if '-round=' in query:
             puzzlename, roundname = query.split(' -round=')
+            # check if requested round exists in nexus, if it does assume the category exists
+            if self.check_nexus_round_list(nexuswkbook,nametest=roundname):
+                roundcategory = self.fetch_round_category(ctx,wkbook=nexuswkbook,roundname=roundname)
+                pass
+            else:
+                await ctx.send('Round name `{}` does not exist in nexus. Please create it first using `!createround`'.format(roundname))
+                return
         else:
             puzzlename = query
-            roundname = False
-        nexus_url = await self.nexus_get_url(ctx)
-        nexussheet = self.nexus_get_sheet(nexus_url)
+            roundname = ctx.channel.category.name
+            roundid = ctx.channel.category.id
+            print(roundid)
+            # check if current category is a round in the nexus
+            if self.check_nexus_round_list(wkbook=nexuswkbook,idtest=roundid):
+                roundcategory = self.fetch_round_category(ctx,wkbook=nexuswkbook,roundid=roundid)
+                pass
+            else:
+                await ctx.send('Cannot create a puzzle in this category. Current category `{}` is not a round. '.format(roundname))
+                return
+        
+        nexussheet = nexuswkbook.sheet1
 
         # check existence of puzzle in channels and nexus
         if self.check_server_channel_list(ctx,puzzlename):
-            await ctx.send('Channel named {} exists in current category.'.format(puzzlename))
+            await ctx.send('Channel named {} exists in current server.'.format(puzzlename))
             return
         if self.check_nexus_puzzle_list(nexussheet,puzzlename):
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
             return
         
-        # check existence of category in round list
 
-        position = ctx.message.channel.category.channels[0].position
+        position = roundcategory.channels[0].position
+        infomsg = await ctx.send('Creating puzzle `{}`'.format(puzzlename))
 
         # puzzle creation sequence
-        infomsg = await ctx.send('Creating puzzle {}'.format(puzzlename))
-        newchannel = await self.channel_create(ctx,puzzlename,position)
+        newchannel = await self.channel_create(ctx,name=puzzlename,position=position,category=roundcategory)
         newsheet_url = self.puzzle_sheet_make(nexussheet,puzzlename)
         msg = await newchannel.send(newsheet_url)
         await msg.pin()
         self.nexus_add_puzzle(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundname=roundname)
-        await infomsg.edit(content='Puzzle created at {}'.format(newchannel.mention))
+        
+
+        # send final feedback 
+        await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannel.mention,roundname))
+        now = datetime.utcnow() - timedelta(hours=5)
+        dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        await logchannel.send('['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannel.mention,roundname))
+
 
 
 
@@ -439,12 +484,16 @@ class BigHuntCog(commands.Cog):
         col_select = lib['Priority'][0]+1
         nexussheet.update_cell(row_select, col_select, 'Solved')
         col_select = lib['Solved At'][0]+1
-        nexussheet.update_cell(row_select, col_select, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        nexussheet.update_cell(row_select, col_select, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         # move channel down
         channels = ctx.message.channel.category.channels
-        idx = channels[-1].position+1
+        idx = channels[-2].position+1 # note the change due to voice channel in category
+        print(channels)
+        print('')
         for channel in channels:
+            print(channel.name)
+            print(channel.position)
             if self.mark in channel.name:
                 idx = channel.position 
                 break
@@ -452,11 +501,16 @@ class BigHuntCog(commands.Cog):
 
         # update user of solve
         puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
+        now = datetime.utcnow() - timedelta(hours=5)
+        dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        
         if self.mark not in ctx.channel.name:
             emote = random.choice(['gemheart','bang','face_explode','face_hearts','face_openmouth','face_party','face_stars','party','rocket','star','mbot','slug'])
             filepath = './misc/emotes/'+emote+'.png'
             await ctx.send(content='`{}` marked as solved!'.format(puzzlename),file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
+            await logchannel.send('['+dt_string+' EST] :tada: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
         
@@ -496,6 +550,12 @@ class BigHuntCog(commands.Cog):
             
         filepath = './misc/emotes/szeth.png'
         await ctx.send(content='Fixed.',file=discord.File(filepath))
+
+        now = datetime.utcnow() - timedelta(hours=5)
+        dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        await logchannel.send('['+dt_string+' EST] Puzzle UNsolved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+
 
 
     @commands.command(aliases=['note'])
