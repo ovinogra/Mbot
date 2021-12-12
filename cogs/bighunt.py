@@ -251,6 +251,33 @@ class BigHuntCog(commands.Cog):
     ##### begin bot commands #####
 
     @commands.command()
+    async def bighelp(self,ctx,*,query=None):
+        embed = discord.Embed(
+            title='Commands',
+            colour=discord.Colour.dark_grey(),
+            description='All our puzzle data is summarized in a google sheet called Nexus. '\
+                'For the most part you should not have to edit it manually if these commands are used.'\
+                ' Ping an organizer if you are ever uncertain about any of these :)'
+        )
+        embed.add_field(name='Puzzle Manager',value=
+            '`!login` will show our team info and links\n'\
+            '`!login update` to update our team info (mod only) \n'\
+            '`!createround` will setup channels for a new round\n'\
+            '`!createpuzzle` (`!create`) will setup channel/sheet for a new puzzle\n'\
+            '`!createpuzzle Puzz Name -round=Round Name`\n'\
+            '`!solve HERRING` will make a puzzle as solved\n'\
+            '`!undosolve` if you messed up the channel?\n'\
+            '`!note backsolve` to leave solving notes about the puzzle\n'\
+            '`!listrounds` (`!rounds`) will show all rounds \n'\
+            '`!nexus` will show all our progress\n'\
+            '`!nexus -round=Round Name` show progress only from one round\n'\
+            '`!nexus -unsolved` \n'\
+            '`!check` bot setup during pre-hunt period (mod only)\n'\
+            ,inline=True)
+        await ctx.send(embed=embed)
+
+
+    @commands.command()
     @commands.guild_only()
     async def nexus(self,ctx,*,query=None):
         """ 

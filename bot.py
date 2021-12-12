@@ -41,22 +41,24 @@ bot.remove_command('help')
 async def help(ctx):
     embed = discord.Embed(
         title='Commands',
-        colour=discord.Colour.dark_grey()
+        colour=discord.Colour.dark_grey(),
+        description='For more details on the puzzle manager, ask for `!bighelp`'
     )
-    embed.add_field(name='Tools',value=
-        '**!nut**: Nutrimatic\n'\
-#        '**!qq**: Quipqiup\n'\
-        '**!cc**: Caesar cipher\n'\
-        '**!vig**: Vigenere cipher\n'\
-        '**!alpha**: A1Z26\n'\
-        '**!atbash**: atbash cipher\n'\
-        '**!atom**: Periodic table\n'\
-        '**!tag**: Other resources',inline=True)
     embed.add_field(name='Puzzle Manager',value=
-        '**!login** [update]\n'\
-        '**!nexus** [-unsolved] [-round=1]\n**!create** Name [-round=1]\n**!solve** ANSWER\n**!note** backsolve\n**!update** [-name=Name]\n**!undosolve**\n'\
-        '**!check** (setup only)',inline=True)
-    embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*, engage',inline=False)
+        '`!login`\n'\
+        '`!login update` (mod only)'\
+        '`!nexus [-unsolved] [-round=1]`\n`!create Name [-round=1]`\n`!solve ANSWER`\n`!note backsolve`\n`!update [-name=Name]`\n`!undosolve`\n'\
+        '`!check` (setup only)',inline=True)
+    embed.add_field(name='Tools',value=
+        '`!nut`: Nutrimatic\n'\
+    #    '`!qq`: Quipqiup\n'\
+        '`!cc`: Caesar cipher\n'\
+        '`!vig`: Vigenere cipher\n'\
+        '`!alpha`: A1Z26\n'\
+        '`!atbash`: atbash cipher\n'\
+        '`!atom`: Periodic table\n'\
+        '`!tag list`: Code cheatsheets available',inline=True)
+    embed.add_field(name='Fun',value='`!sz`, `!flip`, `!dice` *N S*, `engage`, talk to M-Bot',inline=False)
     embed.set_footer(text='@Moonrise#3554')
     await ctx.send(embed=embed)
 
