@@ -173,7 +173,7 @@ class BigHuntCog(commands.Cog):
 
         return lib
 
-    def nexus_add_round(self,wkbook,categoryobject):
+    def nexus_add_round(self,wkbook,categoryobject,generalchannelobject):
         """ add a row for the new round in third tab of nexus workbook """
 
         # fetch nexus data of rounds
@@ -181,7 +181,7 @@ class BigHuntCog(commands.Cog):
         data_all = sheet.get_all_values()
 
         # new row for round
-        temp = [categoryobject.name,str(categoryobject.id)]
+        temp = [categoryobject.name,str(categoryobject.id),str(generalchannelobject.id)]
 
         # append row to end of category/round list
         rownum = len(data_all)+1
@@ -340,9 +340,33 @@ class BigHuntCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(aliases=['rounds','listround','listrounds'])
+    @commands.guild_only()
+    async def list_rounds(self,ctx,*,query=None):
+        ''' list all rounds in nexus'''
+
+        nexus_url = await self.nexus_get_url(ctx)
+        data_all = self.nexus_get_wkbook(nexus_url).get_worksheet(2).get_all_values()
+
+        embed = discord.Embed(
+            title='Nexus Link',
+            colour=discord.Colour(0xfffff0),
+            url=nexus_url
+        )
+
+        roundnames = [item[0] for item in data_all[3:]]
+        generalids = [item[2] for item in data_all[3:]]
+
+        names = ''
+        for idx,name in enumerate(roundnames):
+            channel = discord.utils.get(ctx.guild.channels, id=int(generalids[idx]))
+            names += name+': '+channel.mention+'\n'
+
+        embed.add_field(name='All Rounds',value=names,inline=False)
+        await ctx.send(embed=embed)
 
 
-    @commands.command(aliases=['round','createround'])
+    @commands.command(aliases=['createround'])
     @commands.guild_only()
     async def create_round(self, ctx, *, query=None):
         """ round creation script to 
@@ -375,7 +399,7 @@ class BigHuntCog(commands.Cog):
         newcategory = await ctx.guild.create_category(query)
         newchannnel = await newcategory.create_text_channel(name=query+'-general')
         newvoicechannnel = await newcategory.create_voice_channel(name=query+'-general')
-        self.nexus_add_round(nexuswkbook,newcategory)
+        self.nexus_add_round(nexuswkbook,newcategory,newchannnel)
         
         # send feedback on round creation
         now = datetime.utcnow() - timedelta(hours=5)
@@ -489,11 +513,11 @@ class BigHuntCog(commands.Cog):
         # move channel down
         channels = ctx.message.channel.category.channels
         idx = channels[-2].position+1 # note the change due to voice channel in category
-        print(channels)
-        print('')
+        # print(channels)
+        # print('')
         for channel in channels:
-            print(channel.name)
-            print(channel.position)
+            # print(channel.name)
+            # print(channel.position)
             if self.mark in channel.name:
                 idx = channel.position 
                 break
