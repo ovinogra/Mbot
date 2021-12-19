@@ -12,7 +12,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='!',case_insensitive=True,intents=intents)
+bot = commands.Bot(command_prefix='?',case_insensitive=True,intents=intents)
 
 initial_extensions = ['misc',
                       'toolbox',
@@ -56,7 +56,7 @@ async def help(ctx):
         '**!nexus** [-unsolved] [-round=1]\n**!create** Name [-round=1]\n**!solve** ANSWER\n**!note** backsolve\n**!update** [-name=Name]\n**!undosolve**\n'\
         '**!check** (setup only)',inline=True)
     embed.add_field(name='Fun',value='**!sz**, **!flip**, **!dice** *N S*, engage',inline=False)
-    embed.set_footer(text='@Moonrise#3554')
+    embed.set_footer(text='https://github.com/Moonrise55/Mbot')
     await ctx.send(embed=embed)
 
 
