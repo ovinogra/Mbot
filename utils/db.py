@@ -129,7 +129,7 @@ class DBase:
 
     async def tag_get_all(self):
         
-        query1 = "SELECT tag_name FROM tags WHERE guild_id = '"+self.guildID+"';"
+        query1 = "SELECT tag_name FROM tags;"
         
         try:
             connection, cursor = self.connect()
@@ -145,7 +145,7 @@ class DBase:
     async def tag_get_row(self,tagname):
         ''' tagname: string '''
         
-        query1 = "SELECT tag_content FROM tags WHERE guild_id = '"+self.guildID+"' AND tag_name = '"+tagname+"';"
+        query1 = "SELECT tag_content FROM tags WHERE tag_name = '"+tagname+"';"
         
         try:
             connection, cursor = self.connect()
@@ -191,7 +191,7 @@ class DBase:
     async def tag_delete_row(self,tagname):
         ''' tagname: string '''
 
-        query1 = "DELETE FROM tags WHERE guild_id = '"+self.guildID+"' AND tag_name = '"+tagname+"';" 
+        query1 = "DELETE FROM tags WHERE tag_name = '"+tagname+"';" 
 
         try:
             connection, cursor = self.connect()

@@ -48,7 +48,7 @@ class TagsCog(commands.Cog):
                 final = []
                 for item in result:
                     final.append(item[0])
-
+            final.sort()
             embed = discord.Embed(title='Existing Tags', colour=discord.Colour.teal())
             
             p = Pages(ctx,solutions=final,embedTemp=embed)
