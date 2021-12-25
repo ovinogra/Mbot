@@ -1,4 +1,6 @@
 # practice.py
+import re
+
 import discord
 from discord.ext import commands
 import random
@@ -95,15 +97,15 @@ class MiscCog(commands.Cog):
             await message.channel.send('Pong!')
 
 
-        if message.content.lower().startswith('hello mbot') or message.content.lower().startswith('hi mbot'):
+        if re.match('(hi|hello),? m-?bot.*', message.content.lower()):
             await message.channel.send('Welcome again {}!'.format(message.author.mention))
 
 
-        if message.content.lower().startswith('bye mbot') or message.content.lower().startswith('goodbye mbot'):
+        if re.match('(bye|good-?bye),? m-?bot.*', message.content.lower()):
             await message.channel.send('Good night {}'.format(message.author.mention))
 
 
-        if message.content.lower().startswith('thanks mbot') or message.content.lower().startswith('thank you mbot'):
+        if re.match('(thanks|thank you|thx),? m-?bot.*', message.content.lower()):
             url = 'https://i.imgur.com/XZsOmxg.png?2'
             embed=discord.Embed()
             embed.set_image(url=url)
@@ -154,7 +156,9 @@ class MiscCog(commands.Cog):
                 "I’m so storming pure I practically belch rainbows.",
                 "Mocking a woman is like drinking too much wine. It may be fun for a short time, but the hangover is hell.",
                 "Inappropriate... like dividing by zero?",
-                "Women are fickle, but men are fools."
+                "Women are fickle, but men are fools.",
+                "I am not enthused by my first experiments in self-determination.",
+                "Mushroom locating AI. With supplementary espionage additions."
             ]
             response = random.choice(quotes)
             await message.channel.send(response)
