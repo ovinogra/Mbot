@@ -1,17 +1,17 @@
-	0	0	0	0	0	0	0	0	0	
+0	0	0	0	0	0	0	0	0	0	0
 0					Haven					0
-0							O4			0
-0		F2		F1						0
-0	Haven							O1	Haven	0
-0						O3		O5		0
-0		F4		F5	T1	T3	T2			0
-0			L1							0
-0	Start			Y1	Kress	Y4				0
-0		F3					O2			0
-0										0
-0					Y2					0
-0	Haven		L2		L3				Haven	0
-0						T4				0
-0				Y3						0
+0							O			0
+0		F	F	F		O		O		0
+0	Haven	F				O		O	Haven	0
+0		F				O		O		0
+0		F	F	F	T	TO	T	O		0
+0		F	L			TO		O		0
+0	Start	F	L	Y	Kress	YTO		O		0
+0		F	L	Y		YT	O			0
+0			L		Y	T				0
+0			L		Y	T				0
+0	Haven		L	L	LY	T			Haven	0
+0					Y	T				0
+0				Y						0
 0					Haven					0
-	0	0	0	0	0	0	0	0	0	
+0	0	0	0	0	0	0	0	0	0	0

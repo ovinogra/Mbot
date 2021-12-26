@@ -137,8 +137,8 @@ class MiscCog(commands.Cog):
         if 'quote' in message.content.lower():
             quotes = [
                 "What's the most important step a man can take? The next one.",
-                "What's the most important ~~step~~drink a man can take? The next one.",
-                "What's the most important ~~step~~puzzle a man can ~~take~~solve? The next one.",
+                "What's the most important ~~step~~ drink a man can take? The next one.",
+                "What's the most important ~~step~~ puzzle a man can ~~take~~ solve? The next one.",
                 "What's the most important puzzle a man can solve? The next one.",
                 'There is always another secret.',
                 'There is always another puzzle.',
@@ -158,7 +158,7 @@ class MiscCog(commands.Cog):
                 "Inappropriate... like dividing by zero?",
                 "Women are fickle, but men are fools.",
                 "I am not enthused by my first experiments in self-determination.",
-                "Mushroom locating AI. With supplementary espionage additions."
+                "Mushroom locating AI. With supplementary espionage additions. At your service."
             ]
             response = random.choice(quotes)
             await message.channel.send(response)

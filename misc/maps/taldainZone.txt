@@ -1,10 +1,10 @@
-	0	0	0	0	0	0	0	0		
-0	Start	b	ok	w	m	kr	h	u	0	
-0	d	ni	c	ar	i	s	sn	r	0	
-0	m	o	li	e	o	in	ch	s	0	
-0	t	y	p	ng	st	r	o	br	0	
-0	p	k	a	ze	k	wi	n	e	0	
-0	u	n	sp	d	nt	a	i	g	0	
-0	b	sh	r	a	j	ga	an	vi	0	
-0	ng	f	c	om	ed	et	r	p	0	
-	0	0	0	0	0	0	0	0		
+	0	0	0	0	0	0	0	0	
+0	Start	b	ro	b	m	kr	h	u	0
+0	d	ni	c	ar	i	se	sn	r	0
+0	m	o	iu	rp	o	ni	ch	s	0
+0	ty	y	p	ng	st	en	o	br	0
+0	p	k	a	lo	k	wi	m	e	0
+0	u	e	sp	d	t	a	i	po	0
+0	w	sh	r	v	j	ga	an	vi	0
+0	ng	f	c	mo	l	te	r	x	0
+	0	0	0	0	0	0	0	0	
