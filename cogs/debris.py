@@ -118,7 +118,7 @@ class DebrisCog(commands.Cog):
                     'I really want to know what is at the edge of the dark matter areas.'\
                     '\nWhich direction do you want to go?'
             elif self.world == 'scadrial':
-                prompt = 'We start floating in a vastless space. Too bad my database got damaged and the map is incomplete. Maybe you can deduce the rest. '\
+                prompt = 'We start floating in a vastless space. Too bad the map is incomplete, but something about unique numbers in each 3x3 area. Maybe you can deduce the rest.'\
                     '\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
