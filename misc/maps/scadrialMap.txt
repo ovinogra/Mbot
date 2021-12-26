@@ -1,11 +1,11 @@
-	0	0	0	0	0	0	0	0	0		
-0	Zone	Space	Zone	Space	Zone	Space	Zone	Space	Space	0	
-0	Zone	Space	Select	Space	Space	Zone	Space	Space	Space	0	
-0	Space	Zone	Space	Space	Space	Zone	Zone	Zone	Select	0	
-0	Space	Space	Zone	Space	Space	Space	Select	Zone	Space	0	
-0	Zone	Space	Zone	Zone	Kress	Zone	Zone	Space	Zone	0	
-0	Space	Zone	Space	Space	Space	Select	Zone	Space	Select	0	
-0	Space	Zone	Zone	Zone	Select	Space	Space	Zone	Select	0	
-0	Space	Space	Space	Zone	Space	Space	Space	Space	Zone	0	
-0	Space	Space	Zone	Space	Zone	Start	Zone	Select	Zone	0	
-	0	0	0	0	0	0	0	0	0		
+	0	0	0	0	0	0	0	0	0	
+0	Zone	Space	Zone	Space	Zone	Space	Zone	Space	Space	0
+0	Zone	Space	Select	Space	Space	Zone	Select	Select	Space	0
+0	Space	Zone	Space	Space	Space	Zone	Zone	Zone	Select	0
+0	Space	Zone	Space	Space	Space	Space	Zone	Select	Zone	0
+0	Zone	Select	Zone	Zone	Kress	Zone	Zone	Space	Zone	0
+0	Space	Zone	Space	Space	Space	Space	Zone	Space	Space	0
+0	Zone	Zone	Zone	Zone	Space	Space	Select	Zone	Space	0
+0	Space	Select	Space	Zone	Space	Space	Space	Space	Select	0
+0	Space	Space	Zone	Space	Zone	Start	Zone	Select	Zone	0
+	0	0	0	0	0	0	0	0	0	

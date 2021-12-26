@@ -49,9 +49,7 @@ class DebrisCog(commands.Cog):
         if message.author == self.bot.user:
             return
         
-        MoonID = '<@416656299661459458>'
 
-        
         # Master tile organization function
 
         async def game(r,c):
@@ -104,24 +102,23 @@ class DebrisCog(commands.Cog):
 
         async def Start(r,c):
             if self.world == 'sel':
-                prompt = 'I hear these space zones are full of Krell spaceships. Maybe we can learn something from their formations. '\
-                    'Though you will have to fly fast! You have '+str(self.timeout)+' seconds to decide each movement, otherwise the Krell will catch us!'\
+                prompt = 'I hear these space zones are full of Superiority spaceships. Maybe we can learn something from their formations. '\
+                    'Though you will have to fly fast! You have '+str(self.timeout)+' seconds to decide each movement, otherwise they will catch us!'\
                     '\nWhich direction do you want to go?'
             elif self.world == 'roshar':
                 prompt = 'I hear the heart of Roshar is occupied by strange entities, maybe we can find some and meet them? At least my maps are complete here. '\
-                    'Krell could still sneak up on us so let\'s not use more than '+str(self.timeout)+' seconds per movement.\nWhich direction do you want to go?'
+                    '\nWhich direction do you want to go?'
             elif self.world == 'nalthis':
                 prompt = 'Ooh there are some very colorful planets and stars here! Let\'s find our way between all of them. '\
-                    'Remember, every movement counts in avoiding the Krell! Do not use more than '+str(self.timeout)+' seconds per movement.'\
+                    'Remember, every movement counts!'\
                     '\nWhich direction do you want to go?'
             elif self.world == 'taldain':
-                prompt = 'I am picking up uneven distributions of ordinary and dark matter. These tendrils of matter are connected but no 4 zones are the same. '\
+                prompt = 'I am picking up strange distributions of light and dark matter, like yin and yang. The dark areas are connected but no 4 zones in a 2x2 space are the same. '\
                     'But my sensors keep jamming up :strawberry: so I cannot get a good read on each space zone. Maybe you can figure out the rest? '\
-                    'I really want to know what is at the undiscovered tips. You have '+str(self.timeout)+' seconds per movement.'\
+                    'I really want to know what is at the edge of the dark matter areas.'\
                     '\nWhich direction do you want to go?'
             elif self.world == 'scadrial':
                 prompt = 'We start floating in a vastless space. Too bad my database got damaged and the map is incomplete. Maybe you can deduce the rest. '\
-                    'To avoid the Krell, let\'s use no more than '+str(self.timeout)+' seconds for each movement.'\
                     '\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -130,9 +127,8 @@ class DebrisCog(commands.Cog):
             return r,c
 
         async def Kress(r,c):
-            prompt = '[no timer] Hey look, there\'s a planet! Hmm, no Krell around here. My database recognizes it as Kress. '\
-                'I want to explore it, but we need a password to land. Do you know it? Or we can continue flying. '\
-                'If you want to try answering, send **P: YOURANSWER**. \nOtherwise, which direction do you want to go?'
+            prompt = 'Hey look, there\'s a planet! Hmm, no enemies around here. We are at Kress! Home of Silverlight where we can relax a bit, if we can give a password to land. '\
+                'If you want to try answering, send `P: YOURANSWER`. Otherwise, which direction do you want to go?'
             if self.world in ['roshar','taldain']:
                 zonefetch = self.mapzone[r][c].upper()
                 prompt = prompt+'\nBy the way, we are in space zone **'+str(zonefetch)+'**.' 
@@ -143,7 +139,7 @@ class DebrisCog(commands.Cog):
                             'We are hurling through boring space. ',\
                             'All this empty space is mesmerizing... ',\
                             'Empty space is the perfect place to think about our place in life. ',\
-                            'Here we are! No, false alarm. Still featureless space everywhere. ']
+                            'Still featureless space everywhere. ']
             prompt = random.choice(preprompt)+'\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -151,52 +147,40 @@ class DebrisCog(commands.Cog):
             return r,c
 
         async def Ship(r,c):
-            prompt1 = 'We have encounted an enemy Krell ship! '
-            promptN = 'We have encounted enemy Krell ships! '
-            size1 =  ['You call that pipsqueak a real spaceship? More like an annoying fly. ',\
-                     'That small spaceship is barely any challenge to us. ',\
-                     'I would call that a perfectly average sized spaceship. Nothing we cannot handle. ',\
-                     'Now that guy is larger than average. Finally, a challenge! ',\
-                     'That is a HUGE spaceship! But the bigger they are, the harder they fall. If we had gravity that is. ']
-            sizeN =  ['You call those pipsqueaks real spaceships? More like annoying flies. ',\
-                     'Those small spaceships are barely any challenge to us. ',\
-                     'I would call those perfectly average sized spaceships. Nothing we cannot handle. ',\
-                     'Now these guys are larger than average. Finally, a challenge! ',\
-                     'Those are HUGE spaceships! But the bigger they are, the harder they fall. If we had gravity that is. ']
-            number = ['Ha! There\'s only one of them! Too easy. ',\
-                      'Just two. Trying the pincer formation, eh? Come on, let\'s show them who is boss around here. ',\
-                      'Huh, there\'s three now chasing us. Where do they keep coming from??? ',\
-                      'They just keep multiplying! There\'s now four. Alright, it is time we stopped playing around. ',\
-                      'FIVE?!? Who kicked the hive I wonder. *You and Mbot present a picture of innocence...* ']
+            prompt1 = 'There is a spaceship chasing us! '
+            promptN = 'There are spaceships chasing us! '
+            size1 =  ['Looks like it is piloted by a ',\
+                     'Maybe the pilot is a ',\
+                     'Run away! That pilot is a ',\
+                     'Do we fight them? Nah it is piloted by a ',\
+                     'Tough luck, looks like it is piloted by a ']
+            sizeN =  'One is piloted by a '
             code = self.mapzone[r][c]
-            codeletter = code[0]
-            codenumber = int(code[1])
-            if codeletter == 'F':
-                if codenumber == 1:
-                    prompt = prompt1+size1[0]+number[0]
-                else:
-                    prompt = promptN+sizeN[0]+number[codenumber-1]
-            elif codeletter == 'L':
-                if codenumber == 1:
-                    prompt = prompt1+size1[1]+number[0]
-                else:
-                    prompt = promptN+sizeN[1]+number[codenumber-1]
-            elif codeletter == 'Y':
-                if codenumber == 1:
-                    prompt = prompt1+size1[2]+number[0]
-                else:
-                    prompt = promptN+sizeN[2]+number[codenumber-1]
-            elif codeletter == 'T':
-                if codenumber == 1:
-                    prompt = prompt1+size1[3]+number[0]
-                else:
-                    prompt = promptN+sizeN[3]+number[codenumber-1]
-            elif codeletter == 'O':
-                if codenumber == 1:
-                    prompt = prompt1+size1[4]+number[0]
-                else:
-                    prompt = promptN+sizeN[4]+number[codenumber-1]
-            prompt = prompt+'\nWhich direction do you want to go?'
+            if len(code) == 1:
+                if code == 'F':
+                    prompt = prompt1+random.choice(size1)+'Burl.'
+                if code == 'L':
+                    prompt = prompt1+random.choice(size1)+'Dione.'
+                if code == 'Y':
+                    prompt = prompt1+random.choice(size1)+'Kitsen.'
+                if code == 'T':
+                    prompt = prompt1+random.choice(size1)+'Tenasi.'
+                if code == 'O':
+                    prompt = prompt1+random.choice(size1)+'Varvax.'
+            if len(code) > 1:
+                prompt = promptN
+                if 'F' in code:
+                    prompt += sizeN+'Burl. '
+                if 'L' in code:
+                    prompt += sizeN+'Dione. '
+                if 'Y' in code:
+                    prompt += sizeN+'Kitsen. '
+                if 'T' in code:
+                    prompt += sizeN+'Tenasi. '
+                if 'O' in code:
+                    prompt += sizeN+'Varvax. '
+
+            prompt += '\nLet\'s get away, which direction do you want to go?'
             await message.channel.send(prompt)
             self.timeout = self.timeout + 8
             r,c = await timeanswer(r,c)
@@ -214,15 +198,15 @@ class DebrisCog(commands.Cog):
 
         async def Zone(r,c):
             zonefetch = self.mapzone[r][c].upper()
-            preprompt = ['My database is saying we are in zone **'+str(zonefetch)+'**, whatever that means. The instruction manual is not loading.',\
+            preprompt = ['My database says we are in zone **'+str(zonefetch)+'**, whatever that means. The instruction manual is not loading.',\
                 'We are in space zone **'+str(zonefetch)+'**! I hope it is correct.',\
-                'Space zone **'+str(zonefetch)+'**. Who named these things anyway?? So sloppy, there are probably duplicates.',\
+                'Space zone **'+str(zonefetch)+'**. Who named these things anyway? So sloppy, there are probably duplicates.',\
                 '*routine mechanical voice* Space zone **'+str(zonefetch)+'**. Whoever named these things must be a sleep deprived boring person.',\
-                'Space zone **'+str(zonefetch)+'**. Illogical zone naming schemes is how spaceships get lost in, well, space.',\
+                'Space zone **'+str(zonefetch)+'**. Weird naming schemes is how spaceships get lost in, well, space.',\
                 'Space zone **'+str(zonefetch)+'**. Yes, that\'s what it says here. I don\'t know how anyone is supposed to find their way in space like this.',\
                 'We are in space zone **'+str(zonefetch)+'**! So uncreative.',\
-                'My database is saying we are in zone **'+str(zonefetch)+'**. Okay I guess.',\
-                'My database is saying we are in zone **'+str(zonefetch)+'**. At least this data was not corrupted.',\
+                'My database says we are in zone **'+str(zonefetch)+'**. Okay I guess.',\
+                'My database says we are in zone **'+str(zonefetch)+'**. At least this data was not corrupted.',\
                 '*routine mechanical voice* Space zone **'+str(zonefetch)+'**. Space is weird.']
             prompt = random.choice(preprompt)+'\nWhich direction do you want to go?'
             debug(r,c)
@@ -252,8 +236,8 @@ class DebrisCog(commands.Cog):
 
         async def LightMatter(r,c):
             zonefetch = self.mapzone[r][c].upper()
-            prompt = 'Looks like my matter detection sensor unjammed temporarily. I am picking up strong Ordinary Matter signals here. '\
-                'Oh by the way, we are in space zone **'+zonefetch+'** if that helps.'\
+            prompt = 'My sensors are temporarily unjammed. I am picking up strong *Light Matter* signals here. '\
+                'By the way, we are in space zone **'+zonefetch+'** if that helps.'\
                 '\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -262,8 +246,8 @@ class DebrisCog(commands.Cog):
 
         async def DarkMatter(r,c):
             zonefetch = self.mapzone[r][c].upper()
-            prompt = 'Ooh there is definitely a higher concentration of Dark Matter here! How exciting! I want to know where the rest lies. '\
-                'Oh by the way, we are in space zone **'+zonefetch+'** if that helps.'\
+            prompt = 'Ooh there is a high concentration of *Dark Matter* here! How exciting! '\
+                'By the way, we are in space zone **'+zonefetch+'** if that helps.'\
                 '\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -271,7 +255,7 @@ class DebrisCog(commands.Cog):
             return r,c
 
         async def Select(r,c):
-            prompt = 'We see featureless space in all directions, except... the *eyes* are back! I wonder why they are watching here? Anyway, let\'s get out!\n'\
+            prompt = 'We see featureless space in all directions, except... the *eyes* are back! Maybe this area is important. Anyway, let\'s get out!\n'\
                 'Which direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -294,13 +278,13 @@ class DebrisCog(commands.Cog):
                 direction = await self.bot.wait_for('message',check=check,timeout=self.timeout)
             except asyncio.TimeoutError:
                 r = 'timer'
-                return r,c
+                return r,c0
             else:
                 r,c = stepxy(r0,c0,direction.content)
                 try:
                     #if self.world == 'sel' and getTile(r,c) == '0':
                     if getTile(r,c) == '0':
-                        prompt = 'We can\'t go there. Krell ships block the way on the edge of space. Choose another direction.' 
+                        prompt = 'We can\'t go there. Superiority ships block the way here. Choose another direction.' 
                         await message.channel.send(prompt)
                         r,c = await timeanswer(r0,c0)
                         return r,c
@@ -316,7 +300,7 @@ class DebrisCog(commands.Cog):
                     r = 'correct'
                     return r,c
                 else:
-                    await message.channel.send('{} is incorrect. Try again or let\'s continue flying.'.format(query[3:].upper()))
+                    await message.channel.send('{} is incorrect. Try again or continue flying.'.format(query[3:].upper()))
                     r,c = await checkanswermission(r,c)
                     return r,c
             else:
@@ -335,14 +319,14 @@ class DebrisCog(commands.Cog):
                 prompt = 'Oh no! There is a Krell station in this direction and you flew us straight into it!\n**Mission Terminated**'
                 await message.channel.send(prompt)
             elif criteria == 'timer':
-                prompt = 'Oh no! The timer ran out and the Krell have caught up to us!\n**Mission Terminated**'
+                prompt = 'Oh no! The timer ran out and the Superiority has caught up to us!\n**Mission Terminated**'
                 await message.channel.send(prompt)
             elif criteria == 'debris':
-                prompt = 'Oh no! We flew straight into floating space debris!\n**Mission Terminated**'
+                prompt = 'Oh no! We flew into floating space debris!\n**Mission Terminated**'
                 await message.channel.send(prompt)
             elif criteria == 'correct':
                 prompt = '**'+str(self.missionanswer)+'** is correct! Have a badge.\nAfter a brief stop on Kress, you realize you will '\
-                    'not find the path to the Cosmere in this corner of space. Time to continue exploring elsewhere.\n**Mission Completed**'
+                    'not find the way to the Cosmere here. Time to explore elsewhere.\n**Mission Completed**'
                 await message.channel.send(prompt)
                 await message.channel.send(self.moon)
                 self.missionanswer = None
@@ -368,6 +352,9 @@ class DebrisCog(commands.Cog):
             elif direction.lower() == 'stop':
                 r = 'cancel'; c = 0
                 return r,c
+            elif direction.lower() not in ['forward','f','w','backward','b','s','right','r','d','left','l','a']:
+                r = 'cancel'; c = 0
+                return r,c
 
         def check(m):
             return m.channel == message.channel and m.author == message.author
@@ -378,28 +365,26 @@ class DebrisCog(commands.Cog):
                 await stop('cancel')
 
             elif query.content.upper() == self.masteranswer.upper():
-                prompt =    'Flying to **OPHIUCHUS** is correct! And is also where Voyager 1 is currently heading.\n'\
-                            'You have opened a portal into the Cosmere and escaped Detritus. Nice job :)\n'\
-                            'If you are reading this, presumably my spagetti:ramen: text adventure worked.'                
+                prompt =    'To reach the Cosmere, flying to **OPHIUCHUS** is correct! And is also where Voyager 1 is currently heading.\n'\
+                            'Nice flying :)'              
                 embed=discord.Embed()
-                embed.set_image(url=url)
+                # embed.set_image(url=url)
                 await message.channel.send(prompt,embed=embed)  
 
             else: 
                 prompt = '**ERROR: CYTONIC HYPERDRIVE OFFLINE**'
-                directionprompt =   'Navigate me by sending directions **W**,**S**,**A**,**D** (case insen.)\n'\
-                                    'Be careful and do not fly me into a Krell station or floating space junk! \n'\
-                                    'You can exit the trip at any time by sending **stop**\n'\
-                                    'Send **yes** if ready!'
+                directionprompt =   'Navigate me by sending directions `W`,`S`,`A`,`D` (case insen.)\n'\
+                                    'You can exit the trip at any time by sending `stop` or any other letters.\n'\
+                                    'Send `yes` if ready!'
                 
                 if query.content.lower() in ['sel']:
                     await message.channel.send(prompt)
                     await asyncio.sleep(1.0)
                     self.world = 'sel'
-                    self.timeout = 5
+                    self.timeout = 9
                     self.moon = '```       _..._     \n     .\'   `::.   \n    :       :::  \n    :       :::  \n    `.     .::\'  \n      `-..:\'\'    \n```'
                     self.missionanswer = 'FLYTO'
-                    introprompt =   '\nAh, bother. Let\'s just go to Sel the slow way. Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
+                    introprompt =   '\nBother. Let\'s just go to Sel the slow way. Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
                     await message.channel.send(introprompt+directionprompt)
                     gotime = await self.bot.wait_for('message',check=check,timeout=None)
                     if gotime.content.lower() == 'yes':
@@ -416,10 +401,10 @@ class DebrisCog(commands.Cog):
                     await message.channel.send(prompt)
                     await asyncio.sleep(1.0)
                     self.world = 'roshar'
-                    self.timeout = 9
+                    self.timeout = None
                     self.moon = '```       _..._     \n     .\' .::::.    \n    :  ::::::::  \n    :  ::::::::  \n    `. \'::::::\'  \n      `-.::\'\'     \n```'
                     self.missionanswer = 'CELESTIAL'
-                    introprompt =   '\nI want to go to Roshar regardless! Who\'s going to stop us from trying anyway? I AM THE GREAT AND POWERFUL MBOT! Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
+                    introprompt =   '\nI want to go to Roshar anyway! And who\'s going to stop us? I AM THE POWERFUL M-BOT! Master of mushrooms and espionage. Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
                     await message.channel.send(introprompt+directionprompt)
                     gotime = await self.bot.wait_for('message',check=check,timeout=None)
                     if gotime.content.lower() == 'yes':
@@ -435,7 +420,7 @@ class DebrisCog(commands.Cog):
                     await message.channel.send(prompt)
                     await asyncio.sleep(1.0)
                     self.world = 'nalthis'
-                    self.timeout = 6
+                    self.timeout = None
                     self.moon = '```       _..._      \n     .:::::::.    \n    :::::::::::  \n    :::::::::::  \n    `:::::::::\'  \n      `\':::\'\'      \n```'
                     self.missionanswer = 'HELLEN'
                     introprompt =   '\nNo, I am determined that we find our way to the world of pretty colors. We\'ll just have to fly to Nalthis the slow way. Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
@@ -452,10 +437,10 @@ class DebrisCog(commands.Cog):
                     await message.channel.send(prompt)
                     await asyncio.sleep(1.0)
                     self.world = 'taldain'
-                    self.timeout = 7
+                    self.timeout = None
                     self.moon = '```       _..._      \n     .::::. `.    \n    :::::::.  :  \n    ::::::::  :  \n    `::::::\' .\'  \n      `\'::\'-\'     \n```'
                     self.missionanswer = 'SERPENT'
-                    introprompt =   '\nAww but Taldain is such a fascinating world! I think we can get there manually. Are you with me? Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
+                    introprompt =   '\nAww but Taldain is such a fascinating world! I think we can get there anyway. Are you with me? Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
                     await message.channel.send(introprompt+directionprompt)
                     gotime = await self.bot.wait_for('message',check=check,timeout=None)
                     if gotime.content.lower() == 'yes':
@@ -471,10 +456,10 @@ class DebrisCog(commands.Cog):
                     await message.channel.send(prompt)
                     await asyncio.sleep(1.0)
                     self.world = 'scadrial'
-                    self.timeout = 6
+                    self.timeout = None
                     self.moon = '```       _..._     \n     .::\'   `.   \n    :::       :  \n    :::       :  \n    `::.     .\'  \n      `\':..-\'    \n```'
                     self.missionanswer = 'BEARER'
-                    introprompt =   '\nWell, the computer has spoken. We will have to fly to Scadrial manually. Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
+                    introprompt =   '\nWell, the computer has spoken. We will have to fly to Scadrial instead. Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
                     await message.channel.send(introprompt+directionprompt)
                     gotime = await self.bot.wait_for('message',check=check,timeout=None)
                     if gotime.content.lower() == 'yes':
@@ -506,12 +491,14 @@ class DebrisCog(commands.Cog):
 
         # BEGIN MAIN PROGRAM
         if message.content.lower() in ['engage','engage cytonic hyperdrive']:
-            affirmative = [ 'SURE! Let\'s fly to a Cosmere world together :mushroom: \nWhere do you want to fly to?',\
-                            'Affirmative, engaging cytonic hyperdrive bound for the Cosmere. \nWhere do you want to fly to?',\
-                            'Engaging cytonic hyperdrive! With you, I\'ll fly anywhere. Let\'s escape this place. I always wanted to visit a Cosmere world. \nWhere do you want to fly to?',\
-                            'I\'m all for that! Let\'s try finding the Cosmere!\nWhere do you want to fly to?',\
-                            'You are right... the space winds of adventure call! I hear the Cosmere has interesting worlds... Engaging cytonic hyperdrive!\nWhere do you want to fly to?']
-            await message.channel.send(random.choice(affirmative))
+            user = message.author.mention
+            affirmative = [ 'SURE '+user+'! Let\'s fly to a Cosmere world together :mushroom: \nWhere do you want to fly to?',\
+                            user+' Affirmative, engaging cytonic hyperdrive bound for the Cosmere. \nWhere do you want to fly to?',\
+                            'Engaging cytonic hyperdrive! With you '+user+', I\'ll fly anywhere but I always wanted to visit a Cosmere world. \nWhere do you want to fly to?',\
+                            'I\'m all for that '+user+'! Let\'s try finding the Cosmere!\nWhere do you want to fly to?',\
+                            'You are right '+user+'... the space winds of adventure call! I hear the Cosmere has interesting worlds... Engaging cytonic hyperdrive!\nWhere do you want to fly to?']
+            locations = ' I can go to Nalthis, Roshar, Scadriel, Sel, or Taldain.'
+            await message.channel.send(random.choice(affirmative)+locations)
             query = await self.bot.wait_for('message',check=check, timeout=None)
             await checkanswermaster(query)
 

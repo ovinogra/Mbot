@@ -12,7 +12,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='!',case_insensitive=True,intents=intents)
+bot = commands.Bot(command_prefix='?',case_insensitive=True,intents=intents)
 
 initial_extensions = ['misc',
                       'toolbox',
@@ -23,7 +23,7 @@ initial_extensions = ['misc',
                       'puzzle',
                       'archive']
 
-#initial_extensions = ['tags']
+#initial_extensions = ['debris']
 
 @bot.event
 async def on_ready():
