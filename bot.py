@@ -23,7 +23,7 @@ initial_extensions = ['misc',
                       'puzzle',
                       'archive']
 
-initial_extensions = ['debris']
+#initial_extensions = ['debris']
 
 @bot.event
 async def on_ready():

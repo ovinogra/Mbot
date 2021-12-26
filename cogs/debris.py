@@ -139,7 +139,7 @@ class DebrisCog(commands.Cog):
                             'We are hurling through boring space. ',\
                             'All this empty space is mesmerizing... ',\
                             'Empty space is the perfect place to think about our place in life. ',\
-                            'Here we are! No, false alarm. Still featureless space everywhere. ']
+                            'Still featureless space everywhere. ']
             prompt = random.choice(preprompt)+'\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -236,8 +236,8 @@ class DebrisCog(commands.Cog):
 
         async def LightMatter(r,c):
             zonefetch = self.mapzone[r][c].upper()
-            prompt = 'My sensors temporarily unjammed. I am picking up strong *Light Matter* signals here. '\
-                'Oh by the way, we are in space zone **'+zonefetch+'** if that helps.'\
+            prompt = 'My sensors are temporarily unjammed. I am picking up strong *Light Matter* signals here. '\
+                'By the way, we are in space zone **'+zonefetch+'** if that helps.'\
                 '\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -247,7 +247,7 @@ class DebrisCog(commands.Cog):
         async def DarkMatter(r,c):
             zonefetch = self.mapzone[r][c].upper()
             prompt = 'Ooh there is a high concentration of *Dark Matter* here! How exciting! '\
-                'Oh by the way, we are in space zone **'+zonefetch+'** if that helps.'\
+                'By the way, we are in space zone **'+zonefetch+'** if that helps.'\
                 '\nWhich direction do you want to go?'
             debug(r,c)
             await message.channel.send(prompt)
@@ -300,7 +300,7 @@ class DebrisCog(commands.Cog):
                     r = 'correct'
                     return r,c
                 else:
-                    await message.channel.send('{} is incorrect. Try again or let\'s continue flying.'.format(query[3:].upper()))
+                    await message.channel.send('{} is incorrect. Try again or continue flying.'.format(query[3:].upper()))
                     r,c = await checkanswermission(r,c)
                     return r,c
             else:
@@ -322,11 +322,11 @@ class DebrisCog(commands.Cog):
                 prompt = 'Oh no! The timer ran out and the Superiority has caught up to us!\n**Mission Terminated**'
                 await message.channel.send(prompt)
             elif criteria == 'debris':
-                prompt = 'Oh no! We flew straight into floating space debris!\n**Mission Terminated**'
+                prompt = 'Oh no! We flew into floating space debris!\n**Mission Terminated**'
                 await message.channel.send(prompt)
             elif criteria == 'correct':
                 prompt = '**'+str(self.missionanswer)+'** is correct! Have a badge.\nAfter a brief stop on Kress, you realize you will '\
-                    'not find the way to the Cosmere here. Time to continue exploring elsewhere.\n**Mission Completed**'
+                    'not find the way to the Cosmere here. Time to explore elsewhere.\n**Mission Completed**'
                 await message.channel.send(prompt)
                 await message.channel.send(self.moon)
                 self.missionanswer = None
@@ -373,15 +373,15 @@ class DebrisCog(commands.Cog):
 
             else: 
                 prompt = '**ERROR: CYTONIC HYPERDRIVE OFFLINE**'
-                directionprompt =   'Navigate me by sending directions **W**,**S**,**A**,**D** (case insen.)\n'\
-                                    'You can exit the trip at any time by sending **stop** or any other letters.\n'\
-                                    'Send **yes** if ready!'
+                directionprompt =   'Navigate me by sending directions `W`,`S`,`A`,`D` (case insen.)\n'\
+                                    'You can exit the trip at any time by sending `stop` or any other letters.\n'\
+                                    'Send `yes` if ready!'
                 
                 if query.content.lower() in ['sel']:
                     await message.channel.send(prompt)
                     await asyncio.sleep(1.0)
                     self.world = 'sel'
-                    self.timeout = 5
+                    self.timeout = 9
                     self.moon = '```       _..._     \n     .\'   `::.   \n    :       :::  \n    :       :::  \n    `.     .::\'  \n      `-..:\'\'    \n```'
                     self.missionanswer = 'FLYTO'
                     introprompt =   '\nBother. Let\'s just go to Sel the slow way. Maybe we can find a shortcut to the Cosmere somewhere... \n\n'
@@ -490,7 +490,7 @@ class DebrisCog(commands.Cog):
 
 
         # BEGIN MAIN PROGRAM
-        if message.content.lower() in ['en','engage cytonic hyperdrive']:
+        if message.content.lower() in ['engage','engage cytonic hyperdrive']:
             user = message.author.mention
             affirmative = [ 'SURE '+user+'! Let\'s fly to a Cosmere world together :mushroom: \nWhere do you want to fly to?',\
                             user+' Affirmative, engaging cytonic hyperdrive bound for the Cosmere. \nWhere do you want to fly to?',\
