@@ -12,7 +12,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='?',case_insensitive=True,intents=intents)
+bot = commands.Bot(command_prefix='!',case_insensitive=True,intents=intents)
 
 initial_extensions = ['misc',
                        'toolbox',

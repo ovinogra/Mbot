@@ -37,7 +37,7 @@ class BigHuntCog(commands.Cog):
         self.bot = bot
         self.mark = '✅'
         #self.mark = '✔'
-        self.logfeed = 805502275107815466
+        self.logfeed = 913855656694530059
 
         # import credentials
         load_dotenv()
