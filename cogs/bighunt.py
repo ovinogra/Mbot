@@ -267,9 +267,9 @@ class BigHuntCog(commands.Cog):
             ,inline=False)
         embed.add_field(name='Update hunt/puzzle data',value=
             '`!login update` to update our team info (mod only) \n'\
-            '`!createround RoundName` to setup channels for a new round\n'\
+            '`!createround RoundName` to setup a category for a new round\n'\
             '`!createpuzzle PuzzName` (`!create`) to setup channel/sheet for a new puzzle\n'\
-            '`!createpuzzle Puzz Name -round=Round Name`\n'\
+            '`!createpuzzle PuzzName -round=Round Name`\n'\
             '`!solve HERRING` to mark a puzzle as solved\n'\
             '`!undosolve` to unsolve a puzzle if you marked a solve in the wrong channel\n'\
             '`!note Backsolve` to leave any short solving notes about the puzzle\n'\
