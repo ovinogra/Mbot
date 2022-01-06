@@ -200,7 +200,7 @@ class BigHuntCog(commands.Cog):
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(data_all[2]))
         sheet.append_row(temp,table_range=table_range)
 
-    def nexus_add_puzzle(self,nexussheet,puzzlechannel,puzzlename,puzzlesheeturl,roundmarker):
+    def nexus_add_puzzle(self,nexussheet,puzzlechannel,puzzlename,puzzlesheeturl,roundmarker,roundname):
         """ add channel id, puzzle name, link, priority=New """
 
         # fetch nexus data and sort headings
@@ -215,7 +215,7 @@ class BigHuntCog(commands.Cog):
         temp[lib['Puzzle Name'][0]] = puzzlename
         temp[lib['Spreadsheet Link'][0]] = puzzlesheeturl
         if roundmarker:
-            temp[lib['Round'][0]] = roundmarker
+            temp[lib['Round'][0]] = roundmarker+' '+roundname 
 
         # append row to end of nexus puzzle list
         rownum = len(data_all)+1
@@ -262,9 +262,9 @@ class BigHuntCog(commands.Cog):
             '`!nexus` to show all puzzles unlocked/solved\n'\
             '`!nexus -round=Round Name` to show puzzles from only one round\n'\
             '`!nexus -unsolved` to show only unsolved puzzles \n'\
-            '`!listrounds` (`!rounds`) to show all rounds \n'\
+            '`!listrounds` (`!rounds`) to show all hunt rounds \n'\
             '`!check` that bot is setup during pre-hunt period (mod only)\n'\
-            ,inline=True)
+            ,inline=False)
         embed.add_field(name='Update hunt/puzzle data',value=
             '`!login update` to update our team info (mod only) \n'\
             '`!createround RoundName` to setup channels for a new round\n'\
@@ -274,7 +274,7 @@ class BigHuntCog(commands.Cog):
             '`!undosolve` to unsolve a puzzle if you marked a solve in the wrong channel\n'\
             '`!note Backsolve` to leave any short solving notes about the puzzle\n'\
             '`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` to update a field in Nexus\n'\
-            ,inline=True)
+            ,inline=False)
         await ctx.send(embed=embed)
 
 
@@ -504,7 +504,7 @@ class BigHuntCog(commands.Cog):
         newsheet_url = self.puzzle_sheet_make(nexussheet,puzzlename)
         msg = await newchannel.send(newsheet_url)
         await msg.pin()
-        self.nexus_add_puzzle(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundmarker=roundmarker)
+        self.nexus_add_puzzle(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundmarker=roundmarker,roundname=roundname)
         
 
         # send final feedback 

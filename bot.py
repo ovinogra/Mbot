@@ -58,7 +58,7 @@ async def help(ctx):
         '`!atom`: Periodic table\n'\
         '`!tag list`: Code cheatsheets available',inline=True)
     embed.add_field(name='Fun',value='`!sz`, `!flip`, `!dice` *N S*, `engage`, talk to M-Bot',inline=False)
-    embed.set_footer(text='@Moonrise#3554')
+    embed.set_footer(text='https://github.com/Moonrise55/Mbot')
     await ctx.send(embed=embed)
 
 
