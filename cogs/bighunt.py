@@ -155,6 +155,12 @@ class BigHuntCog(commands.Cog):
         url = await db.hunt_get_row(query)
         return url[0]
 
+    def nexus_get_wkbook(self,url):
+        nexus_key = max(url.split('/'),key=len)
+        gclient = self.gclient()
+        wkbook = gclient.open_by_key(nexus_key)
+        return wkbook
+
     def nexus_get_sheet(self,url):
         nexus_key = max(url.split('/'),key=len)
         gclient = self.gclient()
@@ -162,11 +168,7 @@ class BigHuntCog(commands.Cog):
         sheet = wkbook.sheet1
         return sheet
 
-    def nexus_get_wkbook(self,url):
-        nexus_key = max(url.split('/'),key=len)
-        gclient = self.gclient()
-        wkbook = gclient.open_by_key(nexus_key)
-        return wkbook
+
 
     def nexus_sort_columns(self,headings):
         """
@@ -216,27 +218,12 @@ class BigHuntCog(commands.Cog):
             temp[lib['Round'][0]] = roundmarker
 
         # append row to end of nexus puzzle list
-        # TODO: appen row in correct round
         rownum = len(data_all)+1
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(headings))
         nexussheet.append_row(temp,table_range=table_range)
 
         col_select = lib['Created At'][0]+1
         nexussheet.update_cell(rownum, col_select, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-
-    # @commands.command()
-    # @commands.is_owner()
-    # async def test(self,ctx):
-    #     nexus_url = await self.nexus_get_url(ctx)
-    #     wkbook = self.nexus_get_wkbook(nexus_url)
-    #     data_all = wkbook.get_worksheet(2).get_all_values()
-    #     roundname = [item[0] for item in data_all[3:]]
-    #     roundid = [item[1] for item in data_all[3:]]
-
-    #     print(roundname)
-    #     print(roundid)
-
-
 
 
     def puzzle_sheet_make(self,nexussheet,puzzlename):
@@ -263,26 +250,30 @@ class BigHuntCog(commands.Cog):
     @commands.command()
     async def bighelp(self,ctx,*,query=None):
         embed = discord.Embed(
-            title='Commands',
+            title='Commands for the puzzle manager',
             colour=discord.Colour.dark_grey(),
-            description='All our puzzle data is summarized in a google sheet called Nexus. '\
-                'For the most part you should not have to edit it manually if these commands are used.'\
-                ' Ping an organizer if you are ever uncertain about any of these :)'
+            description='All our puzzle data is summarized in a google sheet called `#Nexus`. '\
+                'There are two types of bot commands: (1) those that show our info/progress and (2) those that update it. '\
+                'Do **not** edit the Nexus directly unless you know what you are doing! Use these commands instead so everything is tracked consistently. '\
+                'If you are new, then generally you only need to know `!login`, `!nexus`, and `!solve`. Ping an organizer if you are ever uncertain about a command :)'
         )
-        embed.add_field(name='Puzzle Manager',value=
-            '`!login` will show our team info and links\n'\
+        embed.add_field(name='Display hunt/puzzle data',value=
+            '`!login` to show our team info and drive links\n'\
+            '`!nexus` to show all puzzles unlocked/solved\n'\
+            '`!nexus -round=Round Name` to show puzzles from only one round\n'\
+            '`!nexus -unsolved` to show only unsolved puzzles \n'\
+            '`!listrounds` (`!rounds`) to show all rounds \n'\
+            '`!check` that bot is setup during pre-hunt period (mod only)\n'\
+            ,inline=True)
+        embed.add_field(name='Update hunt/puzzle data',value=
             '`!login update` to update our team info (mod only) \n'\
-            '`!createround` will setup channels for a new round\n'\
-            '`!createpuzzle` (`!create`) will setup channel/sheet for a new puzzle\n'\
+            '`!createround RoundName` to setup channels for a new round\n'\
+            '`!createpuzzle PuzzName` (`!create`) to setup channel/sheet for a new puzzle\n'\
             '`!createpuzzle Puzz Name -round=Round Name`\n'\
-            '`!solve HERRING` will make a puzzle as solved\n'\
-            '`!undosolve` if you messed up the channel?\n'\
-            '`!note backsolve` to leave solving notes about the puzzle\n'\
-            '`!listrounds` (`!rounds`) will show all rounds \n'\
-            '`!nexus` will show all our progress\n'\
-            '`!nexus -round=Round Name` show progress only from one round\n'\
-            '`!nexus -unsolved` \n'\
-            '`!check` bot setup during pre-hunt period (mod only)\n'\
+            '`!solve HERRING` to mark a puzzle as solved\n'\
+            '`!undosolve` to unsolve a puzzle if you marked a solve in the wrong channel\n'\
+            '`!note Backsolve` to leave any short solving notes about the puzzle\n'\
+            '`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` to update a field in Nexus\n'\
             ,inline=True)
         await ctx.send(embed=embed)
 

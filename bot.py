@@ -42,12 +42,11 @@ async def help(ctx):
     embed = discord.Embed(
         title='Commands',
         colour=discord.Colour.dark_grey(),
-        description='For more details on the puzzle manager, ask for `!bighelp`'
+        description='For more details on puzzle manager commands, ask for `!bighelp`'
     )
     embed.add_field(name='Puzzle Manager',value=
-        '`!login`\n'\
-        '`!login update` (mod only)'\
-        '`!nexus [-unsolved] [-round=1]`\n`!create Name [-round=1]`\n`!solve ANSWER`\n`!note backsolve`\n`!update [-name=Name]`\n`!undosolve`\n'\
+        '`!login [update]`\n'\
+        '`!nexus [-unsolved] [-round=1]`\n`!createround RoundName`\n`!createpuzzle PuzzName [-round=1]`\n`!solve ANSWER`\n`!note backsolve`\n`!update [-name=Name]`\n`!undosolve`\n'\
         '`!check` (setup only)',inline=True)
     embed.add_field(name='Tools',value=
         '`!nut`: Nutrimatic\n'\
