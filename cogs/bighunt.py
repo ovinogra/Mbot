@@ -8,10 +8,13 @@ import gspread
 import random
 import json
 import numpy as np
-import datetime
+from datetime import datetime, timedelta
 from utils.db import DBase
 from google.oauth2 import service_account
 
+
+# This cog replaces 'hunt.py' for hunts where we care about organizing puzzles by round. 
+# 'hunt.py' and 'bighunt.py' should not be run at the same time. Choose one. 
 
 # A cog for puzzle management
 # !nexus
@@ -27,14 +30,16 @@ from google.oauth2 import service_account
 # 3) Folder must be shared with google service account
 
 
-class PuzzCog(commands.Cog):
+
+class BigHuntCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
         self.mark = '✅'
         #self.mark = '✔'
+        self.logfeed = 913855656694530059
 
-        # TODO: has to be a less silly way to organize this
+        # import credentials
         load_dotenv()
         self.key = os.getenv('GOOGLE_CLIENT_SECRETS')
         self.googledata = json.loads(self.key)
@@ -53,89 +58,108 @@ class PuzzCog(commands.Cog):
         client = gspread.authorize(self.credentials)
         return client
 
-    def channel_get_by_id(self,ctx,channelid):
-        try:
-            channel = discord.utils.get(ctx.guild.channels, id=channelid)
-            return channel
-        except:
-            return False
-
-    def check_puzzle_list(self,nexussheet,newpuzzle):
-        ''' check if puzzle name already exists in nexus '''
-
-        # fetch nexus data and sort headings
-        data_all = nexussheet.get_all_values()
-        headings = data_all[0]
-        lib = self.nexus_sort_columns(headings)
-        
-        data_name = [item[lib['Puzzle Name'][0]] for item in data_all[2:]]
-        if newpuzzle in data_name:
-            return True
-        else:
-            return False
-
-    def check_channel_list(self,ctx,name):
-        ''' check if channel name already exists in current category '''
-
-        category = ctx.message.channel.category
-        channelall = category.text_channels
-        names = [item.name for item in channelall]
-        if name in names:
-            return True
-        else:
-            return False
-
-    async def check_hunt_role(self,ctx):
-        ''' check if user has role for current hunt '''
-
-        query = 'hunt_role_id'
-        db = DBase(ctx)
-        results = await db.hunt_get_row(query)
-
-        # guild does not exist in db
-        if not results:
-            await ctx.send('Not in this guild.')
-            return False
-
-        res = list(results)
-        # no hunt role set
-        if res[0] == 'none':
-            return True
-        else:
-            roleid = int(res[0])
-            status = discord.utils.get(ctx.author.roles, id=roleid)
-            # role is not correct
-            if not status:
-                await ctx.send('Missing role for current hunt. ')
-                return False
-            # role is correct
-            else: 
-                return True
-
-
-
-    async def channel_create(self,ctx,name,position):
-        category = ctx.message.channel.category        
+    ### channel action functions
+    async def channel_create(self,ctx,name,position,category=None):
+        if not category:
+            category = ctx.message.channel.category        
         newchannnel = await category.create_text_channel(name=name,position=position)
         return newchannnel
 
     async def channel_rename(self,ctx,channel,newname):
         channel.name = newname
         await channel.edit(name=newname)
-    
-    @commands.command()
-    @commands.is_owner()
-    async def channel_delete(self,ctx,channelid):
-        channel = ctx.guild.get_channel(int(channelid))
-        await channel.delete()
 
 
 
+
+    ### check functions for puzzle or round name in nexus and server
+    def check_nexus_round_list(self,wkbook,nametest=None,idtest=None):
+        ''' bool: return [True] if round name exists in nexus '''
+
+        data_all = wkbook.get_worksheet(2).get_all_values()
+        if nametest:
+            roundnames = [item[0] for item in data_all[3:]]
+            if nametest in roundnames:
+                return True
+            else:
+                return False
+        if idtest:
+            roundids = [item[1] for item in data_all[3:]]
+            if str(idtest) in roundids:
+                return True
+            else:
+                return False
+
+    def check_nexus_puzzle_list(self,nexussheet,newpuzzle):
+        ''' bool: return [True] if puzzle name exists in nexus '''
+
+        data_all = nexussheet.get_all_values()
+        headings = data_all[0]
+        lib = self.nexus_sort_columns(headings)
+        data_name = [item[lib['Puzzle Name'][0]] for item in data_all[2:]]
+        if newpuzzle in data_name:
+            return True
+        else:
+            return False
+
+    def check_server_category_list(self,ctx,name):
+        ''' bool: return [True] if category/round name exists in server '''
+
+        categoryall = ctx.guild.categories
+        names = [item.name for item in categoryall]
+        if name in names:
+            return True
+        else:
+            return False
+
+    def check_server_channel_list(self,ctx,name):
+        ''' bool: return [True] if puzzle name exists in server '''
+
+        channelall = ctx.message.channel.category.text_channels
+        names = [item.name for item in channelall]
+        if name in names:
+            return True
+        else:
+            return False
+        
+
+    def fetch_round_category(self,ctx,wkbook,roundid=None,roundname=None):
+        data_all = wkbook.get_worksheet(2).get_all_values()
+        allroundnames = [item[0] for item in data_all[3:]]
+        allroundidx = [item[1] for item in data_all[3:]]
+        if roundname:
+            category = discord.utils.get(ctx.guild.channels, id=int(allroundidx[allroundnames.index(roundname)]))
+            return category
+        if roundid:
+            category = discord.utils.get(ctx.guild.channels, id=int(roundid))
+            return category
+
+
+    def fetch_round_marker(self,ctx,wkbook,roundid=None,roundname=None):
+        data_all = wkbook.get_worksheet(2).get_all_values()
+        allroundnames = [item[0] for item in data_all[3:]]
+        allroundidx = [item[1] for item in data_all[3:]]
+        allroundmarker = [item[3] for item in data_all[3:]]
+        if roundname:
+            marker = allroundmarker[allroundnames.index(roundname)]
+            return marker
+        if roundid:
+            marker = allroundmarker[allroundidx.index(str(roundid))]
+            return marker
+
+
+    ### nexus action functions
     async def nexus_get_url(self,ctx):
         query = 'hunt_nexus'
         db = DBase(ctx)
         url = await db.hunt_get_row(query)
         return url[0]
+
+    def nexus_get_wkbook(self,url):
+        nexus_key = max(url.split('/'),key=len)
+        gclient = self.gclient()
+        wkbook = gclient.open_by_key(nexus_key)
+        return wkbook
 
     def nexus_get_sheet(self,url):
         nexus_key = max(url.split('/'),key=len)
@@ -144,13 +168,14 @@ class PuzzCog(commands.Cog):
         sheet = wkbook.sheet1
         return sheet
 
+
+
     def nexus_sort_columns(self,headings):
         """
-        make nexus column order independent
+        this messy way ensures that order of columns in nexus does not matter, nor do new columns
         return a dict of column names with their indicies
         assume all in label_key exists in nexus
         """
-
         label_key = ['Channel ID','Round','Number','Puzzle Name','Answer','Spreadsheet Link','Priority','Notes','Created At','Solved At']
         lib = {}
         for n in range(0,len(label_key)):
@@ -160,7 +185,22 @@ class PuzzCog(commands.Cog):
 
         return lib
 
-    def nexus_add_row(self,nexussheet,puzzlechannel,puzzlename,puzzlesheeturl,roundname):
+    def nexus_add_round(self,wkbook,categoryobject,generalchannelobject,marker):
+        """ add a row for the new round in third tab of nexus workbook """
+
+        # fetch nexus data of rounds
+        sheet = wkbook.get_worksheet(2)
+        data_all = sheet.get_all_values()
+
+        # new row for round
+        temp = [categoryobject.name,str(categoryobject.id),str(generalchannelobject.id),marker]
+
+        # append row to end of category/round list
+        rownum = len(data_all)+1
+        table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(data_all[2]))
+        sheet.append_row(temp,table_range=table_range)
+
+    def nexus_add_puzzle(self,nexussheet,puzzlechannel,puzzlename,puzzlesheeturl,roundmarker,roundname):
         """ add channel id, puzzle name, link, priority=New """
 
         # fetch nexus data and sort headings
@@ -168,21 +208,22 @@ class PuzzCog(commands.Cog):
         headings = data_all[0]
         lib = self.nexus_sort_columns(headings)
 
+        # new row for puzzle
         temp = ['' for item in range(0,len(headings))]
         temp[lib['Channel ID'][0]] = str(puzzlechannel.id)
         temp[lib['Priority'][0]] = 'New'
         temp[lib['Puzzle Name'][0]] = puzzlename
         temp[lib['Spreadsheet Link'][0]] = puzzlesheeturl
-        if roundname:
-            temp[lib['Round'][0]] = roundname
+        if roundmarker:
+            temp[lib['Round'][0]] = roundmarker+' '+roundname 
 
-
+        # append row to end of nexus puzzle list
         rownum = len(data_all)+1
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(headings))
         nexussheet.append_row(temp,table_range=table_range)
 
         col_select = lib['Created At'][0]+1
-        nexussheet.update_cell(rownum, col_select, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        nexussheet.update_cell(rownum, col_select, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
 
     def puzzle_sheet_make(self,nexussheet,puzzlename):
@@ -204,6 +245,38 @@ class PuzzCog(commands.Cog):
         return newsheet_url
 
 
+    ##### begin bot commands #####
+
+    @commands.command()
+    async def bighelp(self,ctx,*,query=None):
+        embed = discord.Embed(
+            title='Commands for the puzzle manager',
+            colour=discord.Colour.dark_grey(),
+            description='All our puzzle data is summarized in a google sheet called `#Nexus`. '\
+                'There are two types of bot commands: (1) those that show our info/progress and (2) those that update it. '\
+                'Do **not** edit the Nexus directly unless you know what you are doing! Use these commands instead so everything is tracked consistently. '\
+                'If you are new, then generally you only need to know `!login`, `!nexus`, and `!solve`. Ping an organizer if you are ever uncertain about a command :)'
+        )
+        embed.add_field(name='Display hunt/puzzle data',value=
+            '`!login` to show our team info and drive links\n'\
+            '`!nexus` to show all puzzles unlocked/solved\n'\
+            '`!nexus -round=Round Name` to show puzzles from only one round\n'\
+            '`!nexus -unsolved` to show only unsolved puzzles \n'\
+            '`!listrounds` (`!rounds`) to show all hunt rounds \n'\
+            '`!check` that bot is setup during pre-hunt period (mod only)\n'\
+            ,inline=False)
+        embed.add_field(name='Update hunt/puzzle data',value=
+            '`!login update` to update our team info (mod only) \n'\
+            '`!createround RoundName` to setup channels for a new round\n'\
+            '`!createpuzzle PuzzName` (`!create`) to setup channel/sheet for a new puzzle\n'\
+            '`!createpuzzle Puzz Name -round=Round Name`\n'\
+            '`!solve HERRING` to mark a puzzle as solved\n'\
+            '`!undosolve` to unsolve a puzzle if you marked a solve in the wrong channel\n'\
+            '`!note Backsolve` to leave any short solving notes about the puzzle\n'\
+            '`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` to update a field in Nexus\n'\
+            ,inline=False)
+        await ctx.send(embed=embed)
+
 
     @commands.command()
     @commands.guild_only()
@@ -212,9 +285,6 @@ class PuzzCog(commands.Cog):
         display list of puzzles and solutions
         can flag by round or unsolved 
         """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
@@ -230,16 +300,16 @@ class PuzzCog(commands.Cog):
         #data_name = ['-' if item == '' else self.channel_get_by_id(ctx,int(item)).mention for item in data_channel]
         data_answer = ['-' if item[lib['Answer'][0]] == '' else item[lib['Answer'][0]] for item in data_all[2:]]
 
-        print('start')
+        # print('start')
         data_name = []
         for j, item in enumerate(data_channel):
             if item == '':
                 data_name.append('-')
             else:
-                channelpick = self.channel_get_by_id(ctx,int(item))
-                if channelpick:
-                    data_name.append(channelpick.mention)
-                else:
+                try: 
+                    channel = discord.utils.get(ctx.guild.channels, id=int(item))
+                    data_name.append(channel.mention)
+                except:
                     nameidx = lib['Puzzle Name'][0]
                     datatemp = data_all[2:][j]
                     data_name.append(datatemp[int(nameidx)])
@@ -298,12 +368,84 @@ class PuzzCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
+    @commands.command(aliases=['rounds','listround','listrounds'])
+    @commands.guild_only()
+    async def list_rounds(self,ctx,*,query=None):
+        ''' list all rounds in nexus'''
+
+        nexus_url = await self.nexus_get_url(ctx)
+        data_all = self.nexus_get_wkbook(nexus_url).get_worksheet(2).get_all_values()
+
+        embed = discord.Embed(
+            title='Nexus Link',
+            colour=discord.Colour(0xfffff0),
+            url=nexus_url
+        )
+
+        roundnames = [item[0] for item in data_all[3:]]
+        generalids = [item[2] for item in data_all[3:]]
+
+        names = ''
+        for idx,name in enumerate(roundnames):
+            channel = discord.utils.get(ctx.guild.channels, id=int(generalids[idx]))
+            names += name+': '+channel.mention+'\n'
+
+        embed.add_field(name='All Rounds',value=names,inline=False)
+        await ctx.send(embed=embed)
+
+
+    @commands.command(aliases=['createround','round'])
+    @commands.guild_only()
+    async def create_round(self, ctx, *, query=None):
+        """ round creation script to 
+        1) make category named by round
+        2) make a general text channel
+        3) make a voice channel
+        4) add category id... somewhere in nexus?
+        """
+
+        if not query:
+            await ctx.send('`!round Some Round Name Here -marker=marker`')
+            return
+
+        if '-marker=' in query:
+            name, marker = query.split(' -marker=')
+        else:
+            await ctx.send('`!round Some Round Name Here -marker=marker`')
+            return
+        
+        # fetch nexus data
+        nexus_url = await self.nexus_get_url(ctx)
+        nexuswkbook = self.nexus_get_wkbook(nexus_url)
+        nexussheet = nexuswkbook.sheet1
+
+
+        # check if round name exists in server
+        # if self.check_server_category_list(ctx,name):
+        #     await ctx.send('Round named `{}` already exists in server.'.format(name))
+        #     return
+        # check if round name exists in nexus
+        if self.check_nexus_round_list(nexuswkbook,name):
+            await ctx.send('Round named `{}` already exists in Nexus.'.format(name))
+            return
+
+        # do the round creation things
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        newcategory = await ctx.guild.create_category(name)
+        newchannnel = await newcategory.create_text_channel(name=marker+'-'+name+'-general')
+        newvoicechannnel = await newcategory.create_voice_channel(name=name+' Voice')
+        self.nexus_add_round(nexuswkbook,newcategory,newchannnel, marker)
+        
+        # send feedback on round creation
+        now = datetime.utcnow() - timedelta(hours=5)
+        dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
+        await ctx.send(':green_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        await logchannel.send('['+dt_string+' EST] :green_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        
 
 
 
-
-
-    @commands.command(aliases=['create'])
+    @commands.command(aliases=['create','createpuzzle'])
     @commands.guild_only()
     async def create_puzzle(self, ctx, *, query=None):
         """ puzzle creation script to 
@@ -312,39 +454,66 @@ class PuzzCog(commands.Cog):
         3) add nexus entry
         """
 
-        if not await self.check_hunt_role(ctx):
-            return
-
         if not query:
             await ctx.send('`!create Some Puzzle Name Here -round=1`')
             return
 
+        nexus_url = await self.nexus_get_url(ctx)
+        nexuswkbook = self.nexus_get_wkbook(nexus_url)
+
+
         if '-round=' in query:
             puzzlename, roundname = query.split(' -round=')
+            # check if requested round exists in nexus, if it does assume the category exists
+            if self.check_nexus_round_list(nexuswkbook,nametest=roundname):
+                roundcategory = self.fetch_round_category(ctx,wkbook=nexuswkbook,roundname=roundname)
+                roundmarker = self.fetch_round_marker(ctx,wkbook=nexuswkbook,roundname=roundname)
+                pass
+            else:
+                await ctx.send('Round name `{}` does not exist in nexus. Please create it first using `!createround`'.format(roundname))
+                return
         else:
             puzzlename = query
-            roundname = False
-        nexus_url = await self.nexus_get_url(ctx)
-        nexussheet = self.nexus_get_sheet(nexus_url)
+            roundname = ctx.channel.category.name
+            roundid = ctx.channel.category.id
+            # check if current category is a round in the nexus
+            if self.check_nexus_round_list(wkbook=nexuswkbook,idtest=roundid):
+                roundcategory = self.fetch_round_category(ctx,wkbook=nexuswkbook,roundid=roundid)
+                roundmarker = self.fetch_round_marker(ctx,wkbook=nexuswkbook,roundid=roundid)
+                pass
+            else:
+                await ctx.send('Cannot create a puzzle in this category. Current category `{}` is not a round. '.format(roundname))
+                return
+        
+        nexussheet = nexuswkbook.sheet1
 
         # check existence of puzzle in channels and nexus
-        if self.check_channel_list(ctx,puzzlename):
-            await ctx.send('Channel named {} exists in current category.'.format(puzzlename))
+        if self.check_server_channel_list(ctx,puzzlename):
+            await ctx.send('Channel named {} exists in current server.'.format(puzzlename))
             return
-        if self.check_puzzle_list(nexussheet,puzzlename):
+        if self.check_nexus_puzzle_list(nexussheet,puzzlename):
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
             return
+        
 
-        position = ctx.message.channel.category.channels[0].position
+        position = roundcategory.channels[0].position
+        infomsg = await ctx.send('Creating puzzle `{}`'.format(puzzlename))
 
         # puzzle creation sequence
-        infomsg = await ctx.send('Creating puzzle {}'.format(puzzlename))
-        newchannel = await self.channel_create(ctx,puzzlename,position)
+        newchannel = await self.channel_create(ctx,name=puzzlename,position=position,category=roundcategory)
         newsheet_url = self.puzzle_sheet_make(nexussheet,puzzlename)
         msg = await newchannel.send(newsheet_url)
         await msg.pin()
-        self.nexus_add_row(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundname=roundname)
-        await infomsg.edit(content='Puzzle created at {}'.format(newchannel.mention))
+        self.nexus_add_puzzle(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundmarker=roundmarker,roundname=roundname)
+        
+
+        # send final feedback 
+        await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannel.mention,roundname))
+        now = datetime.utcnow() - timedelta(hours=5)
+        dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        await logchannel.send('['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannel.mention,roundname))
+
 
 
 
@@ -353,9 +522,6 @@ class PuzzCog(commands.Cog):
     @commands.guild_only()
     async def solve_puzzle(self, ctx, *, query=None):
         """ update puzzle in nexus with answer and solved priority """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         if not query:
             await ctx.send('`!solve Red Herring` in appropriate channel')
@@ -378,12 +544,16 @@ class PuzzCog(commands.Cog):
         col_select = lib['Priority'][0]+1
         nexussheet.update_cell(row_select, col_select, 'Solved')
         col_select = lib['Solved At'][0]+1
-        nexussheet.update_cell(row_select, col_select, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        nexussheet.update_cell(row_select, col_select, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
         # move channel down
         channels = ctx.message.channel.category.channels
-        idx = channels[-1].position+1
+        idx = channels[-2].position+1 # note the change due to voice channel in category
+        # print(channels)
+        # print('')
         for channel in channels:
+            # print(channel.name)
+            # print(channel.position)
             if self.mark in channel.name:
                 idx = channel.position 
                 break
@@ -391,11 +561,16 @@ class PuzzCog(commands.Cog):
 
         # update user of solve
         puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
+        now = datetime.utcnow() - timedelta(hours=5)
+        dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        
         if self.mark not in ctx.channel.name:
             emote = random.choice(['gemheart','bang','face_explode','face_hearts','face_openmouth','face_party','face_stars','party','rocket','star','mbot','slug'])
             filepath = './misc/emotes/'+emote+'.png'
             await ctx.send(content='`{}` marked as solved!'.format(puzzlename),file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
+            await logchannel.send('['+dt_string+' EST] :tada: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
         
@@ -408,9 +583,6 @@ class PuzzCog(commands.Cog):
     @commands.guild_only()
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
@@ -439,14 +611,17 @@ class PuzzCog(commands.Cog):
         filepath = './misc/emotes/szeth.png'
         await ctx.send(content='Fixed.',file=discord.File(filepath))
 
+        now = datetime.utcnow() - timedelta(hours=5)
+        dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        await logchannel.send('['+dt_string+' EST] Puzzle UNsolved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+
+
 
     @commands.command(aliases=['note'])
     @commands.guild_only()
     async def update_nexus_note(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         if not query:
             await ctx.send('`!note backsolve` in appropriate channel')
@@ -484,9 +659,6 @@ class PuzzCog(commands.Cog):
     @commands.guild_only()
     async def update_nexus(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         if not query:
             await ctx.send('`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` in appropriate channel')
@@ -558,9 +730,6 @@ class PuzzCog(commands.Cog):
         """
         This awful sequence of checks and API calls presumably makes sure stuff won't break later
         """
-
-        if not await self.check_hunt_role(ctx):
-            return
 
         checks = {}
 
@@ -638,8 +807,6 @@ class PuzzCog(commands.Cog):
 
 
 
-
-
 def setup(bot):
-    bot.add_cog(PuzzCog(bot))
+    bot.add_cog(BigHuntCog(bot))
 
