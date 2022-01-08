@@ -31,7 +31,7 @@ class LoginCog(commands.Cog):
     def check_role(self,member,role):
         ''' member: ctx.author, role: integer discord ID '''
 
-        return 
+        return True
         #if isinstance(role,int):
         #    return discord.utils.get(member.roles, id=role)
 
