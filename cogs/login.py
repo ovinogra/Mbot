@@ -31,8 +31,9 @@ class LoginCog(commands.Cog):
     def check_role(self,member,role):
         ''' member: ctx.author, role: integer discord ID '''
 
-        if isinstance(role,int):
-            return discord.utils.get(member.roles, id=role)
+        return 
+        #if isinstance(role,int):
+        #    return discord.utils.get(member.roles, id=role)
 
 
     async def check_guild(self,ctx):
