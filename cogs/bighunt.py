@@ -215,7 +215,7 @@ class BigHuntCog(commands.Cog):
         temp[lib['Puzzle Name'][0]] = puzzlename
         temp[lib['Spreadsheet Link'][0]] = puzzlesheeturl
         if roundmarker:
-            temp[lib['Round'][0]] = roundmarker+' '+roundname 
+            temp[lib['Round'][0]] = roundmarker
 
         # append row to end of nexus puzzle list
         rownum = len(data_all)+1
