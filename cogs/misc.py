@@ -6,7 +6,8 @@ from discord.ext import commands
 import random
 import os
 import asyncio
-
+import urllib.request
+import datetime
 
 # A cog for nonessential commands and triggers
 
@@ -67,6 +68,23 @@ class MiscCog(commands.Cog):
         filepath = './misc/emotes/szeth.png'
         await ctx.send(file=discord.File(filepath))
         #await ctx.send('<:szeth:667773296896507919>')
+
+    @commands.command(aliases=['iihy'])
+    async def isithuntyet(self,ctx):
+        huntdate = datetime.datetime(2022,1,14,17,0,0,0) # start time in utc
+        now = datetime.datetime.utcnow()
+        delta = huntdate - now 
+        days = delta.days 
+        hours = delta.seconds // 3600 
+        minutes = (delta.seconds % 3600) // 60
+        seconds = (delta.seconds % 3600) % 60
+
+        if days < 0:
+            await ctx.send('**YES!!!*** :tada: Hunt 2022 has started')
+        else:
+            await ctx.send('NO. Hunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds))
+
+
 
 
     @commands.command()
