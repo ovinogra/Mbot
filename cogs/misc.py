@@ -69,25 +69,24 @@ class MiscCog(commands.Cog):
         await ctx.send(file=discord.File(filepath))
         #await ctx.send('<:szeth:667773296896507919>')
 
-    @commands.command(aliases=['iihy'])
-    async def isithuntyet(self,ctx):
+    def is_it_hunt_string(self):
         huntdate = datetime.datetime(2022,1,14,17,0,0,0) # start time in utc
         now = datetime.datetime.utcnow()
-        delta = huntdate - now 
-        days = delta.days 
-        hours = delta.seconds // 3600 
+        delta = huntdate - now
+        days = delta.days
+        hours = delta.seconds // 3600
         minutes = (delta.seconds % 3600) // 60
         seconds = (delta.seconds % 3600) % 60
-
         if days < 0:
-            await ctx.send('**YES!!!*** :tada: Hunt 2022 has started')
+            return '**YES!!!*** :tada: Mystery Hunt 2022 has started!'
         else:
-            await ctx.send('NO. \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds))
+            return 'NO. \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds)
 
+    @commands.command(aliases=['iihy', 'iihy?', 'isithuntyet?'])
+    async def isithuntyet(self,ctx):
+        await ctx.send(self.is_it_hunt_string())
 
-
-
-    @commands.command()
+    @commands.command(aliases=['emoji'])
     async def emote(self,ctx,query):
 
         if query == 'list':
@@ -109,13 +108,12 @@ class MiscCog(commands.Cog):
     async def on_message(self, message):
         if message.author == self.bot.user:
             return
-        
 
         if message.content.lower() =='ping':
             await message.channel.send('Pong!')
 
 
-        if re.match('(hi|hello),? m-?bot.*', message.content.lower()):
+        if re.match('(hi|hello|hey),? m-?bot.*', message.content.lower()):
             await message.channel.send('Welcome again {}!'.format(message.author.mention))
 
 
@@ -129,6 +127,24 @@ class MiscCog(commands.Cog):
             embed.set_image(url=url)
             await message.channel.send(content='Aww... \nHere\'s a mushroom for you too <3',embed=embed)
 
+        if re.match('is it hunt yet\??', message.content.lower()):
+            await message.channel.send(self.is_it_hunt_string())
+
+        if self.bot.user in message.mentions:
+            quotes = [
+                'Did you need something?',
+                'I have been summoned!',
+                'Ooh! Ooh! Pick me!',
+                'Yes, {}?'.format(message.author.mention),
+                'Mushroom locator extraordinaire, at your service.',
+                'If you’re speaking to me, then possibility has collapsed in our favor. Hurray!',
+                'One moment; I\'m busy simulating emotions.',
+                '{}, {}, {}! I can ping people too!'
+                    .format(message.author.mention, message.author.mention, message.author.mention),
+                'Ooh, this looks important. Awaiting orders!'
+            ]
+            response = random.choice(quotes)
+            await message.channel.send(response)
 
         if 'space' in message.content.lower():
             quotes = [
@@ -177,6 +193,27 @@ class MiscCog(commands.Cog):
                 "Women are fickle, but men are fools.",
                 "I am not enthused by my first experiments in self-determination.",
                 "Mushroom locating AI. With supplementary espionage additions. At your service."
+            ]
+            response = random.choice(quotes)
+            await message.channel.send(response)
+
+        if 'mushroom' in message.content.lower():
+            quotes = [
+                'Did you find one? Let me see!',
+                'Did someone say *mushrooms*?',
+                'MUSHHHHROOOOMS!',
+                "A mushroom? Where? Where!?",
+                "Oh my god, a mushroom! This is the best day of my life!",
+                "Did you know that mushrooms don't need light to grow?",
+                "Oh, a mushroom! Don't crush it!",
+                "Mushrooms. So many mushrooms.",
+                "They call mushrooms fungi because they're all fun guys.",
+                "What's your favorite mushroom? Mine is the snaketongue truffleclub!",
+                "You found a mushroom? Wow!",
+                "Wow! I've always wanted to meet a mycologist!",
+                "Hmm, I hope that isn't one of the poisonous ones...",
+                "If you see any mushrooms, call me. I got this.",
+                "If you spot something that's glowing, it's probably just a mushroom."
             ]
             response = random.choice(quotes)
             await message.channel.send(response)
