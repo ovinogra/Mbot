@@ -82,7 +82,7 @@ class MiscCog(commands.Cog):
         if days < 0:
             await ctx.send('**YES!!!*** :tada: Hunt 2022 has started')
         else:
-            await ctx.send('NO. Hunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds))
+            await ctx.send('NO. \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds))
 
 
 
