@@ -184,7 +184,6 @@ class HuntCog(commands.Cog):
         col_select = lib['Created At'][0]+1
         nexussheet.update_cell(rownum, col_select, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-
     def puzzle_sheet_make(self,nexussheet,puzzlename):
         """ copy template sheet from link in Nexus and return link to new sheet """
 
@@ -199,11 +198,9 @@ class HuntCog(commands.Cog):
 
         # make copy of template sheet
         gclient = self.gclient()
-        newsheet = gclient.copy(template_key,title=puzzlename,copy_permissions=True)
+        newsheet = gclient.copy(template_key,title=puzzlename, copy_permissions=False)
         newsheet_url = "https://docs.google.com/spreadsheets/d/%s" % newsheet.id
         return newsheet_url
-
-
 
     @commands.command()
     @commands.guild_only()
@@ -298,11 +295,6 @@ class HuntCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
-
-
-
-
-
     @commands.command(aliases=['create'])
     @commands.guild_only()
     async def create_puzzle(self, ctx, *, query=None):
@@ -346,9 +338,6 @@ class HuntCog(commands.Cog):
         self.nexus_add_row(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundname=roundname)
         await infomsg.edit(content='Puzzle created at {}'.format(newchannel.mention))
 
-
-
-    
     @commands.command(aliases=['solve'])
     @commands.guild_only()
     async def solve_puzzle(self, ctx, *, query=None):
