@@ -2,15 +2,12 @@
 
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-import os
-import gspread
 import json
 import asyncio
 
 from gspread import WorksheetNotFound
 from gspread.exceptions import APIError
-from google.oauth2 import service_account
+from utils.drive import Drive
 
 
 # A cog for archiving channels and categories
@@ -20,21 +17,7 @@ class ArchiveCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        
-        # TODO: has to be a less silly way to organize this
-        load_dotenv()
-        self.key = os.getenv('GOOGLE_CLIENT_SECRETS')
-        self.googledata = json.loads(self.key)
-        self.googledata['private_key'] = self.googledata['private_key'].replace("\\n", "\n")
-        scopes = [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        self.credentials = service_account.Credentials.from_service_account_info(self.googledata, scopes=scopes)
-
-    def gclient(self):
-        client = gspread.authorize(self.credentials)
-        return client
+        self.drive = Drive()
 
     @commands.command(aliases=['arc'])
     @commands.has_role('organiser')
@@ -104,7 +87,7 @@ class ArchiveCog(commands.Cog):
 
         # set up workbook information
         sheet_key = max(sheet_url.split('/'), key=len)
-        gclient = self.gclient()
+        gclient = self.drive.gclient()
         wkbook = gclient.open_by_key(sheet_key)
 
         # replace channel sheet if it exists

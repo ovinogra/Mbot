@@ -2,15 +2,12 @@
 
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-import os
 import gspread
 import random
-import json
 import numpy as np
 import datetime
 from utils.db import DBase
-from google.oauth2 import service_account
+from utils.drive import Drive
 
 
 # A cog for puzzle management
@@ -32,26 +29,7 @@ class HuntCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.mark = '✅'
-        #self.mark = '✔'
-
-        # TODO: has to be a less silly way to organize this
-        load_dotenv()
-        self.key = os.getenv('GOOGLE_CLIENT_SECRETS')
-        self.googledata = json.loads(self.key)
-        self.googledata['private_key'] = self.googledata['private_key'].replace("\\n","\n")
-        scopes = [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        self.credentials = service_account.Credentials.from_service_account_info(self.googledata,scopes=scopes)
-
-
-
-
-
-    def gclient(self):
-        client = gspread.authorize(self.credentials)
-        return client
+        self.drive = Drive()
 
     def channel_get_by_id(self,ctx,channelid):
         try:
@@ -139,7 +117,7 @@ class HuntCog(commands.Cog):
 
     def nexus_get_sheet(self,url):
         nexus_key = max(url.split('/'),key=len)
-        gclient = self.gclient()
+        gclient = self.drive.gclient()
         wkbook = gclient.open_by_key(nexus_key)
         sheet = wkbook.sheet1
         return sheet
@@ -197,7 +175,7 @@ class HuntCog(commands.Cog):
         template_key = max(template_url.split('/'),key=len)
 
         # make copy of template sheet
-        gclient = self.gclient()
+        gclient = self.drive.gclient()
         newsheet = gclient.copy(template_key,title=puzzlename, copy_permissions=False)
         newsheet_url = "https://docs.google.com/spreadsheets/d/%s" % newsheet.id
         return newsheet_url
@@ -598,7 +576,7 @@ class HuntCog(commands.Cog):
         # template sheet check API call
         try:
             template_key = max(template_url.split('/'),key=len)
-            gclient = self.gclient()
+            gclient = self.drive.gclient()
             wkbook = gclient.open_by_key(template_key)
             wkbook.sheet1
             checks['Template Sheet Access'] = ':+1:'

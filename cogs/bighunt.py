@@ -2,15 +2,12 @@
 
 import discord
 from discord.ext import commands
-from dotenv import load_dotenv
-import os
 import gspread
 import random
-import json
 import numpy as np
 from datetime import datetime, timedelta
 from utils.db import DBase
-from google.oauth2 import service_account
+from utils.drive import Drive
 
 
 # This cog replaces 'hunt.py' for hunts where we care about organizing puzzles by round. 
@@ -36,27 +33,8 @@ class BigHuntCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.mark = '✅'
-        #self.mark = '✔'
+        self.drive = Drive()
         self.logfeed = 913855656694530059
-
-        # import credentials
-        load_dotenv()
-        self.key = os.getenv('GOOGLE_CLIENT_SECRETS')
-        self.googledata = json.loads(self.key)
-        self.googledata['private_key'] = self.googledata['private_key'].replace("\\n","\n")
-        scopes = [
-            'https://www.googleapis.com/auth/spreadsheets',
-            'https://www.googleapis.com/auth/drive'
-        ]
-        self.credentials = service_account.Credentials.from_service_account_info(self.googledata,scopes=scopes)
-
-
-
-
-
-    def gclient(self):
-        client = gspread.authorize(self.credentials)
-        return client
 
     ### channel action functions
     async def channel_create(self,ctx,name,position,category=None):
@@ -157,13 +135,13 @@ class BigHuntCog(commands.Cog):
 
     def nexus_get_wkbook(self,url):
         nexus_key = max(url.split('/'),key=len)
-        gclient = self.gclient()
+        gclient = self.drive.gclient()
         wkbook = gclient.open_by_key(nexus_key)
         return wkbook
 
     def nexus_get_sheet(self,url):
         nexus_key = max(url.split('/'),key=len)
-        gclient = self.gclient()
+        gclient = self.drive.gclient()
         wkbook = gclient.open_by_key(nexus_key)
         sheet = wkbook.sheet1
         return sheet
@@ -239,7 +217,7 @@ class BigHuntCog(commands.Cog):
         template_key = max(template_url.split('/'),key=len)
 
         # make copy of template sheet
-        gclient = self.gclient()
+        gclient = self.drive.gclient()
         newsheet = gclient.copy(template_key,title=puzzlename,copy_permissions=False)
         newsheet_url = "https://docs.google.com/spreadsheets/d/%s" % newsheet.id
         return newsheet_url
@@ -778,7 +756,7 @@ class BigHuntCog(commands.Cog):
         # template sheet check API call
         try:
             template_key = max(template_url.split('/'),key=len)
-            gclient = self.gclient()
+            gclient = self.drive.gclient()
             wkbook = gclient.open_by_key(template_key)
             wkbook.sheet1
             checks['Template Sheet Access'] = ':+1:'
