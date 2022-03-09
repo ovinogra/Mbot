@@ -24,7 +24,7 @@ initial_extensions = ['misc',
                        #'bighunt',
                        'archive']
 
-# initial_extensions = ['bighunt']
+# initial_extensions = ['archive']
 
 @bot.event
 async def on_ready():
@@ -50,7 +50,6 @@ async def help(ctx):
         '`!check` (setup only)',inline=True)
     embed.add_field(name='Tools',value=
         '`!nut`: Nutrimatic\n'\
-    #    '`!qq`: Quipqiup\n'\
         '`!cc`: Caesar cipher\n'\
         '`!vig`: Vigenere cipher\n'\
         '`!alpha`: A1Z26\n'\
