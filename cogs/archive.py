@@ -25,19 +25,25 @@ class ArchiveCog(commands.Cog):
     @commands.guild_only()
     async def archive(self, ctx, *args):
         # ensure exactly three arguments
-        if len(args) != 3:
+        if len(args) not in [2,3]:
             # !archive category https://url C:\botarchive\
             await ctx.send('`!archive <channel|category> <sheet> <imagefilepath>`\n'\
                 'Example: `!arc category https://url C:/zbotarchive/`\n'\
-                'Reminder: share with worldhopper')
+                'Note: share with worldhopper; imagefilepath only if you are running bot.py locally')
             return
 
         # attempt an archive, catch any errors with the sheet link
         try:
             if args[0] == 'channel':
-                await self.archive_channel(ctx, ctx.channel, args[1], args[2], True)
+                if len(args) == 2:
+                    await self.archive_channel(ctx, ctx.channel, sheet_url=args[1], imagefilepath=None, log=True)
+                else:
+                    await self.archive_channel(ctx, ctx.channel, sheet_url=args[1], imagefilepath=args[2], log=True)
             elif args[0] == 'category' or args[0] == 'cat':
-                await self.archive_category(ctx, args[1], args[2])
+                if len(args) == 2:
+                    await self.archive_category(ctx, sheet_url=args[1], imagefilepath=None)
+                else:
+                    await self.archive_category(ctx, sheet_url=args[1], imagefilepath=args[2])
             else:
                 await ctx.send('`!archive <channel|category> <sheet>`')
         # handle most common errors
@@ -85,10 +91,11 @@ class ArchiveCog(commands.Cog):
                     '=IMAGE("' + attachment.url + '")'
                 ])
                 images_all.append('Image: <'+attachment.url+'>')
-                if attachment.filename not in ignoreimages:
-                    save_path = imagefilepath+channel.name+'_'+str(counter)+'_'+attachment.filename
-                    counter += 1
-                    await attachment.save(save_path)
+                if imagefilepath:
+                    if attachment.filename not in ignoreimages:
+                        save_path = imagefilepath+channel.name+'_'+str(counter)+'_'+attachment.filename
+                        counter += 1
+                        await attachment.save(save_path)
         
         # set up workbook information
         sheet_key = max(sheet_url.split('/'), key=len)
