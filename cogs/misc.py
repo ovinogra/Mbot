@@ -1,4 +1,4 @@
-# practice.py
+# misc.py
 import re
 
 import discord
@@ -8,13 +8,62 @@ import os
 import asyncio
 import urllib.request
 import datetime
+import string
 
 # A cog for nonessential commands and triggers
+
+
+# temporary april fools joke: 
+# https://gist.github.com/AXVin/2e7dc608b552d05d2b04cecaaa4457bc
+flipped_lower_chars = "ɐqɔpǝɟƃɥıɾʞןɯuodbɹsʇnʌʍxʎz"
+flipped_lower_chars = "ɐqɔpǝɟƃɥıɾʞlɯuodbɹsʇnʌʍxʎz"
+flipped_upper_chars = "∀𐐒Ɔ◖ƎℲ⅁HIſ⋊˥WNOԀΌᴚS⊥∩ΛMX⅄Z"
+mapping = {char: flipped_lower_chars[i] for i, char in enumerate(string.ascii_lowercase) }
+mapping.update({char: flipped_upper_chars[i] for i, char in enumerate(string.ascii_uppercase) })
+mapping.update({
+"-": "-",
+"_": "‾",
+" ": " "
+})
+flipped_mapping = {v:k for k,v in mapping.items()}
+
+
+
 
 class MiscCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command()
+    @commands.is_owner()
+    async def flipchannels(self, ctx):
+        idxall = [555663169612283906,556694164234960938,797939344056778824,797576926197841940,833541557746925578,667749988222107653,870111032138412063]
+        # print('start')
+        for idx in idxall:
+            channel = self.bot.get_channel(idx)
+            # print(channel)
+            emoji = channel.name[0:2]
+            name = channel.name[2:]
+            revname = "".join(mapping[char] for char in name[::-1])
+            newname = emoji+revname
+            # print(newname)
+            await channel.edit(name=newname)
+
+    @commands.command()
+    @commands.is_owner()
+    async def unflipchannels(self, ctx):
+        idxall = [555663169612283906,556694164234960938,797939344056778824,797576926197841940,833541557746925578,667749988222107653,870111032138412063]
+        for idx in idxall:
+            channel = self.bot.get_channel(idx)
+            # print(channel)
+            emoji = channel.name[0:2]
+            name = channel.name[2:]
+            revname = "".join(flipped_mapping[char] for char in name[::-1])
+            newname = emoji+revname
+            # print(newname)
+            await channel.edit(name=newname)
+
 
     @commands.command()
     async def flip(self, ctx):
