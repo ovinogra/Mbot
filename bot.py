@@ -24,7 +24,7 @@ initial_extensions = ['misc',
                        #'bighunt',
                        'archive']
 
-# initial_extensions = ['misc']
+# initial_extensions = ['admin']
 
 @bot.event
 async def on_ready():

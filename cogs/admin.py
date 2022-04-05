@@ -1,4 +1,5 @@
 # admin.py
+from tabnanny import check
 import discord
 from discord.ext import commands
 from utils.db import DBase
@@ -73,6 +74,20 @@ class AdminCog(commands.Cog):
             await ctx.send('Message not found. ')
 
 
+    @commands.command(aliases=['rmc'])
+    @commands.has_role('organiser')
+    @commands.guild_only()
+    async def delete_category(self, ctx, *, checkquery=None):
+        channels = ctx.message.channel.category.channels
+        if checkquery:
+            if checkquery == 'check':
+                namesall = ['Channels to be deleted:']
+                for channel in channels:
+                    namesall.append(channel.mention)
+                await ctx.send('\n'.join(namesall))
+        else:
+            for channel in channels:
+                await channel.delete()
 
 
 def setup(bot):
