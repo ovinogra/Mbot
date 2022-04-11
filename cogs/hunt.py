@@ -594,7 +594,7 @@ class HuntCog(commands.Cog):
         embed = discord.Embed(
             title='Checks',
             colour=discord.Colour(0xfffff0),
-            description='Share hunt folder with\n`'+self.googledata['client_email']+'`\n')
+            description='Share hunt folder with\n`'+self.drive.googledata['client_email']+'`\n')
         embed.add_field(name='Topic',value=topic,inline=True)
         embed.add_field(name='Status',value=status,inline=True)
 
