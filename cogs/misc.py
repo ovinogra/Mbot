@@ -119,7 +119,7 @@ class MiscCog(commands.Cog):
         #await ctx.send('<:szeth:667773296896507919>')
 
     def is_it_hunt_string(self):
-        huntdate = datetime.datetime(2022,1,14,17,0,0,0) # start time in utc
+        huntdate = datetime.datetime(2023,1,13,17,0,0,0) # start time in utc
         now = datetime.datetime.utcnow()
         delta = huntdate - now
         days = delta.days
