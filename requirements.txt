@@ -2,7 +2,7 @@ discord.py==1.5.0
 python-dotenv
 asyncio
 regex
-numpy==1.22.0
+numpy==1.19.5
 mechanize==0.4.5
 requests==2.22.0
 psycopg2-binary==2.8.4
