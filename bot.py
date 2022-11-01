@@ -72,23 +72,27 @@ async def help(ctx):
 
 @bot.command(name='load')
 @commands.is_owner()
+@commands.has_role('organiser')
 async def load_cog(ctx, cogname):
     bot.load_extension('cogs.'+cogname)
     await ctx.send('Cog {} is loaded!'.format(cogname))
 
 @bot.command(name='reload')
+@commands.has_role('organiser')
 @commands.is_owner()
 async def reload_cog(ctx, cogname):
     bot.reload_extension('cogs.'+cogname)
     await ctx.send('Cog {} is reloaded!'.format(cogname))
 
 @bot.command(name='unload')
+@commands.has_role('organiser')
 @commands.is_owner()
 async def unload_cog(ctx, cogname):
     bot.unload_extension('cogs.'+cogname)
     await ctx.send('Cog {} is unloaded!'.format(cogname))
 
 @bot.command(name='restart')
+@commands.has_role('organiser')
 @commands.is_owner()
 async def restart_cog(ctx,initial_extensions=initial_extensions):
     for extension in initial_extensions:
