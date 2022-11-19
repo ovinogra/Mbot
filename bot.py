@@ -12,7 +12,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix='!',case_insensitive=True,intents=intents)
+bot = commands.Bot(command_prefix='?',case_insensitive=True,intents=intents)
 
 initial_extensions = ['misc',
                        'toolbox',
@@ -24,7 +24,7 @@ initial_extensions = ['misc',
                        #'bighunt',
                        'archive']
 
-# initial_extensions = ['admin']
+initial_extensions = ['login','admin']
 
 @bot.event
 async def on_ready():

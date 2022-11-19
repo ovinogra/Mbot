@@ -2,7 +2,7 @@
 from tabnanny import check
 import discord
 from discord.ext import commands
-from utils.db import DBase
+from utils.db2 import DBase
 
 
 # A cog with some db owner commands, mostly for testing
@@ -15,6 +15,7 @@ class AdminCog(commands.Cog):
 
     @commands.command(aliases=['ins'])
     @commands.is_owner()
+    @commands.has_role('organiser')
     async def login_insert(self, ctx, *, query=None):
         ''' adds a row the hunt db table to initiate puzzle manager commands '''
 
@@ -24,11 +25,12 @@ class AdminCog(commands.Cog):
 
         guildname,guildID = query.split(' ')
         db = DBase(ctx)
-        await db.hunt_insert_row(guildname,guildID)
+        await db.hunt_insert_row(guildname,int(guildID))
 
 
     @commands.command(aliases=['del'])
     @commands.is_owner()
+    @commands.has_role('organiser')
     async def login_delete(self, ctx, *, guildID=None):
 
         if not guildID:
@@ -36,7 +38,7 @@ class AdminCog(commands.Cog):
             return
 
         db = DBase(ctx)
-        await db.hunt_delete_row(guildID)
+        await db.hunt_delete_row(int(guildID))
 
 
     @commands.command(aliases=['stat'])
