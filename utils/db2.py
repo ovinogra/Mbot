@@ -16,9 +16,7 @@ class DBase:
 
     def __init__(self, ctx):
         self.ctx = ctx
-        # self.bot = ctx.bot
-        # self.guildID = str(ctx.guild.id)
-        # self.guildID = 123 # for testing
+        self.bot = ctx.bot
 
     
     ################ Main DB connection ################
@@ -38,6 +36,7 @@ class DBase:
         return dynamodb
 
 
+    ################ TABLE hunt ################
 
     def hunt_get_row(self,guildID):
         ''' query, guildID: int '''
@@ -48,10 +47,7 @@ class DBase:
             FilterExpression=Attr('guild_id').eq(guildID)
         )
         return response['Items'][0]
-
-
-
-    
+ 
     async def hunt_update_row(self,updatedata,guildID):
         ''' updatedata: list of tuples [(fieldname, value),(fieldname, value)] '''
 
@@ -116,6 +112,83 @@ class DBase:
         )
         await self.ctx.send('DELETE ROW successful')
         return
+
+
+    ################ TABLE tags ################
+
+    def tag_get_all(self):
+        dynamodb = self.connect()
+        table = dynamodb.Table('tags') 
+        response = table.scan()
+        data = response['Items']       
+        return data
+    
+    def tag_get_row(self,tagname):
+        ''' tagname: string '''
+
+        dynamodb = self.connect()
+        table = dynamodb.Table('tags') 
+
+        try: 
+            response = table.scan(
+                FilterExpression=Attr('tag_name').eq(tagname)
+            )
+            items = response['Items']      
+
+            return items[0]
+        except: 
+            return False
+
+    async def tag_insert_row(self,tagname,tagcontent,guildID):
+        ''' tagname, tagcontent: string '''
+
+        dynamodb = self.connect()
+        table = dynamodb.Table('tags') 
+        table.put_item(
+        Item={
+                'tag_name': tagname,
+                'guild_id': int(guildID),
+                'tag_content': tagcontent
+            }
+        )
+        await self.ctx.send('Tag added successful')
+        return
+
+    async def tag_update_row(self,tagname,tagcontent):
+        ''' tagname, tagcontent: string '''
+
+        dynamodb = self.connect()
+        table = dynamodb.Table('tags') 
+        currentdata = self.tag_get_row(tagname)
+        table.update_item(
+            Key={
+                    'guild_id': int(currentdata['guild_id']),
+                    'tag_name': tagname
+                },
+            UpdateExpression='set tag_content = :val1',
+            ExpressionAttributeValues={
+                    ':val1': tagcontent
+                }
+            )      
+        await self.ctx.send('Tag updated successful')
+        return 
+
+    async def tag_delete_row(self,tagname):
+        ''' tagname: string '''
+
+        dynamodb = self.connect()
+        table = dynamodb.Table('tags') 
+        currentdata = self.tag_get_row(tagname)
+        table.delete_item(
+            Key={
+                    'guild_id': int(currentdata['guild_id']),
+                    'tag_name': tagname
+                }
+            )      
+
+        await self.ctx.send('Tag deleted successful')
+        return
+
 
 
 

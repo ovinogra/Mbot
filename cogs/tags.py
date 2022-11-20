@@ -2,7 +2,7 @@
 import discord
 from discord.ext import commands
 import asyncio
-from utils.db import DBase
+from utils.db2 import DBase
 from utils.paginator import Pages
 
 
@@ -21,7 +21,7 @@ class TagsCog(commands.Cog):
         return True
 
 
-    @commands.command(aliases=['tag'])
+    @commands.command(aliases=['tag','tags'])
     @commands.guild_only()
     async def taginfo(self, ctx, *, query=None):
         helpstate = '`!tag list`\n`!tag [create] [update] [delete] <name>`'
@@ -43,11 +43,11 @@ class TagsCog(commands.Cog):
         quers = query.split(' ',1)
 
         if quers[0] == 'list':
-            result = await db.tag_get_all()
+            result = db.tag_get_all()
             if result:
                 final = []
                 for item in result:
-                    final.append(item[0])
+                    final.append(item['tag_name'])
             final.sort()
             embed = discord.Embed(title='Existing Tags', colour=discord.Colour.teal())
             
@@ -57,7 +57,7 @@ class TagsCog(commands.Cog):
 
         if quers[0] == 'create':
             tagname = quers[1]
-            result = await db.tag_get_row(tagname)
+            result = db.tag_get_row(tagname)
             if result:
                 await ctx.send('Tag already exists: `'+tagname+'`.')
                 return
@@ -69,12 +69,12 @@ class TagsCog(commands.Cog):
                 return
 
             tagcontent = response.content.replace("'",'qqq')
-            await db.tag_insert_row(tagname,tagcontent)
+            await db.tag_insert_row(tagname,tagcontent,ctx.guild.id)
             return
 
         if quers[0] == 'update':
             tagname = quers[1]
-            result = await db.tag_get_row(tagname)
+            result = db.tag_get_row(tagname)
             if not result:
                 await ctx.send('No tag found: `'+tagname+'`')
                 return
@@ -91,19 +91,17 @@ class TagsCog(commands.Cog):
         
         if quers[0] == 'delete':
             tagname = quers[1]
-            result = await db.tag_get_row(tagname)
-
+            result = db.tag_get_row(tagname)
             if not result:
                 await ctx.send('No tag found: `'+tagname+'`. Make a tag before you delete it.')
                 return
-            
             await db.tag_delete_row(tagname)
             return
         
 
-        result = await db.tag_get_row(query)
+        result = db.tag_get_row(query)
         if result:
-            tagcontent = result[0][0].replace('qqq',"'")
+            tagcontent = result['tag_content'].replace('qqq',"'")
             await ctx.send('>>> '+tagcontent)
         else:
             await ctx.send('No tag found: `'+query+'`.')

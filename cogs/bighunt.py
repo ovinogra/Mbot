@@ -6,7 +6,7 @@ import gspread
 import random
 import numpy as np
 from datetime import datetime, timedelta
-from utils.db import DBase
+from utils.db2 import DBase
 from utils.drive import Drive
 
 
@@ -128,10 +128,9 @@ class BigHuntCog(commands.Cog):
 
     ### nexus action functions
     async def nexus_get_url(self,ctx):
-        query = 'hunt_nexus'
         db = DBase(ctx)
-        url = await db.hunt_get_row(query)
-        return url[0]
+        res = db.hunt_get_row(ctx.guild.id)
+        return res['hunt_nexus']
 
     def nexus_get_wkbook(self,url):
         nexus_key = max(url.split('/'),key=len)
@@ -722,12 +721,11 @@ class BigHuntCog(commands.Cog):
         checks['Add Reactions'] = ':+1:' if perms.add_reactions else ':x:'
 
         # db hunt fetch links
-        query = 'hunt_folder, hunt_nexus'
         db = DBase(ctx)
-        results = await db.hunt_get_row(query)
-        res = list(results)
-        checks['Google Folder'] = '[Link]('+res[0]+')' if 'http' in res[0] else res[0]
-        checks['Nexus Sheet'] = '[Link]('+res[1]+')' if 'http' in res[1] else res[1]
+        res = db.hunt_get_row(ctx.guild.id)
+        # res = list(results)
+        checks['Google Folder'] = '[Link]('+res['hunt_folder']+')' if 'http' in res['hunt_folder'] else res['hunt_folder']
+        checks['Nexus Sheet'] = '[Link]('+res['hunt_nexus']+')' if 'http' in res['hunt_nexus'] else res['hunt_nexus']
 
         # nexus sheet check API call
         try:
