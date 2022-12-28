@@ -11,6 +11,7 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 
 intents = discord.Intents.default()
 intents.members = True
+intents.message_content = True
 
 bot = commands.Bot(command_prefix='!',case_insensitive=True,intents=intents)
 
@@ -30,7 +31,7 @@ initial_extensions = ['misc',
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
     for extension in initial_extensions:
-        bot.load_extension('cogs.'+extension)
+        bot.load_extension('cogs.' + extension)
 
 
 # General #################################################################
