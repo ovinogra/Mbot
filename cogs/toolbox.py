@@ -314,8 +314,5 @@ class ToolboxCog(commands.Cog):
         await ctx.send(final)
 
 
-
-
-
-def setup(bot):
-    bot.add_cog(ToolboxCog(bot))
+async def setup(bot):
+    await bot.add_cog(ToolboxCog(bot))

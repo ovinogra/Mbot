@@ -31,7 +31,7 @@ initial_extensions = ['misc',
 async def on_ready():
     print(f'{bot.user.name} has connected to Discord!')
     for extension in initial_extensions:
-        bot.load_extension('cogs.' + extension)
+        await bot.load_extension('cogs.' + extension)
 
 
 # General #################################################################
@@ -75,21 +75,21 @@ async def help(ctx):
 @commands.is_owner()
 @commands.has_role('organiser')
 async def load_cog(ctx, cogname):
-    bot.load_extension('cogs.'+cogname)
+    await bot.load_extension('cogs.'+cogname)
     await ctx.send('Cog {} is loaded!'.format(cogname))
 
 @bot.command(name='reload')
 @commands.has_role('organiser')
 @commands.is_owner()
 async def reload_cog(ctx, cogname):
-    bot.reload_extension('cogs.'+cogname)
+    await bot.reload_extension('cogs.'+cogname)
     await ctx.send('Cog {} is reloaded!'.format(cogname))
 
 @bot.command(name='unload')
 @commands.has_role('organiser')
 @commands.is_owner()
 async def unload_cog(ctx, cogname):
-    bot.unload_extension('cogs.'+cogname)
+    await bot.unload_extension('cogs.'+cogname)
     await ctx.send('Cog {} is unloaded!'.format(cogname))
 
 @bot.command(name='restart')
@@ -98,11 +98,11 @@ async def unload_cog(ctx, cogname):
 async def restart_cog(ctx,initial_extensions=initial_extensions):
     for extension in initial_extensions:
         try:
-            bot.reload_extension('cogs.'+extension)
+            await bot.reload_extension('cogs.'+extension)
             await ctx.send('Cog {} is reloaded!'.format(extension))
         except:
             try: 
-                bot.load_extension('cogs.'+extension)
+                await bot.load_extension('cogs.'+extension)
                 await ctx.send('Cog {} is loaded!'.format(extension))
             except:
                 await ctx.send('Cog {} not loaded :('.format(extension))

@@ -142,11 +142,6 @@ class LoginCog(commands.Cog):
             await ctx.send('I don\'t understand that...\n'+helpstate)
 
 
-
-
-
-
-
-def setup(bot):
-    bot.add_cog(LoginCog(bot))
+async def setup(bot):
+    await bot.add_cog(LoginCog(bot))
 

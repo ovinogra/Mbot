@@ -276,8 +276,5 @@ class MiscCog(commands.Cog):
             'But Mbot is still impressed you found this. Here\'s a mushroom for your efforts.',embed=embed)
 
 
-
-
-
-def setup(bot):
-    bot.add_cog(MiscCog(bot))
+async def setup(bot):
+    await bot.add_cog(MiscCog(bot))

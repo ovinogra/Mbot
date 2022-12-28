@@ -107,11 +107,7 @@ class TagsCog(commands.Cog):
             await ctx.send('No tag found: `'+query+'`.')
         return
 
-        
 
-
-
-
-def setup(bot):
-    bot.add_cog(TagsCog(bot))
+async def setup(bot):
+    await bot.add_cog(TagsCog(bot))
 

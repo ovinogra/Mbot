@@ -503,8 +503,7 @@ class DebrisCog(commands.Cog):
             await checkanswermaster(query)
 
 
-
-def setup(bot):
-    bot.add_cog(DebrisCog(bot))
+async def setup(bot):
+    await bot.add_cog(DebrisCog(bot))
 
 

@@ -92,7 +92,7 @@ class AdminCog(commands.Cog):
                 await channel.delete()
 
 
-def setup(bot):
-    bot.add_cog(AdminCog(bot))
+async def setup(bot):
+    await bot.add_cog(AdminCog(bot))
 
 

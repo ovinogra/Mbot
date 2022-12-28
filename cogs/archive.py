@@ -132,6 +132,6 @@ class ArchiveCog(commands.Cog):
             await status.delete()
 
 
-def setup(bot):
-    bot.add_cog(ArchiveCog(bot))
+async def setup(bot):
+    await bot.add_cog(ArchiveCog(bot))
 
