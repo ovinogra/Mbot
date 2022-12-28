@@ -202,7 +202,7 @@ class BigHuntCog(commands.Cog):
         nexussheet.append_row(temp,table_range=table_range)
 
         col_select = lib['Created At'][0]+1
-        nexussheet.update_cell(rownum, col_select, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        nexussheet.update_cell(rownum, col_select, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
 
     def puzzle_sheet_make(self,nexussheet,puzzlename):
@@ -523,7 +523,7 @@ class BigHuntCog(commands.Cog):
         col_select = lib['Priority'][0]+1
         nexussheet.update_cell(row_select, col_select, 'Solved')
         col_select = lib['Solved At'][0]+1
-        nexussheet.update_cell(row_select, col_select, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        nexussheet.update_cell(row_select, col_select, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
         # move channel down
         channels = ctx.message.channel.category.channels
