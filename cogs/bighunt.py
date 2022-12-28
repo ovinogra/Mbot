@@ -2,6 +2,7 @@
 import asyncio
 
 import discord
+from discord import HTTPException
 from discord.ext import commands
 import gspread
 import random
@@ -272,6 +273,18 @@ class BigHuntCog(commands.Cog):
         can flag by round or unsolved 
         """
 
+        async def send_nexus(nexus):
+            try:
+                await ctx.send(embed=nexus)
+            except HTTPException:
+                new_embed = discord.Embed(
+                    title='Nexus Link',
+                    colour=discord.Colour(0xfffff0),
+                    url=nexus_url
+                )
+                new_embed.add_field(name="Note", value="Puzzle list exceeds character limit. Try using `-unsolved` or `-round=[round]` instead.")
+                await ctx.send(embed=new_embed)
+
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
         nexus_wkbook = self.nexus_get_wkbook(nexus_url)
@@ -339,7 +352,7 @@ class BigHuntCog(commands.Cog):
                     if data_answer[n] == '-':
                         names += data_round[n]+'-'+data_number[n]+': '+data_name[n]+'\n'
                 embed.add_field(name='Unsolved',value=names,inline=True)
-                await ctx.send(embed=embed)
+                await send_nexus(nexus=embed)
                 return
             elif query == '-all':
                 rounds = np.unique(data_round)
@@ -349,7 +362,7 @@ class BigHuntCog(commands.Cog):
                         if data_round[n] == level:
                             names += data_number[n] + ': ' + data_name[n] + ' (' + data_answer[n] + ')' + '\n'
                     embed.add_field(name='Round: ' + str(level), value=names, inline=False)
-                await ctx.send(embed=embed)
+                await send_nexus(nexus=embed)
                 return
             elif '-round=' in query:
                 round_token = query.split('=')[1]
@@ -367,7 +380,7 @@ class BigHuntCog(commands.Cog):
                 names += data_number[n] + ': ' + data_name[n] + ' (' + data_answer[n] + ')' + '\n'
         embed.add_field(name='Round: ' + current_round_token, value=names, inline=False)
 
-        await ctx.send(embed=embed)
+        await send_nexus(nexus=embed)
 
     @commands.command(aliases=['rounds','listround','listrounds'])
     @commands.guild_only()
