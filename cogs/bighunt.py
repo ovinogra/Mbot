@@ -223,6 +223,13 @@ class BigHuntCog(commands.Cog):
         newsheet_url = "https://docs.google.com/spreadsheets/d/%s" % newsheet.id
         return newsheet_url
 
+    # relies on column order in rounds sheet
+    def get_round_name_from_marker(self, data, marker):
+        for item in data[3:]:
+            if marker == item[3]:
+                return item[0]
+        return 'Unsorted'
+
 
     ##### begin bot commands #####
 
@@ -267,14 +274,20 @@ class BigHuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
-        nexussheet = self.nexus_get_sheet(nexus_url)
-        data_all = nexussheet.get_all_values()
+        nexus_wkbook = self.nexus_get_wkbook(nexus_url)
+        nexus_sheet = nexus_wkbook.get_worksheet(0)
+        data_all = nexus_sheet.get_all_values()
         headings = data_all[0]
         lib = self.nexus_sort_columns(headings)
+
+        # fetch nexus data of rounds
+        round_sheet = nexus_wkbook.get_worksheet(2)
+        round_data_all = round_sheet.get_all_values()
         
         # want: puzzle channel mention (linked), answer, round
         data_channel = [item[lib['Channel ID'][0]] for item in data_all[2:]]
         data_round = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] for item in data_all[2:]]
+        data_round_name = ['Unsorted' if item[lib['Round'][0]] == '' else self.get_round_name_from_marker(round_data_all, item[lib['Round'][0]]) for item in data_all[2:]]
         data_number = ['-' if item[lib['Number'][0]] == '' else item[lib['Number'][0]] for item in data_all[2:]]
         #data_name = ['-' if item == '' else self.channel_get_by_id(ctx,int(item)).mention for item in data_channel]
         data_answer = ['-' if item[lib['Answer'][0]] == '' else item[lib['Answer'][0]] for item in data_all[2:]]
@@ -310,8 +323,16 @@ class BigHuntCog(commands.Cog):
             url=nexus_url
         )
 
+        current_round_id = ctx.channel.category.id
+        current_round_token = ''
+        # check if current category is a round in the nexus
+        if self.check_nexus_round_list(wkbook=nexus_wkbook, idtest=current_round_id):
+            current_round_token = self.fetch_round_marker(ctx, wkbook=nexus_wkbook, roundid=current_round_id)
+        # if not in a category and no flags specified, go for "all"
+        elif not query:
+            query = "-all"
+
         if query:
-            
             if query == '-unsolved':
                 names = ''
                 for n in range(0,len(data_name)):
@@ -320,30 +341,31 @@ class BigHuntCog(commands.Cog):
                 embed.add_field(name='Unsolved',value=names,inline=True)
                 await ctx.send(embed=embed)
                 return
-            
-            if '-round=' in query:
-                roundnumber = query.split('=')[1]
-                names = ''
-                if roundnumber in data_round:
-                    for n in range(0,len(data_name)):
-                        if data_round[n] == query.split('=')[1]:
-                            names += data_number[n]+': '+data_name[n]+' ('+data_answer[n]+')'+'\n'
-                    embed.add_field(name='Round: '+query.split('=')[1],value=names,inline=False)
-                    await ctx.send(embed=embed)
+            elif query == '-all':
+                rounds = np.unique(data_round)
+                for level in rounds:
+                    names = ''
+                    for n in range(0, len(data_name)):
+                        if data_round[n] == level:
+                            names += data_number[n] + ': ' + data_name[n] + ' (' + data_answer[n] + ')' + '\n'
+                    embed.add_field(name='Round: ' + str(level), value=names, inline=False)
+                await ctx.send(embed=embed)
+                return
+            elif '-round=' in query:
+                round_token = query.split('=')[1]
+                if round_token in data_round or round_token in data_round_name:
+                    current_round_token = round_token
                 else:
                     await ctx.send('No such round found.')
+            else:
+                await ctx.send('Accepted flags: `-round=`, `-all`, or `-unsolved`')
                 return
 
-            await ctx.send('Accepted flags: `-round=` or `-unsolved`')
-            return
-
-        rounds = np.unique(data_round)
-        for level in rounds:
-            names = ''
-            for n in range(0,len(data_name)):
-                if data_round[n] == level:
-                    names += data_number[n]+': '+data_name[n]+' ('+data_answer[n]+')'+'\n'
-            embed.add_field(name='Round: '+str(level),value=names,inline=False)
+        names = ''
+        for n in range(0, len(data_name)):
+            if data_round[n] == current_round_token or data_round_name[n] == current_round_token:
+                names += data_number[n] + ': ' + data_name[n] + ' (' + data_answer[n] + ')' + '\n'
+        embed.add_field(name='Round: ' + current_round_token, value=names, inline=False)
 
         await ctx.send(embed=embed)
 
