@@ -5,6 +5,7 @@ __pycache__/*
 .env
 client_secrets.json
 **/venv
+*.pem
 
 # IDE-Specific
 **/.idea

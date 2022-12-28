@@ -127,7 +127,7 @@ class MiscCog(commands.Cog):
         minutes = (delta.seconds % 3600) // 60
         seconds = (delta.seconds % 3600) % 60
         if days < 0:
-            return '**YES!!!*** :tada: Mystery Hunt 2022 has started!'
+            return '**YES!!!*** :tada: Mystery Hunt 2023 has started!'
         else:
             return 'NO. \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds)
 

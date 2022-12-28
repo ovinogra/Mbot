@@ -1,4 +1,5 @@
 # puzzle.py
+import asyncio
 
 import discord
 from discord.ext import commands
@@ -34,19 +35,19 @@ class BigHuntCog(commands.Cog):
         self.bot = bot
         self.mark = '✅'
         self.drive = Drive()
-        self.logfeed = 913855656694530059
+        self.logfeed = 809608416569851944
 
     ### channel action functions
     async def channel_create(self,ctx,name,position,category=None):
         if not category:
-            category = ctx.message.channel.category        
-        newchannnel = await category.create_text_channel(name=name,position=position)
-        return newchannnel
+            category = ctx.message.channel.category
+        textchannnel = await category.create_text_channel(name=name,position=position)
+        voicechannnel = await category.create_voice_channel(name=name,position=position)
+        return [textchannnel,voicechannnel]
 
     async def channel_rename(self,ctx,channel,newname):
         channel.name = newname
         await channel.edit(name=newname)
-
 
 
 
@@ -153,7 +154,7 @@ class BigHuntCog(commands.Cog):
         return a dict of column names with their indicies
         assume all in label_key exists in nexus
         """
-        label_key = ['Channel ID','Round','Number','Puzzle Name','Answer','Spreadsheet Link','Priority','Notes','Created At','Solved At']
+        label_key = ['Channel ID','Voice Channel ID','Round','Number','Puzzle Name','Answer','Spreadsheet Link','Priority','Notes','Created At','Solved At']
         lib = {}
         for n in range(0,len(label_key)):
             label = label_key[n]
@@ -177,7 +178,7 @@ class BigHuntCog(commands.Cog):
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(data_all[2]))
         sheet.append_row(temp,table_range=table_range)
 
-    def nexus_add_puzzle(self,nexussheet,puzzlechannel,puzzlename,puzzlesheeturl,roundmarker,roundname):
+    def nexus_add_puzzle(self,nexussheet,puzzlechannel,voicechannel,puzzlename,puzzlesheeturl,roundmarker,roundname):
         """ add channel id, puzzle name, link, priority=New """
 
         # fetch nexus data and sort headings
@@ -188,6 +189,7 @@ class BigHuntCog(commands.Cog):
         # new row for puzzle
         temp = ['' for item in range(0,len(headings))]
         temp[lib['Channel ID'][0]] = str(puzzlechannel.id)
+        temp[lib['Voice Channel ID'][0]] = str(voicechannel.id)
         temp[lib['Priority'][0]] = 'New'
         temp[lib['Puzzle Name'][0]] = puzzlename
         temp[lib['Spreadsheet Link'][0]] = puzzlesheeturl
@@ -411,13 +413,13 @@ class BigHuntCog(commands.Cog):
         newcategory = await ctx.guild.create_category(name)
         newchannnel = await newcategory.create_text_channel(name=marker+'-'+name+'-general')
         newvoicechannnel = await newcategory.create_voice_channel(name=name+' Voice')
-        self.nexus_add_round(nexuswkbook,newcategory,newchannnel, marker)
+        self.nexus_add_round(nexuswkbook,newcategory,newchannnel,marker)
         
         # send feedback on round creation
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        await ctx.send(':green_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
-        await logchannel.send('['+dt_string+' EST] :green_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        await ctx.send(':orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        await logchannel.send('['+dt_string+' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
         
 
 
@@ -477,19 +479,19 @@ class BigHuntCog(commands.Cog):
         infomsg = await ctx.send('Creating puzzle `{}`'.format(puzzlename))
 
         # puzzle creation sequence
-        newchannel = await self.channel_create(ctx,name=puzzlename,position=position,category=roundcategory)
+        newchannels = await self.channel_create(ctx,name=puzzlename,position=position,category=roundcategory)
         newsheet_url = self.puzzle_sheet_make(nexussheet,puzzlename)
-        msg = await newchannel.send(newsheet_url)
+        msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
-        self.nexus_add_puzzle(nexussheet=nexussheet,puzzlechannel=newchannel,puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundmarker=roundmarker,roundname=roundname)
+        self.nexus_add_puzzle(nexussheet=nexussheet,puzzlechannel=newchannels[0],voicechannel=newchannels[1],puzzlename=puzzlename,puzzlesheeturl=newsheet_url,roundmarker=roundmarker,roundname=roundname)
         
 
         # send final feedback 
-        await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannel.mention,roundname))
+        await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
         logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
-        await logchannel.send('['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannel.mention,roundname))
+        await logchannel.send('['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
 
 
 
@@ -545,9 +547,17 @@ class BigHuntCog(commands.Cog):
         if self.mark not in ctx.channel.name:
             emote = random.choice(['gemheart','bang','face_explode','face_hearts','face_openmouth','face_party','face_stars','party','rocket','star','mbot','slug'])
             filepath = './misc/emotes/'+emote+'.png'
-            await ctx.send(content='`{}` marked as solved!'.format(puzzlename),file=discord.File(filepath))
+            solve_message = await ctx.send(content='`{}` marked as solved! Voice chat will be deleted in **5 minutes**.'.format(puzzlename),file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
-            await logchannel.send('['+dt_string+' EST] :tada: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+            await logchannel.send('['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+
+            # delete the vc after 5 minutes
+            await asyncio.sleep(300)
+            try:
+                await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select-1][lib['Voice Channel ID'][0]])).delete()
+            except AttributeError:
+                pass
+            await solve_message.edit(content='`{}` marked as solved!'.format(puzzlename))
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
         
@@ -682,6 +692,7 @@ class BigHuntCog(commands.Cog):
                 col_select = lib['Puzzle Name'][0]+1
                 nexussheet.update_cell(row_select, col_select, updatedict[item])
                 await self.channel_rename(ctx,ctx.channel,updatedict[item])
+                await self.channel_rename(ctx,ctx.guild.get_channel(int(data_all[row_select-1][lib['Voice Channel ID'][0]])),updatedict[item])
                 await ctx.send('Updated column Name for puzzle: {}'.format(puzzlename))
 
             elif item == 'priority':
@@ -772,7 +783,7 @@ class BigHuntCog(commands.Cog):
         embed = discord.Embed(
             title='Checks',
             colour=discord.Colour(0xfffff0),
-            description='Share hunt folder with\n`'+self.googledata['client_email']+'`\n')
+            description='Share hunt folder with\n`'+self.drive.googledata['client_email']+'`\n')
         embed.add_field(name='Topic',value=topic,inline=True)
         embed.add_field(name='Status',value=status,inline=True)
 
