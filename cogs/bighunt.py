@@ -36,7 +36,7 @@ class BigHuntCog(commands.Cog):
         self.bot = bot
         self.mark = '✅'
         self.drive = Drive()
-        self.logfeed = 809608416569851944
+        self.logfeed = 1061298260142211223
 
     ### channel action functions
     async def channel_create(self,ctx,name,position,category=None):
