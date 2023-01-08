@@ -231,6 +231,12 @@ class BigHuntCog(commands.Cog):
                 return item[0]
         return 'Unsorted'
 
+    async def send_log_message(self, ctx, msg):
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        # if the log channel doesn't exist, just fail silently
+        if logchannel is None:
+            return
+        await logchannel.send(msg)
 
     ##### begin bot commands #####
 
@@ -444,7 +450,6 @@ class BigHuntCog(commands.Cog):
             return
 
         # do the round creation things
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
         newcategory = await ctx.guild.create_category(name)
         newchannnel = await newcategory.create_text_channel(name=marker+'-'+name+'-general')
         newvoicechannnel = await newcategory.create_voice_channel(name=name+' Voice')
@@ -454,7 +459,7 @@ class BigHuntCog(commands.Cog):
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
         await ctx.send(':orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
-        await logchannel.send('['+dt_string+' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        await self.send_log_message(ctx, '['+dt_string+' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
         
 
 
@@ -525,11 +530,15 @@ class BigHuntCog(commands.Cog):
         await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
-        await logchannel.send('['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
+        await self.send_log_message(ctx, '['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
 
 
-
+    @commands.command(aliases=['multicreate'])
+    @commands.guild_only()
+    async def multicreate_puzzles(self, ctx, *, query=None):
+        """ create multiple puzzles with one command """
+        for puzz in query.splitlines():
+            await self.create_puzzle(ctx, query=puzz)
 
     
     @commands.command(aliases=['solve'])
@@ -560,6 +569,16 @@ class BigHuntCog(commands.Cog):
         col_select = lib['Solved At'][0]+1
         nexussheet.update_cell(row_select, col_select, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
+        # update sheet to indicate solve
+        col_select = lib['Puzzle Name'][0]
+        puzzle_name = data_all[row_select - 1][col_select]
+        col_select = lib['Spreadsheet Link'][0]
+        puzzle_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select])
+        puzzle_sheet.update_title("SOLVED: " + puzzle_name)
+        for wksheet in puzzle_sheet.worksheets():
+            wksheet.update_tab_color({ "red": 0.0, "green": 1.0, "blue": 0.0 })
+        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 0.0, "green": 1.0, "blue": 0.0 } })
+
         # move channel down
         channels = ctx.message.channel.category.channels
         idx = channels[-2].position+1 # note the change due to voice channel in category
@@ -577,17 +596,16 @@ class BigHuntCog(commands.Cog):
         puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
         
         if self.mark not in ctx.channel.name:
             emote = random.choice(['gemheart','bang','face_explode','face_hearts','face_openmouth','face_party','face_stars','party','rocket','star','mbot','slug'])
             filepath = './misc/emotes/'+emote+'.png'
-            solve_message = await ctx.send(content='`{}` marked as solved! Voice chat will be deleted in **5 minutes**.'.format(puzzlename),file=discord.File(filepath))
+            solve_message = await ctx.send(content='`{}` marked as solved! Voice chat will be deleted in **2 minutes**.'.format(puzzlename),file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
-            await logchannel.send('['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+            await self.send_log_message(ctx, '['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
 
-            # delete the vc after 5 minutes
-            await asyncio.sleep(300)
+            # delete the vc after 2 minutes
+            await asyncio.sleep(120)
             try:
                 await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select-1][lib['Voice Channel ID'][0]])).delete()
             except AttributeError:
@@ -601,7 +619,7 @@ class BigHuntCog(commands.Cog):
             
     
 
-    @commands.command(aliases=['undosolve','imessedup'])
+    @commands.command(aliases=['undosolve','unsolve','imessedup'])
     @commands.guild_only()
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
@@ -624,6 +642,18 @@ class BigHuntCog(commands.Cog):
         col_select = lib['Solved At'][0]+1
         nexussheet.update_cell(row_select, col_select, '')
 
+        # undo the coloring stuff
+        col_select = lib['Puzzle Name'][0]
+        puzzle_name = data_all[row_select - 1][col_select]
+        col_select = lib['Spreadsheet Link'][0]
+        puzzle_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select])
+        puzzle_sheet.update_title(puzzle_name.replace("SOLVED: ", ""))
+        for wksheet in puzzle_sheet.worksheets():
+            # sadly we can't actually unset the tab color with this
+            # TODO call the API directly here
+            wksheet.update_tab_color({ "red": 1.0, "green": 1.0, "blue": 1.0 })
+        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 1.0, "green": 1.0, "blue": 1.0 } })
+
         # update user of undosolve
         await ctx.channel.edit(name=ctx.channel.name.replace(self.mark,''))
 
@@ -635,8 +665,7 @@ class BigHuntCog(commands.Cog):
 
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
-        await logchannel.send('['+dt_string+' EST] Puzzle UNsolved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+        await self.send_log_message(ctx, '['+dt_string+' EST] Puzzle Unsolved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
 
 
 
