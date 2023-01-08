@@ -529,7 +529,12 @@ class BigHuntCog(commands.Cog):
         await logchannel.send('['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
 
 
-
+    @commands.command(aliases=['multicreate'])
+    @commands.guild_only()
+    async def multicreate_puzzles(self, ctx, *, query=None):
+        """ create multiple puzzles with one command """
+        for puzz in query.splitlines():
+            await self.create_puzzle(ctx, query=puzz)
 
     
     @commands.command(aliases=['solve'])
