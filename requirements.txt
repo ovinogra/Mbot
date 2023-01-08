@@ -6,7 +6,7 @@ numpy==1.19.5
 mechanize==0.4.5
 requests==2.22.0
 psycopg2-binary==2.8.4
-gspread==3.6.0
+gspread==5.7.0
 datetime
 google-auth==1.14.1
 boto3==1.26.13

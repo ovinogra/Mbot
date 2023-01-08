@@ -569,6 +569,16 @@ class BigHuntCog(commands.Cog):
         col_select = lib['Solved At'][0]+1
         nexussheet.update_cell(row_select, col_select, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
+        # update sheet to indicate solve
+        col_select = lib['Puzzle Name'][0]
+        puzzle_name = data_all[row_select - 1][col_select]
+        col_select = lib['Spreadsheet Link'][0]
+        puzzle_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select])
+        puzzle_sheet.update_title("SOLVED: " + puzzle_name)
+        for wksheet in puzzle_sheet.worksheets():
+            wksheet.update_tab_color({ "red": 0.0, "green": 1.0, "blue": 0.0 })
+        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 0.0, "green": 1.0, "blue": 0.0 } })
+
         # move channel down
         channels = ctx.message.channel.category.channels
         idx = channels[-2].position+1 # note the change due to voice channel in category
@@ -609,7 +619,7 @@ class BigHuntCog(commands.Cog):
             
     
 
-    @commands.command(aliases=['undosolve','imessedup'])
+    @commands.command(aliases=['undosolve','unsolve','imessedup'])
     @commands.guild_only()
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
@@ -631,6 +641,18 @@ class BigHuntCog(commands.Cog):
         nexussheet.update_cell(row_select, col_select, 'New')
         col_select = lib['Solved At'][0]+1
         nexussheet.update_cell(row_select, col_select, '')
+
+        # undo the coloring stuff
+        col_select = lib['Puzzle Name'][0]
+        puzzle_name = data_all[row_select - 1][col_select]
+        col_select = lib['Spreadsheet Link'][0]
+        puzzle_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select])
+        puzzle_sheet.update_title(puzzle_name.replace("SOLVED: ", ""))
+        for wksheet in puzzle_sheet.worksheets():
+            # sadly we can't actually unset the tab color with this
+            # TODO call the API directly here
+            wksheet.update_tab_color({ "red": 1.0, "green": 1.0, "blue": 1.0 })
+        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 1.0, "green": 1.0, "blue": 1.0 } })
 
         # update user of undosolve
         await ctx.channel.edit(name=ctx.channel.name.replace(self.mark,''))
