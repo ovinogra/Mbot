@@ -582,12 +582,12 @@ class BigHuntCog(commands.Cog):
         if self.mark not in ctx.channel.name:
             emote = random.choice(['gemheart','bang','face_explode','face_hearts','face_openmouth','face_party','face_stars','party','rocket','star','mbot','slug'])
             filepath = './misc/emotes/'+emote+'.png'
-            solve_message = await ctx.send(content='`{}` marked as solved! Voice chat will be deleted in **5 minutes**.'.format(puzzlename),file=discord.File(filepath))
+            solve_message = await ctx.send(content='`{}` marked as solved! Voice chat will be deleted in **2 minutes**.'.format(puzzlename),file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
             await logchannel.send('['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
 
-            # delete the vc after 5 minutes
-            await asyncio.sleep(300)
+            # delete the vc after 2 minutes
+            await asyncio.sleep(120)
             try:
                 await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select-1][lib['Voice Channel ID'][0]])).delete()
             except AttributeError:
