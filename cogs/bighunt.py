@@ -231,6 +231,12 @@ class BigHuntCog(commands.Cog):
                 return item[0]
         return 'Unsorted'
 
+    async def send_log_message(self, ctx, msg):
+        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        # if the log channel doesn't exist, just fail silently
+        if logchannel is None:
+            return
+        await logchannel.send(msg)
 
     ##### begin bot commands #####
 
@@ -444,7 +450,6 @@ class BigHuntCog(commands.Cog):
             return
 
         # do the round creation things
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
         newcategory = await ctx.guild.create_category(name)
         newchannnel = await newcategory.create_text_channel(name=marker+'-'+name+'-general')
         newvoicechannnel = await newcategory.create_voice_channel(name=name+' Voice')
@@ -454,7 +459,7 @@ class BigHuntCog(commands.Cog):
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
         await ctx.send(':orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
-        await logchannel.send('['+dt_string+' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
+        await self.send_log_message(ctx, '['+dt_string+' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory,newchannnel.mention))
         
 
 
@@ -525,8 +530,7 @@ class BigHuntCog(commands.Cog):
         await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
-        await logchannel.send('['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
+        await self.send_log_message(ctx, '['+dt_string+' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention,roundname))
 
 
     @commands.command(aliases=['multicreate'])
@@ -582,14 +586,13 @@ class BigHuntCog(commands.Cog):
         puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
         
         if self.mark not in ctx.channel.name:
             emote = random.choice(['gemheart','bang','face_explode','face_hearts','face_openmouth','face_party','face_stars','party','rocket','star','mbot','slug'])
             filepath = './misc/emotes/'+emote+'.png'
             solve_message = await ctx.send(content='`{}` marked as solved! Voice chat will be deleted in **2 minutes**.'.format(puzzlename),file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
-            await logchannel.send('['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+            await self.send_log_message(ctx, '['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
 
             # delete the vc after 2 minutes
             await asyncio.sleep(120)
@@ -640,8 +643,7 @@ class BigHuntCog(commands.Cog):
 
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
-        await logchannel.send('['+dt_string+' EST] Puzzle UNsolved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+        await self.send_log_message(ctx, '['+dt_string+' EST] Puzzle Unsolved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
 
 
 
