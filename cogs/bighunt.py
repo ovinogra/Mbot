@@ -36,7 +36,7 @@ class BigHuntCog(commands.Cog):
         self.bot = bot
         self.mark = '✅'
         self.drive = Drive()
-        self.logfeed = 1061298260142211223
+        self.logfeed = 1033881264895316119
 
     ### channel action functions
     async def channel_create(self,ctx,name,position,category=None):
@@ -452,7 +452,7 @@ class BigHuntCog(commands.Cog):
         # do the round creation things
         newcategory = await ctx.guild.create_category(name)
         newchannnel = await newcategory.create_text_channel(name=marker+'-'+name+'-general')
-        newvoicechannnel = await newcategory.create_voice_channel(name=name+' Voice')
+        newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: '+name+' Voice')
         self.nexus_add_round(nexuswkbook,newcategory,newchannnel,marker)
         
         # send feedback on round creation
