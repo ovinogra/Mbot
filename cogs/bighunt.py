@@ -452,7 +452,7 @@ class BigHuntCog(commands.Cog):
         # do the round creation things
         newcategory = await ctx.guild.create_category(name)
         newchannnel = await newcategory.create_text_channel(name=marker+'-'+name+'-general')
-        newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: '+name+' Voice')
+        newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: '+name)
         self.nexus_add_round(nexuswkbook,newcategory,newchannnel,marker)
         
         # send feedback on round creation
