@@ -602,7 +602,7 @@ class BigHuntCog(commands.Cog):
             filepath = './misc/emotes/'+emote+'.png'
             solve_message = await ctx.send(content='`{}` marked as solved! Voice chat will be deleted in **2 minutes**.'.format(puzzlename),file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
-            await self.send_log_message(ctx, '['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category))
+            await self.send_log_message(ctx, '['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}` ~ Answer: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category,query.upper()))
 
             # delete the vc after 2 minutes
             await asyncio.sleep(120)
