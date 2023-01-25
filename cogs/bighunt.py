@@ -8,6 +8,9 @@ import gspread
 import random
 import numpy as np
 from datetime import datetime, timedelta
+
+from gspread import WorksheetNotFound
+
 from utils.db2 import DBase
 from utils.drive import Drive
 
@@ -586,7 +589,10 @@ class BigHuntCog(commands.Cog):
         puzzle_sheet.update_title("SOLVED: " + puzzle_name)
         for wksheet in puzzle_sheet.worksheets():
             wksheet.update_tab_color({ "red": 0.0, "green": 1.0, "blue": 0.0 })
-        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 0.0, "green": 1.0, "blue": 0.0 } })
+        try:
+            puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 0.0, "green": 1.0, "blue": 0.0 } })
+        except WorksheetNotFound:
+            pass
 
         # move channel down
         channels = ctx.message.channel.category.channels
@@ -658,7 +664,10 @@ class BigHuntCog(commands.Cog):
             # sadly we can't actually unset the tab color with this
             # TODO call the API directly here
             wksheet.update_tab_color({ "red": 1.0, "green": 1.0, "blue": 1.0 })
-        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 1.0, "green": 1.0, "blue": 1.0 } })
+        try:
+            puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 1.0, "green": 1.0, "blue": 1.0 } })
+        except WorksheetNotFound:
+            pass
 
         # remake vc if necessary
         if discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])) is None:
