@@ -619,9 +619,12 @@ class BigHuntCog(commands.Cog):
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
             await self.send_log_message(ctx, '['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}` ~ Answer: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category,query.upper()))
 
-            self.vc_delete_queue.append(
-                (ctx.channel.id,
-                 asyncio.create_task(self.voice_channel_delayed_delete(ctx, int(data_all[row_select - 1][lib['Voice Channel ID'][0]]), puzzlename, solve_message))))
+            deletion = (ctx.channel.id,
+                 asyncio.create_task(self.voice_channel_delayed_delete(ctx, int(data_all[row_select - 1][lib['Voice Channel ID'][0]]), puzzlename, solve_message)))
+            self.vc_delete_queue.append(deletion)
+            await deletion[1]
+            self.vc_delete_queue.remove(deletion)
+
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
 
@@ -634,6 +637,7 @@ class BigHuntCog(commands.Cog):
         for vc in self.vc_delete_queue:
             if vc[0] == ctx.channel.id:
                 vc[1].cancel()
+                self.vc_delete_queue.remove(vc)
                 break
 
         # fetch nexus data and sort headings
