@@ -8,6 +8,9 @@ import gspread
 import random
 import numpy as np
 from datetime import datetime, timedelta
+
+from gspread import WorksheetNotFound
+
 from utils.db2 import DBase
 from utils.drive import Drive
 
@@ -37,6 +40,7 @@ class BigHuntCog(commands.Cog):
         self.mark = '✅'
         self.drive = Drive()
         self.logfeed = 1033881264895316119
+        self.vc_delete_queue = []
 
     ### channel action functions
     async def channel_create(self,ctx,name,position,category=None):
@@ -50,6 +54,14 @@ class BigHuntCog(commands.Cog):
         channel.name = newname
         await channel.edit(name=newname)
 
+    async def voice_channel_delayed_delete(self, ctx, vc, puzzlename, solve_message):
+        # delete the vc after 2 minutes
+        await asyncio.sleep(120)
+        try:
+            await discord.utils.get(ctx.guild.channels, id=vc).delete()
+        except AttributeError:
+            pass
+        await solve_message.edit(content='`{}` marked as solved!'.format(puzzlename))
 
 
     ### check functions for puzzle or round name in nexus and server
@@ -577,7 +589,10 @@ class BigHuntCog(commands.Cog):
         puzzle_sheet.update_title("SOLVED: " + puzzle_name)
         for wksheet in puzzle_sheet.worksheets():
             wksheet.update_tab_color({ "red": 0.0, "green": 1.0, "blue": 0.0 })
-        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 0.0, "green": 1.0, "blue": 0.0 } })
+        try:
+            puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 0.0, "green": 1.0, "blue": 0.0 } })
+        except WorksheetNotFound:
+            pass
 
         # move channel down
         channels = ctx.message.channel.category.channels
@@ -604,25 +619,26 @@ class BigHuntCog(commands.Cog):
             await ctx.channel.edit(name=self.mark+ctx.channel.name)
             await self.send_log_message(ctx, '['+dt_string+' EST] :green_circle: Puzzle solved: {} (Round: `{}` ~ Answer: `{}`)'.format(ctx.message.channel.mention,ctx.message.channel.category,query.upper()))
 
-            # delete the vc after 2 minutes
-            await asyncio.sleep(120)
-            try:
-                await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select-1][lib['Voice Channel ID'][0]])).delete()
-            except AttributeError:
-                pass
-            await solve_message.edit(content='`{}` marked as solved!'.format(puzzlename))
+            deletion = (ctx.channel.id,
+                 asyncio.create_task(self.voice_channel_delayed_delete(ctx, int(data_all[row_select - 1][lib['Voice Channel ID'][0]]), puzzlename, solve_message)))
+            self.vc_delete_queue.append(deletion)
+            await deletion[1]
+            self.vc_delete_queue.remove(deletion)
+
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
-        
-
-
-            
-    
 
     @commands.command(aliases=['undosolve','unsolve','imessedup'])
     @commands.guild_only()
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
+
+        # cancel VC deletion if necessary
+        for vc in self.vc_delete_queue:
+            if vc[0] == ctx.channel.id:
+                vc[1].cancel()
+                self.vc_delete_queue.remove(vc)
+                break
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
@@ -652,14 +668,19 @@ class BigHuntCog(commands.Cog):
             # sadly we can't actually unset the tab color with this
             # TODO call the API directly here
             wksheet.update_tab_color({ "red": 1.0, "green": 1.0, "blue": 1.0 })
-        puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 1.0, "green": 1.0, "blue": 1.0 } })
+        try:
+            puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 1.0, "green": 1.0, "blue": 1.0 } })
+        except WorksheetNotFound:
+            pass
+
+        # remake vc if necessary
+        if discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])) is None:
+            vc = await ctx.channel.category.create_voice_channel(name=puzzle_name)
+            nexussheet.update_cell(row_select, lib['Voice Channel ID'][0]+1, str(vc.id))
 
         # update user of undosolve
         await ctx.channel.edit(name=ctx.channel.name.replace(self.mark,''))
 
-            
-
-            
         filepath = './misc/emotes/szeth.png'
         await ctx.send(content='Fixed.',file=discord.File(filepath))
 
