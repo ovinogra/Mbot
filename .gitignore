@@ -2,7 +2,7 @@
 *.pyc
 .*~
 __pycache__/*
-.env
+*.env
 client_secrets.json
 **/venv
 *.pem

@@ -9,6 +9,7 @@ import random
 import numpy as np
 from datetime import datetime, timedelta
 
+from dotenv import load_dotenv
 from gspread import WorksheetNotFound
 
 from utils.db2 import DBase
@@ -33,6 +34,7 @@ import os
 class HuntCog(commands.Cog):
 
     def __init__(self, bot):
+        load_dotenv()
         self.bot = bot
         self.mark = '✅'
         self.drive = Drive()
@@ -274,7 +276,7 @@ class HuntCog(commands.Cog):
         nexussheet.append_row(temp,table_range=table_range)
 
         col_select = lib['Created At'][0]+1
-        nexussheet.update_cell(rownum, col_select, datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        nexussheet.update_cell(rownum, col_select, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
 
     def puzzle_sheet_make(self,nexussheet,puzzlename):
         """ copy template sheet from link in Nexus and return link to new sheet """
@@ -600,7 +602,7 @@ class HuntCog(commands.Cog):
             return
 
         position = roundcategory.channels[0].position if self.is_bighunt else ctx.message.channel.category.channels[0].position
-        infomsg = await ctx.send('Creating puzzle `{}`'.format(puzzlename))
+        infomsg = await ctx.send(':yellow_circle: Creating puzzle `{}`'.format(puzzlename))
 
         # puzzle creation sequence
         newchannels = await self.channel_create(ctx, name=puzzlename, position=position, category=roundcategory)
@@ -950,6 +952,38 @@ class HuntCog(commands.Cog):
         embed.add_field(name='Status',value=status,inline=True)
 
         await ctx.send(embed=embed)
+
+    @commands.command()
+    @commands.guild_only()
+    @commands.has_role('organiser')
+    async def bighunt(self, ctx, *, query=None):
+        if not query:
+            await ctx.send('Bighunt mode is currently ' + ('enabled.' if self.is_bighunt else 'disabled.'))
+            return
+
+        norm_query = query.lower()
+        edit_line = -1
+        with open('.env', 'r', encoding='utf-8') as reader:
+            data = reader.readlines()
+            for i in range(len(data)):
+                if data[i].startswith('BIG_HUNT='):
+                    edit_line = i
+                    break
+        if norm_query == 'true' or norm_query == 'on':
+            self.is_bighunt = True
+            data[i] = 'BIG_HUNT=\'True\''
+            await ctx.send('Enabled bighunt mode!')
+        elif norm_query == 'false' or norm_query == 'off':
+            self.is_bighunt = False
+            os.putenv('BIG_HUNT', 'False')
+            data[i] = 'BIG_HUNT=\'False\''
+            await ctx.send('Disabled bighunt mode.')
+        else:
+            await ctx.send('`!bighunt true` or `!bighunt false`')
+            return
+
+        with open('.env', 'w', encoding='utf-8') as writer:
+            writer.writelines(data)
 
 
 async def setup(bot):
