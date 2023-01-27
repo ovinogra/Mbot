@@ -612,12 +612,13 @@ class HuntCog(commands.Cog):
         self.nexus_add_puzzle(nexussheet=nexussheet, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
 
         # send final feedback
-        await infomsg.edit(
-            content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention, roundname))
         if self.is_bighunt:
+            await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention, roundname))
             now = datetime.utcnow() - timedelta(hours=5)
             dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
             await self.send_log_message(ctx, '[' + dt_string + ' EST] :yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention, roundname))
+        else:
+            await infomsg.edit(content=':yellow_circle: Puzzle created: {}'.format(newchannels[0].mention))
 
     @commands.command(aliases=['multicreate'])
     @commands.guild_only()
