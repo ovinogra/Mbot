@@ -38,7 +38,7 @@ class HuntCog(commands.Cog):
         self.bot = bot
         self.mark = '✅'
         self.drive = Drive()
-        self.is_bighunt = os.getenv("BIG_HUNT")
+        self.is_bighunt = bool(int(os.getenv("BIG_HUNT")))
         if self.is_bighunt:
             self.logfeed = 1033881264895316119
             self.vc_delete_queue = []
@@ -972,12 +972,12 @@ class HuntCog(commands.Cog):
                     break
         if norm_query == 'true' or norm_query == 'on':
             self.is_bighunt = True
-            data[i] = 'BIG_HUNT=\'True\''
+            data[i] = 'BIG_HUNT=1'
             await ctx.send('Enabled bighunt mode!')
         elif norm_query == 'false' or norm_query == 'off':
             self.is_bighunt = False
             os.putenv('BIG_HUNT', 'False')
-            data[i] = 'BIG_HUNT=\'False\''
+            data[i] = 'BIG_HUNT=0'
             await ctx.send('Disabled bighunt mode.')
         else:
             await ctx.send('`!bighunt true` or `!bighunt false`')
