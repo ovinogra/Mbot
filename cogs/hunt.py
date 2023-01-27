@@ -704,7 +704,7 @@ class HuntCog(commands.Cog):
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
 
-    @commands.command(aliases=['undosolve','imessedup'])
+    @commands.command(aliases=['undosolve','imessedup','!unsolve'])
     @commands.guild_only()
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
