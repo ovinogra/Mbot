@@ -21,8 +21,7 @@ initial_extensions = ['misc',
                        'debris',
                        'admin',
                        'tags',
-                       #'hunt',
-                       'bighunt',
+                       'hunt',
                        'archive']
 
 # initial_extensions = ['login','admin']
