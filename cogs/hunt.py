@@ -39,9 +39,8 @@ class HuntCog(commands.Cog):
         self.mark = '✅'
         self.drive = Drive()
         self.is_bighunt = bool(int(os.getenv("BIG_HUNT")))
-        if self.is_bighunt:
-            self.logfeed = 1033881264895316119
-            self.vc_delete_queue = []
+        self.logfeed = 1033881264895316119
+        self.vc_delete_queue = []
 
     # discord management functions
 
