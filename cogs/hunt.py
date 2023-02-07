@@ -647,8 +647,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
-        nexussheet = self.nexus_get_sheet(nexus_url)
-        data_all = nexussheet.get_all_values()
+        nexus_sheet = self.nexus_get_sheet(nexus_url)
+        data_all = nexus_sheet.get_all_values()
         headings = data_all[0]
         lib = self.nexus_sort_columns(headings)
 
@@ -657,34 +657,78 @@ class HuntCog(commands.Cog):
         # 2) assume channel ID exists in nexus 
         data_id = [item[lib['Channel ID'][0]] for item in data_all]
         row_select = data_id.index(str(ctx.channel.id))+1
-        col_select = lib['Answer'][0]+1
-        nexussheet.update_cell(row_select, col_select, query.upper())
-        col_select = lib['Priority'][0]+1
-        nexussheet.update_cell(row_select, col_select, 'Solved')
-        col_select = lib['Solved At'][0]+1
-        nexussheet.update_cell(row_select, col_select, datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+        edit_row = "A" + str(row_select) + ":" + gspread.utils.rowcol_to_a1(row_select, len(headings))
+        row_data = nexus_sheet.get(edit_row)
+        col_select = lib['Answer'][0]
+        row_data[0][col_select] = query.upper()
+        col_select = lib['Priority'][0]
+        row_data[0][col_select] = 'Solved'
+        col_select = lib['Solved At'][0]
+        time = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+        try:
+            row_data[0][col_select] = time
+        except IndexError:
+            row_data[0].append(time)
+        nexus_sheet.update(edit_row, row_data)
 
         # update sheet to indicate solve
         col_select = lib['Puzzle Name'][0]
         puzzle_name = data_all[row_select - 1][col_select]
         col_select = lib['Spreadsheet Link'][0]
         puzzle_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select])
-        puzzle_sheet.update_title("SOLVED: " + puzzle_name)
-        for wksheet in puzzle_sheet.worksheets():
-            wksheet.update_tab_color({ "red": 0.0, "green": 1.0, "blue": 0.0 })
-        try:
-            puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 0.0, "green": 1.0, "blue": 0.0 } })
-        except WorksheetNotFound:
-            pass
+        tabs = puzzle_sheet.worksheets()
+        requests = [{
+            "updateSheetProperties": {
+                "properties": {
+                    "sheetId": tab.id,
+                    "tabColor": {
+                        "red": 0.0,
+                        "green": 1.0,
+                        "blue": 0.0
+                    }
+                },
+                "fields": "tabColor"
+            }
+        } for tab in tabs]
+        requests.append({
+            "updateSpreadsheetProperties": {
+                "properties": {
+                    "title": "SOLVED: " + puzzle_name
+                },
+                "fields": "title"
+            }
+        })
+        for tab in tabs:
+            if tab.title.upper() == "MAIN":
+                requests.append({
+                    "repeatCell": {
+                        "range": {
+                            "sheetId": tab.id,
+                            "startRowIndex": 0,
+                            "endRowIndex": 4,
+                            "startColumnIndex": 0
+                        },
+                        "cell": {
+                            "userEnteredFormat": {
+                                "backgroundColor": {
+                                    "red": 0.0,
+                                    "green": 1.0,
+                                    "blue": 0.0
+                                }
+                            }
+                        },
+                        "fields": "userEnteredFormat.backgroundColor"
+                    }
+                })
+        puzzle_sheet.batch_update({"requests": requests})
 
-        # move channel down
+        # prepare to move channel down
         channels = ctx.message.channel.category.channels
         idx = channels[-2 if self.is_bighunt else -1].position+1
         for channel in channels:
             if self.mark in channel.name:
                 idx = channel.position 
                 break
-        await ctx.channel.edit(position=idx)
 
         # update user of solve
         puzzlename = data_all[row_select - 1][lib['Puzzle Name'][0]]
@@ -694,7 +738,7 @@ class HuntCog(commands.Cog):
                  'party', 'rocket', 'star', 'mbot', 'slug'])
             filepath = './misc/emotes/' + emote + '.png'
             solve_message = await ctx.send(content=('`{}` marked as solved!' + (' Voice chat will be deleted in **2 minutes**.' if self.is_bighunt else '')).format(puzzlename), file=discord.File(filepath))
-            await ctx.channel.edit(name=self.mark + ctx.channel.name)
+            await ctx.channel.edit(name=self.mark + ctx.channel.name, position=idx)
 
             if self.is_bighunt:
                 now = datetime.utcnow() - timedelta(hours=5)
@@ -728,8 +772,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
-        nexussheet = self.nexus_get_sheet(nexus_url)
-        data_all = nexussheet.get_all_values()
+        nexus_sheet = self.nexus_get_sheet(nexus_url)
+        data_all = nexus_sheet.get_all_values()
         headings = data_all[0]
         lib = self.nexus_sort_columns(headings)
 
@@ -737,32 +781,61 @@ class HuntCog(commands.Cog):
         # assume channel ID exists in nexus 
         data_id = [item[lib['Channel ID'][0]] for item in data_all]
         row_select = data_id.index(str(ctx.channel.id))+1
-        col_select = lib['Answer'][0]+1
-        nexussheet.update_cell(row_select, col_select, '')
-        col_select = lib['Priority'][0]+1
-        nexussheet.update_cell(row_select, col_select, 'New')
-        col_select = lib['Solved At'][0]+1
-        nexussheet.update_cell(row_select, col_select, '')
+        edit_row = "A" + str(row_select) + ":" + gspread.utils.rowcol_to_a1(row_select, len(headings))
+        row_data = nexus_sheet.get(edit_row)
+        col_select = lib['Answer'][0]
+        row_data[0][col_select] = ''
+        col_select = lib['Priority'][0]
+        row_data[0][col_select] = 'New'
+        col_select = lib['Solved At'][0]
+        row_data[0][col_select] = ''
+        nexus_sheet.update(edit_row, row_data)
 
         # undo the coloring stuff
         col_select = lib['Puzzle Name'][0]
         puzzle_name = data_all[row_select - 1][col_select]
         col_select = lib['Spreadsheet Link'][0]
         puzzle_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select])
-        puzzle_sheet.update_title(puzzle_name.replace("SOLVED: ", ""))
-        for wksheet in puzzle_sheet.worksheets():
-            # sadly we can't actually unset the tab color with this
-            # TODO call the API directly here
-            wksheet.update_tab_color({ "red": 1.0, "green": 1.0, "blue": 1.0 })
-        try:
-            puzzle_sheet.worksheet("MAIN").format("1:4", { "backgroundColor": { "red": 1.0, "green": 1.0, "blue": 1.0 } })
-        except WorksheetNotFound:
-            pass
+        tabs = puzzle_sheet.worksheets()
+        requests = [{
+            "updateSheetProperties": {
+                "properties": {
+                    "sheetId": tab.id
+                },
+                "fields": "tabColor"
+            }
+        } for tab in tabs]
+        requests.append({
+            "updateSpreadsheetProperties": {
+                "properties": {
+                    "title": puzzle_name
+                },
+                "fields": "title"
+            }
+        })
+        for tab in tabs:
+            if tab.title.upper() == "MAIN":
+                requests.append({
+                    "repeatCell": {
+                        "range": {
+                            "sheetId": tab.id,
+                            "startRowIndex": 0,
+                            "endRowIndex": 4,
+                            "startColumnIndex": 0
+                        },
+                        "cell": {
+                            "userEnteredFormat": {}
+                        },
+                        "fields": "userEnteredFormat.backgroundColor"
+                    }
+                })
+        puzzle_sheet.batch_update({"requests": requests})
 
         # remake vc if necessary
         if self.is_bighunt and discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])) is None:
             vc = await ctx.channel.category.create_voice_channel(name=puzzle_name)
-            nexussheet.update_cell(row_select, lib['Voice Channel ID'][0]+1, str(vc.id))
+            # this is a separate api edit request, but it should be infrequent enough not to matter
+            nexus_sheet.update_cell(row_select, lib['Voice Channel ID'][0]+1, str(vc.id))
 
         # update user of undosolve
         await ctx.channel.edit(name=ctx.channel.name.replace(self.mark,''))
