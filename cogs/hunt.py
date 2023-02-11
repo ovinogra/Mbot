@@ -339,7 +339,7 @@ class HuntCog(commands.Cog):
                     url=nexus_url
                 )
                 new_embed.add_field(name="Note",
-                                    value="Puzzle list exceeds character limit. Try using `-unsolved` or `-round=[round]` instead.")
+                                    value="Puzzle list exceeds the Discord character limit. Try using `-unsolved` or `-round=[round]` instead.")
                 await ctx.send(embed=new_embed)
 
         # fetch nexus data and sort headings
@@ -360,10 +360,8 @@ class HuntCog(commands.Cog):
         # want: puzzle channel mention (linked), answer, round
         data_channel = [item[lib['Channel ID'][0]] for item in data_all[2:]]
         data_round = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] for item in data_all[2:]]
-        data_round_name = [
-            'Unsorted' if item[lib['Round'][0]] == '' else self.get_round_name_from_marker(round_data,
-                                                                                           item[lib['Round'][0]]) for
-            item in data_all[2:]]
+        data_round_name = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] if not self.is_bighunt
+            else self.get_round_name_from_marker(round_data, item[lib['Round'][0]]) for item in data_all[2:]]
         data_number = ['-' if item[lib['Number'][0]] == '' else item[lib['Number'][0]] for item in data_all[2:]]
         data_answer = ['-' if item[lib['Answer'][0]] == '' else item[lib['Answer'][0]] for item in data_all[2:]]
 
