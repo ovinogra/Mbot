@@ -10,7 +10,10 @@ import numpy as np
 from datetime import datetime, timedelta
 
 from dotenv import load_dotenv
-from gspread import WorksheetNotFound
+from matplotlib import pyplot
+import io
+import math
+import time
 
 from utils.db2 import DBase
 from utils.drive import Drive
@@ -1062,6 +1065,64 @@ class HuntCog(commands.Cog):
         with open('.env', 'w', encoding='utf-8') as writer:
             writer.writelines(data)
 
+    @commands.command(aliases=['graph', 'solvegraph'])
+    @commands.guild_only()
+    async def generate_solve_graph(self, ctx, *, query=None):
+        # fetch solve data
+        nexus_url = await self.nexus_get_url(ctx)
+        nexus_sheet = self.nexus_get_sheet(nexus_url)
+        nexus_data = nexus_sheet.get_all_values()
+        headings = nexus_data[0]
+        lib = self.nexus_sort_columns(headings)
+        create_times = [item[lib['Created At'][0]] for item in nexus_data[2:]]
+        solve_times = [item[lib['Solved At'][0]] for item in nexus_data[2:]]
+
+        def dt_str_to_ms(dt_str):
+            try:
+                return time.mktime(datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S').timetuple())
+            except ValueError:
+                return -1
+
+        create_ms = list(filter(lambda h: h != -1, [dt_str_to_ms(dt_str) for dt_str in create_times]))
+        hunt_start_ms = min(create_ms)
+
+        def dt_str_to_hours(dt_str):
+            solve_ms = dt_str_to_ms(dt_str)
+            if solve_ms == -1:
+                return -1
+            return (solve_ms - hunt_start_ms) / 3600
+
+        # generate x-axis values
+        solve_hours = list(filter(lambda h: h != -1, [dt_str_to_hours(dt_str) for dt_str in solve_times]))
+        solve_hours.sort()
+        solve_hours.insert(0, 0.0)
+        max_x = math.ceil(solve_hours[len(solve_hours) - 1] + (solve_hours[len(solve_hours) - 1] / 25))
+        solve_hours.append(max_x)
+
+        # generate the graph
+        font = {
+            'family': 'serif',
+            'color': 'black',
+            'weight': 'normal',
+            'size': 16,
+        }
+        fig = pyplot.figure(figsize=(10,7))
+        # TODO use specific team name
+        plot = fig.subplots()
+        plot.set_title(ctx.message.channel.category.name + " Solves (17th Shard)", fontdict=font)
+        plot.set_xlabel("Hours", fontdict=font)
+        plot.set_ylabel("Solves", fontdict=font)
+        if query == '-fill' or query == 'fill':
+            plot.fill_between(solve_hours, list(range(0, len(solve_hours) - 1)) + [len(solve_hours) - 2], color='#e8bfff', step='post')
+        plot.step(solve_hours, list(range(0, len(solve_hours) - 1)) + [len(solve_hours) - 2], color='#e8bfff', linewidth=2.5, where='post')
+        plot.set_xlim(left=0.0, right=max_x)
+        plot.set_ylim(bottom=0.0, top=len(create_ms))
+
+        # send it to a byte buffer for messaging
+        buf = io.BytesIO()
+        fig.savefig(buf, bbox_inches='tight')
+        buf.seek(0)
+        await ctx.send(file=discord.File(fp=buf, filename="solve_graph.png"))
 
 async def setup(bot):
     await bot.add_cog(HuntCog(bot))
