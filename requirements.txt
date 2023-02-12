@@ -10,5 +10,5 @@ gspread==5.7.1
 datetime
 google-auth==1.14.1
 boto3==1.26.13
-matplotlib==3.6.3
-Pillow==9.4.0
+matplotlib==3.3.4
+Pillow==8.2.0
