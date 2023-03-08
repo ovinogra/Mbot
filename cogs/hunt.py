@@ -288,38 +288,62 @@ class HuntCog(commands.Cog):
     # begin bot commands #
 
     @commands.command()
-    async def bighelp(self,ctx,*,query=None):
+    # @bot.command(name='help')
+    async def help(self,ctx,*,query=None):
+    # async def help(ctx):
         if not self.is_bighunt:
-            await ctx.send('Bot is not in bighunt mode. Try `!help` instead.')
-            return
-
-        embed = discord.Embed(
-            title='Commands for the bighunt puzzle manager',
-            colour=discord.Colour.dark_grey(),
-            description='All our puzzle data is summarized in a google sheet called `#Nexus`. '\
-                'There are two types of bot commands: (1) those that show our info/progress and (2) those that update it. '\
-                'Do **not** edit the Nexus directly unless you know what you are doing! Use these commands instead so everything is tracked consistently. '\
-                'If you are new, then generally you only need to know `!login`, `!nexus`, and `!solve`. Ping an organizer if you are ever uncertain about a command :)'
-        )
-        embed.add_field(name='Display hunt/puzzle data',value=
-            '`!login` to show our team info and drive links\n'\
-            '`!nexus` to show all puzzles unlocked/solved\n'\
-            '`!nexus -round=Round Name` to show puzzles from only one round\n'\
-            '`!nexus -unsolved` to show only unsolved puzzles \n'\
-            '`!listrounds` (`!rounds`) to show all hunt rounds \n'\
-            '`!check` that bot is setup during pre-hunt period (mod only)\n'\
-            ,inline=False)
-        embed.add_field(name='Update hunt/puzzle data',value=
-            '`!login update` to update our team info (mod only) \n'\
-            '`!createround RoundName` to setup a category for a new round\n'\
-            '`!createpuzzle PuzzName` (`!create`) to setup channel/sheet for a new puzzle\n'\
-            '`!createpuzzle PuzzName -round=Round Name`\n'\
-            '`!solve HERRING` to mark a puzzle as solved\n'\
-            '`!undosolve` to unsolve a puzzle if you marked a solve in the wrong channel\n'\
-            '`!note Backsolve` to leave any short solving notes about the puzzle\n'\
-            '`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` to update a field in Nexus\n'\
-            ,inline=False)
-        await ctx.send(embed=embed)
+            embed = discord.Embed(
+                title='Commands',
+                colour=discord.Colour.dark_grey(),
+                description='Generally you only need the basic functions. Typing a command will usually give more details for it. '
+            )
+            embed.add_field(name=' Basic Functions',value=
+                '`!login`\n'\
+                '`!nexus [-unsolved]`\n'\
+                '`!create Puzzle Name`\n'\
+                '`!solve ANSWER`\n',inline=False)
+            embed.add_field(name='Other Functions',value=
+                '`!multicreate [Puzzle Names (split by line)]`\n'\
+                '`!note [backsolve]`\n'\
+                '`!update [-name=New Puzzle Name]`\n'\
+                '`!undosolve`\n'\
+                '`!graph [fill]`\n'\
+                'Admin: `!login update`, `!checksetup`, `!bighunt`, `!stat`, `!rmc check`, `!arc`',inline=False)
+            embed.add_field(name='Tools',value=
+                '`!n`: Nutrimatic; `!cc`: Caesar; `!vig`: Vigenere; `!alpha`: A1Z26; `!atbash`: atbash; `!atom`: Elements\n'\
+                '`!tag topic`: Cheatsheets and links (topic=braille,morse,etc)',inline=False)
+            embed.add_field(name='Fun',value='`!sz`, `!flip`, `!dice [N S]`, `engage`, talk to M-Bot :)',inline=False)
+            embed.set_footer(text='https://github.com/Moonrise55/Mbot')
+            await ctx.send(embed=embed)
+        else: 
+            embed = discord.Embed(
+                title='Commands',
+                colour=discord.Colour.dark_grey(),
+                description='All our solving data is summarized in a google sheet called `#Nexus`. Do **not** edit it directly. '\
+                'Generally you only need the basic functions. Typing a command will usually give more details for it, but ask if you are uncertain about anything :) '
+            )
+            embed.add_field(name=' Basic Functions',value=
+                '`!login` to show our team info and drive links\n'\
+                '`!nexus` to show all puzzles list\n'\
+                '`!createround Round Name -marker=:emoji:` to setup category for a new round\n'\
+                '`!create Puzzle Name` to setup channel/sheet for a new puzzle (use in the general channel for the correct round!)\n'\
+                '`!solve ANSWER` to mark a puzzle as solved\n',inline=False)
+            embed.add_field(name='Other Functions',value=
+                '`!nexus -unsolved` to show only unsolved puzzles \n'\
+                '`!nexus -round=Round Name` to show puzzles from only one round\n'\
+                '`!listrounds` (`!rounds`) to show all hunt rounds \n'\
+                '`!multicreate [Puzzle Names (split by line)]`\n'\
+                '`!note backsolve` to leave short solving notes about the puzzle\n'\
+                '`!update [-name=Name]` to update a field in Nexus\n'\
+                '`!undosolve` in case you marked the wrong puzzle solved\n'\
+                '`!graph [fill]` to generate a progress graph\n'\
+                'Admin: `!login update`, `!checksetup`, `!bighunt`, `!stat`',inline=False)
+            embed.add_field(name='Tools',value=
+                '`!n`: Nutrimatic; `!cc`: Caesar; `!vig`: Vigenere; `!alpha`: A1Z26; `!atbash`: atbash; `!atom`: Elements\n'\
+                '`!tag topic`: Cheatsheets and links (topic=braille,morse,etc)',inline=False)
+            embed.add_field(name='Fun',value='`!iihy`, `!sz`, `!flip`, `!dice [N S]`, `engage`, talk to M-Bot :)',inline=False)
+            embed.set_footer(text='https://github.com/Moonrise55/Mbot')
+            await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -527,7 +551,7 @@ class HuntCog(commands.Cog):
         await ctx.send(':orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannnel.mention))
         await self.send_log_message(ctx, '[' + dt_string + ' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannnel.mention))
 
-    @commands.command(aliases=['create'])
+    @commands.command(aliases=['create','createpuzzle'])
     @commands.guild_only()
     async def create_puzzle(self, ctx, *, query=None, is_multi=False):
         """ puzzle creation script to
