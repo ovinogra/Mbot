@@ -6,6 +6,10 @@ import os
 
 ## Make simple database tables, only needs to be run once.
 
+### 
+# this initialization script is defunct now that bot relies on dynamodb
+# but keeping this file in case I transfer back to postgresql
+###
 
 # check connection to database
 load_dotenv()

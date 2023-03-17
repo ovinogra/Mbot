@@ -24,7 +24,7 @@ initial_extensions = ['misc',
                        'hunt',
                        'archive']
 
-# initial_extensions = ['login','admin']
+# initial_extensions = ['login','hunt']
 
 @bot.event
 async def on_ready():
@@ -35,31 +35,8 @@ async def on_ready():
 
 # General #################################################################
 
+# help moved to hunt cog
 bot.remove_command('help')
-
-@bot.command(name='help')
-async def help(ctx):
-    embed = discord.Embed(
-        title='Commands',
-        colour=discord.Colour.dark_grey(),
-        description='For more details on puzzle manager commands, ask for `!bighelp`'
-    )
-    embed.add_field(name='Puzzle Manager',value=
-        '`!login [update]`\n'\
-        '`!nexus [-unsolved] [-round=1]`\n`!createround RoundName`\n`!createpuzzle PuzzName [-round=1]`\n`!solve ANSWER`\n`!note backsolve`\n`!update [-name=Name]`\n`!undosolve`\n'\
-        '`!check` (setup only)',inline=True)
-    embed.add_field(name='Tools',value=
-        '`!nut`: Nutrimatic\n'\
-        '`!cc`: Caesar cipher\n'\
-        '`!vig`: Vigenere cipher\n'\
-        '`!alpha`: A1Z26\n'\
-        '`!atbash`: atbash cipher\n'\
-        '`!atom`: Periodic table\n'\
-        '`!tag list`: Code cheatsheets available',inline=True)
-    embed.add_field(name='Fun',value='`!sz`, `!flip`, `!dice` *N S*, `engage`, talk to M-Bot',inline=False)
-    embed.set_footer(text='https://github.com/Moonrise55/Mbot')
-    await ctx.send(embed=embed)
-
 
 # Development Commands #######################################################
 
