@@ -60,16 +60,18 @@ class ArchiveCog(commands.Cog):
 
     async def archive_category(self, ctx, sheet_url, imagefilepath):
         category = ctx.message.channel.category
-        status = await ctx.message.channel.send('Archiving category {}...'.format(category))
+        categorystatus = await ctx.message.channel.send('Archiving category {}...'.format(category))
         # only archive text channels
+        channelstatus = await ctx.message.channel.send('Status:')
         for channel in category.text_channels:
-            await self.archive_channel(ctx, channel, sheet_url, imagefilepath, False)
+            await channelstatus.edit(content='Status:\nArchiving channel {}...'.format(channel.mention))
+            await self.archive_channel(ctx, channel, sheet_url, imagefilepath)
             # sleep for three seconds to dodge API data cap
             await asyncio.sleep(3)
-        await status.edit(content='Category {} archived!'.format(category))
+        await categorystatus.edit(content='Category {} archived!'.format(category))
 
-    async def archive_channel(self, ctx, channel, sheet_url, imagefilepath, log):
-        status = await ctx.message.channel.send('Archiving channel {}...'.format(channel.mention))
+    async def archive_channel(self, ctx, channel, sheet_url, imagefilepath):
+        # status = await ctx.message.channel.send('Archiving channel {}...'.format(channel.mention))
         ignoreimages = os.listdir('./misc/emotes/')
 
         messages = []
@@ -127,9 +129,9 @@ class ArchiveCog(commands.Cog):
         sheet.insert_rows(messages, value_input_option='USER_ENTERED')
         wkbook.batch_update(resize_cols_request)
 
-        await status.edit(content='Channel {} archived!'.format(channel.mention))
-        if not log:
-            await status.delete()
+        # await status.edit(content='Channel {} archived!'.format(channel.mention))
+        # if not log:
+        #     await status.delete()
 
 
 async def setup(bot):
