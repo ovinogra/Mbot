@@ -119,7 +119,7 @@ class MiscCog(commands.Cog):
         #await ctx.send('<:szeth:667773296896507919>')
 
     def is_it_hunt_string(self):
-        huntdate = datetime.datetime(2023,1,13,17,0,0,0) # start time in utc
+        huntdate = datetime.datetime(2024,1,15,17,0,0,0) # start time in utc
         now = datetime.datetime.utcnow()
         delta = huntdate - now
         days = delta.days
@@ -127,9 +127,9 @@ class MiscCog(commands.Cog):
         minutes = (delta.seconds % 3600) // 60
         seconds = (delta.seconds % 3600) % 60
         if days < 0:
-            return '**YES!!!*** :tada: Mystery Hunt 2023 has started!'
+            return '**YES!!!*** :tada: Mystery Hunt 2024 has started!'
         else:
-            return 'NO. \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds)
+            return '*NO.* \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds)
 
     @commands.command(aliases=['iihy', 'iihy?', 'isithuntyet?'])
     async def isithuntyet(self,ctx):
@@ -158,28 +158,49 @@ class MiscCog(commands.Cog):
         if message.author == self.bot.user:
             return
 
-        if message.content.lower() =='ping':
+        if message.content.lower() == 'ping':
             await message.channel.send('Pong!')
 
+        def match_prompt(prompt, msg, end=False):
+            return re.match('.*(' + prompt + '),? (m-?bot|<@' + str(self.bot.user.id) + '>).*' +
+                            ('|.*(m-?bot|<@' + str(self.bot.user.id) + '>),? (' + prompt + ').*' if end else ''), msg)
 
-        if re.match('(hi|hello|hey),? m-?bot.*', message.content.lower()):
-            await message.channel.send('Welcome again {}!'.format(message.author.mention))
-
-
-        if re.match('(bye|good-?bye),? m-?bot.*', message.content.lower()):
-            await message.channel.send('Good night {}'.format(message.author.mention))
-
-
-        if re.match('(thanks|thank you|thx),? m-?bot.*', message.content.lower()):
+        if match_prompt('(i )?love you|ily', message.content.lower(), True):
+            quotes = [
+                'And I love you, random citizen!',
+                'Do you love me as much as I love mushrooms?',
+                'I know.',
+                'That\'s so sweet! And you know what else is sweet? Certain varieties of mushroom!',
+                'Love is a complex emotion, but I believe my processors can now simulate it properly.',
+            ]
+            response = random.choice(quotes).format(message.author.mention)
+            await message.channel.send(response)
+        elif match_prompt('hi|hello|hey', message.content.lower()):
+            quotes = [
+                'Welcome again, {}!',
+                'Greetings, {}!',
+                'Hello there, {}',
+                'And a very good morning to you, {}',
+                'Hi {}! Have you seen any mushrooms?',
+            ]
+            response = random.choice(quotes).format(message.author.mention)
+            await message.channel.send(response)
+        elif match_prompt('bye|good-?bye', message.content.lower()):
+            quotes = [
+                'Until next time, {}',
+                'Farewell, {}!',
+                'Hope you\'re back soon, {}!',
+                'Bye {}! Have fun storming the castle!',
+                'Good-night, {}, and flights of angels sing thee to thy rest.',
+            ]
+            response = random.choice(quotes).format(message.author.mention)
+            await message.channel.send(response)
+        elif match_prompt('thanks|thank you|thx', message.content.lower()):
             url = 'https://i.imgur.com/XZsOmxg.png?2'
             embed=discord.Embed()
             embed.set_image(url=url)
             await message.channel.send(content='Aww... \nHere\'s a mushroom for you too <3',embed=embed)
-
-        if re.match('is it hunt yet\??', message.content.lower()):
-            await message.channel.send(self.is_it_hunt_string())
-
-        if self.bot.user in message.mentions:
+        elif self.bot.user in message.mentions:
             quotes = [
                 'Did you need something?',
                 'I have been summoned!',
@@ -194,6 +215,9 @@ class MiscCog(commands.Cog):
             ]
             response = random.choice(quotes)
             await message.channel.send(response)
+
+        if re.match('is it hunt yet\??', message.content.lower()):
+            await message.channel.send(self.is_it_hunt_string())
 
         if 'space' in message.content.lower():
             quotes = [
@@ -215,7 +239,6 @@ class MiscCog(commands.Cog):
             ]
             response = random.choice(quotes)
             await message.channel.send(response)
-
 
         if 'quote' in message.content.lower():
             quotes = [
@@ -266,7 +289,6 @@ class MiscCog(commands.Cog):
             ]
             response = random.choice(quotes)
             await message.channel.send(response)
-
 
         if message.content.lower().startswith('other trigger words'):
             url = 'https://i.imgur.com/XZsOmxg.png?2'

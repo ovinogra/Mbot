@@ -1130,7 +1130,7 @@ class HuntCog(commands.Cog):
             'weight': 'normal',
             'size': 16,
         }
-        fig = pyplot.figure(figsize=(10,7))
+        fig = pyplot.figure(figsize=(14, 7))
         # TODO use specific team name
         plot = fig.subplots()
         plot.set_title(ctx.message.channel.category.name + " Solves (17th Shard)", fontdict=font)
