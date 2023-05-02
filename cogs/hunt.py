@@ -42,7 +42,7 @@ class HuntCog(commands.Cog):
         self.mark = '✅'
         self.drive = Drive()
         self.is_bighunt = bool(int(os.getenv("BIG_HUNT")))
-        self.logfeed = 809608416569851944
+        self.logfeed = 1103066532008951858
         self.vc_delete_queue = []
 
     # discord management functions
@@ -145,6 +145,18 @@ class HuntCog(commands.Cog):
             return True
         else:
             return False
+
+    async def get_hunt_role_id(self,ctx):
+        db = DBase(ctx)
+        res = db.hunt_get_row(ctx.guild.id)
+
+        if res['hunt_role_id'] == 'none':
+            await ctx.send('Update the role id in the login info.')
+            return False
+        else:
+            roleid = int(res['hunt_role_id'])
+            return roleid  
+
 
     async def check_hunt_role(self,ctx):
         ''' check if user has role for current hunt '''
@@ -288,9 +300,7 @@ class HuntCog(commands.Cog):
     # begin bot commands #
 
     @commands.command()
-    # @bot.command(name='help')
     async def help(self,ctx,*,query=None):
-    # async def help(ctx):
         if not self.is_bighunt:
             embed = discord.Embed(
                 title='Commands',
@@ -540,7 +550,17 @@ class HuntCog(commands.Cog):
             return
 
         # do the round creation things
-        newcategory = await ctx.guild.create_category(name)
+        roleid = await self.get_hunt_role_id(ctx)
+        rolehunt = discord.utils.get(ctx.guild.roles, id=roleid)
+        botmember = self.bot.user
+        logcategory = discord.utils.get(ctx.guild.channels, id=self.logfeed).category
+        position = logcategory.position + 1
+        overwrites = {
+                ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False, connect=False),
+                rolehunt: discord.PermissionOverwrite(read_messages=True, send_messages=True, connect=True, speak=True),
+                botmember: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
+                }
+        newcategory = await ctx.guild.create_category(name,overwrites=overwrites,position=position)
         newchannnel = await newcategory.create_text_channel(name=marker + '-' + name + '-general')
         newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: ' + name)
         self.nexus_add_round(round_sheet, round_data, newcategory, newchannnel, marker)
