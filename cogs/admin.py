@@ -79,17 +79,22 @@ class AdminCog(commands.Cog):
     @commands.command(aliases=['rmc'])
     @commands.has_role('organiser')
     @commands.guild_only()
-    async def delete_category(self, ctx, *, checkquery=None):
+    async def delete_category(self, ctx, *, action=None):
+
+        if action is None:
+            await ctx.send('`!rmc check` will print the channels to be deleted\n`!rmc doit` will delete said channels')
+            return 
+
         channels = ctx.message.channel.category.channels
-        if checkquery:
-            if checkquery == 'check':
-                namesall = ['Channels to be deleted:']
-                for channel in channels:
-                    namesall.append(channel.mention)
-                await ctx.send('\n'.join(namesall))
-        else:
+        if action == 'check':
+            namesall = ['Channels to be deleted:']
             for channel in channels:
-                await channel.delete()
+                namesall.append(channel.mention)
+            await ctx.send('\n'.join(namesall))
+        elif action == 'doit':
+            for channel in channels:
+                await channel.delete()            
+        
 
 
 async def setup(bot):
