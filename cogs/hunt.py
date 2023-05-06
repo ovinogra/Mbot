@@ -553,8 +553,8 @@ class HuntCog(commands.Cog):
         roleid = await self.get_hunt_role_id(ctx)
         rolehunt = discord.utils.get(ctx.guild.roles, id=roleid)
         botmember = self.bot.user
-        logcategory = discord.utils.get(ctx.guild.channels, id=self.logfeed).category
-        position = logcategory.position + 1
+        currentcategory = ctx.message.channel.category
+        position = currentcategory.position
         overwrites = {
                 ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False, connect=False),
                 rolehunt: discord.PermissionOverwrite(read_messages=True, send_messages=True, connect=True, speak=True),
