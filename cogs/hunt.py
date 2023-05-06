@@ -558,11 +558,11 @@ class HuntCog(commands.Cog):
         overwrites = {
                 ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False, connect=False),
                 rolehunt: discord.PermissionOverwrite(read_messages=True, send_messages=True, connect=True, speak=True),
-                botmember: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
+                botmember: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True,connect=True,manage_messages=True)
                 }
         newcategory = await ctx.guild.create_category(name,overwrites=overwrites,position=position)
-        newchannnel = await newcategory.create_text_channel(name=marker + '-' + name + '-general')
-        newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: ' + name)
+        newchannnel = await newcategory.create_text_channel(name=marker + '-' + name + '-general',overwrites=overwrites)
+        newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: ' + name,overwrites=overwrites)
         self.nexus_add_round(round_sheet, round_data, newcategory, newchannnel, marker)
 
         # send feedback on round creation
