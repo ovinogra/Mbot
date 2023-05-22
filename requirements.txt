@@ -4,7 +4,7 @@ asyncio
 regex
 numpy==1.22.0
 mechanize==0.4.6
-requests==2.22.0
+requests==2.31.0
 psycopg2-binary==2.8.4
 gspread==5.7.1
 datetime
