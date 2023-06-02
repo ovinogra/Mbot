@@ -129,7 +129,7 @@ class MiscCog(commands.Cog):
         if days < 0:
             return '**YES!!!*** :tada: Mystery Hunt 2024 has started!'
         else:
-            return '*NO.* \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds)
+            return '**NO.** \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds)
 
     @commands.command(aliases=['iihy', 'iihy?', 'isithuntyet?'])
     async def isithuntyet(self,ctx):
@@ -165,7 +165,7 @@ class MiscCog(commands.Cog):
             return re.match('.*(' + prompt + '),? (m-?bot|<@' + str(self.bot.user.id) + '>).*' +
                             ('|.*(m-?bot|<@' + str(self.bot.user.id) + '>),? (' + prompt + ').*' if end else ''), msg)
 
-        if match_prompt('(i )?love you|ily', message.content.lower(), True):
+        if match_prompt('(i )?love you', message.content.lower(), True):
             quotes = [
                 'And I love you, random citizen!',
                 'Do you love me as much as I love mushrooms?',
@@ -275,7 +275,7 @@ class MiscCog(commands.Cog):
                 'Did someone say *mushrooms*?',
                 'MUSHHHHROOOOMS!',
                 "A mushroom? Where? Where!?",
-                "Oh my god, a mushroom! This is the best day of my life!",
+                "Oh my gosh, a mushroom! This is the best day of my life!",
                 "Did you know that mushrooms don't need light to grow?",
                 "Oh, a mushroom! Don't crush it!",
                 "Mushrooms. So many mushrooms.",
