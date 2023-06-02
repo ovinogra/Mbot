@@ -559,7 +559,7 @@ class HuntCog(commands.Cog):
             overwrites = {
                     ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False, connect=False),
                     rolehunt: discord.PermissionOverwrite(read_messages=True, send_messages=True, connect=True, speak=True),
-                    botmember: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
+                    botmember: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True,connect=True,manage_messages=True)
                     }
             newcategory = await ctx.guild.create_category(name,overwrites=overwrites,position=position)
         else:
