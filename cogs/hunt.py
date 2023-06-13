@@ -932,6 +932,40 @@ class HuntCog(commands.Cog):
 
         await ctx.send('Updated column Notes for puzzle: {}'.format(puzzlename))
 
+    @commands.command(aliases=['unnote', 'undonote', 'removenote'])
+    @commands.guild_only()
+    async def remove_nexus_note(self,ctx,*,query=None):
+        """ update nexus row by flag of column name """
+
+        if not await self.check_hunt_role(ctx):
+            return
+
+        # fetch nexus data and sort headings
+        nexus_url = await self.nexus_get_url(ctx)
+        nexussheet = self.nexus_get_sheet(nexus_url)
+        data_all = nexussheet.get_all_values()
+        headings = data_all[0]
+        lib = self.nexus_sort_columns(headings)
+
+        # select row of current channel
+        # 1) assume command was run in correct channel
+        # 2) assume channel ID exists in nexus
+        data_id = [item[lib['Channel ID'][0]] for item in data_all]
+        row_select = data_id.index(str(ctx.channel.id))+1
+
+        # update requested columns/fields
+        puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
+
+        col_select = lib['Notes'][0]+1
+        data_notes = [item[lib['Notes'][0]] for item in data_all[2:]]
+        if data_notes[row_select-3]:
+            notes = data_notes[row_select-3].split(';')
+            notes.pop()
+            nexussheet.update_cell(row_select, col_select, '; '.join(notes))
+            await ctx.send('Removed last note from puzzle: {}'.format(puzzlename))
+        else:
+            await ctx.send('No notes to remove from puzzle: {}'.format(puzzlename))
+
     @commands.command(aliases=['update'])
     @commands.guild_only()
     async def update_nexus(self,ctx,*,query=None):
