@@ -2,6 +2,8 @@
 import re
 
 import discord
+import pytz
+from discord import HTTPException
 from discord.ext import commands
 import random
 import os
@@ -151,7 +153,31 @@ class MiscCog(commands.Cog):
         filepath = './misc/emotes/'+query+'.png'
         await ctx.send(file=discord.File(filepath))
 
+    @commands.command(aliases=['time', 'timezone'])
+    async def time_in(self, ctx, *, query=None):
+        if not query:
+            await ctx.send('Usage: `!time [region]`')
+            return
 
+        query = query.upper().replace(' ', '_')
+        fmt = '**%I:%M %p** on **%d %b %Y**'
+        valid_zones = []
+        for timezone_str in pytz.common_timezones_set:
+            if query == timezone_str.upper():
+                valid_zones = [timezone_str]
+                break
+            elif query in timezone_str.upper():
+                valid_zones.append(timezone_str)
+        if len(valid_zones) == 1:
+            await ctx.send('The current time in **' + valid_zones[0] + '** is ' +
+                           datetime.datetime.now(tz=pytz.timezone(valid_zones[0])).strftime(fmt))
+        elif len(valid_zones) > 1:
+            try:
+                await ctx.send('Requested timezone is ambiguous. Possible options are:\n\n' + '\n'.join(valid_zones))
+            except HTTPException:
+                await ctx.send('Requested timezone is ambiguous. Your request matches too many options to list.')
+        else:
+            await ctx.send('I don\'t recognize that timezone.')
 
     @commands.Cog.listener()
     async def on_message(self, message):
