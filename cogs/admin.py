@@ -25,7 +25,7 @@ class AdminCog(commands.Cog):
 
         guildname,guildID = query.split(' ')
         db = DBase(ctx)
-        await db.hunt_insert_row(guildname,int(guildID))
+        await db.hunt_insert_row(guildname, int(guildID), ctx.message.channel.category.id)
 
 
     @commands.command(aliases=['del'])
@@ -38,7 +38,7 @@ class AdminCog(commands.Cog):
             return
 
         db = DBase(ctx)
-        await db.hunt_delete_row(int(guildID))
+        await db.hunt_delete_row(int(guildID), ctx.message.channel.category.id)
 
 
     @commands.command(aliases=['stat'])

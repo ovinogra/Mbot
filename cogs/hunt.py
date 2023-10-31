@@ -148,7 +148,7 @@ class HuntCog(commands.Cog):
 
     async def get_hunt_role_id(self,ctx):
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id)
+        res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
 
         if res['hunt_role_id'] == 'none' and not self.is_bighunt:
             await ctx.send('Update the role id in the login info.')
@@ -163,7 +163,7 @@ class HuntCog(commands.Cog):
 
         db = DBase(ctx)
         try:
-            res = db.hunt_get_row(ctx.guild.id)
+            res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
         except:
             await ctx.send('Not in this guild.')
             return False
@@ -213,7 +213,7 @@ class HuntCog(commands.Cog):
 
     async def nexus_get_url(self,ctx):
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id)
+        res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
         return res['hunt_nexus']
 
     def nexus_get_wkbook(self,url):
@@ -1058,7 +1058,7 @@ class HuntCog(commands.Cog):
 
         # db hunt fetch links
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id)
+        res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
         # res = list(results)
         checks['Google Folder'] = '[Link]('+res['hunt_folder']+')' if 'http' in res['hunt_folder'] else res['hunt_folder']
         checks['Nexus Sheet'] = '[Link]('+res['hunt_nexus']+')' if 'http' in res['hunt_nexus'] else res['hunt_nexus']

@@ -33,7 +33,7 @@ class LoginCog(commands.Cog):
         # bot fields = site, user, pswd, folder, nexus, role
 
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id)
+        res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
         if not res:
             await ctx.send('Not in this guild.')
             return
@@ -112,7 +112,7 @@ class LoginCog(commands.Cog):
 
         # update db
         db = DBase(ctx)
-        await db.hunt_update_row(updatedata,ctx.guild.id)
+        await db.hunt_update_row(updatedata, ctx.guild.id, ctx.message.channel.category.id)
             
 
 

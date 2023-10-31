@@ -38,22 +38,22 @@ class DBase:
 
     ################ TABLE hunt ################
 
-    def hunt_get_row(self,guildID):
+    def hunt_get_row(self, guildID, category_id):
         ''' query, guildID: int '''
 
         dynamodb = self.connect()
         table = dynamodb.Table('hunt')
         response = table.scan(
-            FilterExpression=Attr('guild_id').eq(guildID)
+            FilterExpression=Attr('guild_id').eq(guildID) & Attr('hunt_category_id').eq(category_id)
         )
         return response['Items'][0]
  
-    async def hunt_update_row(self,updatedata,guildID):
+    async def hunt_update_row(self, updatedata, guildID, category_id):
         ''' updatedata: list of tuples [(fieldname, value),(fieldname, value)] '''
 
         dynamodb = self.connect()
         table = dynamodb.Table('hunt')
-        currentdata = self.hunt_get_row(guildID)
+        currentdata = self.hunt_get_row(guildID, category_id)
 
         # format update fields
         update_expression = ["set "]
@@ -66,7 +66,8 @@ class DBase:
         table.update_item(
             Key={
                     'guild_id': guildID,
-                    'guild_name': currentdata['guild_name']
+                    'guild_name': currentdata['guild_name'],
+                    'hunt_category_id': category_id
                 },
             UpdateExpression=update_expression,
             ExpressionAttributeValues=dict(update_values)
@@ -74,7 +75,7 @@ class DBase:
         await self.ctx.send('Login update successful')
         return
 
-    async def hunt_insert_row(self,guildname,guildID):
+    async def hunt_insert_row(self, guildname, guildID, category_id):
         ''' guildname, guildID: string and int of guild info '''
 
         dynamodb = self.connect()
@@ -84,6 +85,7 @@ class DBase:
         Item={
             'guild_name': guildname,
             'guild_id': int(guildID),
+            'hunt_category_id': category_id,
             'hunt_role': 'none',
             'hunt_role_id': 'none',
             'hunt_username': 'none',
@@ -96,18 +98,19 @@ class DBase:
         await self.ctx.send('INSERT ROW successful')
         return 
 
-    async def hunt_delete_row(self,guildID):
+    async def hunt_delete_row(self, guildID, category_id):
         ''' guildID: int of guild ID '''
 
         dynamodb = self.connect()
         table = dynamodb.Table('hunt')
 
-        guilddata = self.hunt_get_row(int(guildID))
+        guilddata = self.hunt_get_row(int(guildID), category_id)
 
         table.delete_item(
             Key={
                 'guild_id': int(guildID),
-                'guild_name': guilddata['guild_name']
+                'guild_name': guilddata['guild_name'],
+                'hunt_category_id': category_id
             }
         )
         await self.ctx.send('DELETE ROW successful')
