@@ -308,8 +308,10 @@ class HuntCog(commands.Cog):
     def make_hunt_nexus(self, hunt_name, hunt_folder):
         hunt_folder_id = max(hunt_folder.split('/'), key=len)
         hunt_folder_id = hunt_folder_id.split('?')[0]
-        nexus = self.drive.gclient().copy(os.getenv('BASE_NEXUS_ID'), title='#NEXUS ' + hunt_name, folder_id=hunt_folder_id, copy_permissions=False)
-        template = self.drive.gclient().copy(os.getenv('BASE_TEMPLATE_ID'), title='#TEMPLATE ' + hunt_name, folder_id=hunt_folder_id, copy_permissions=False)
+        nexus_id = os.getenv('BASE_NEXUS_ID') if os.getenv('BASE_NEXUS_ID') is not None else '1JssBgYG4w5YXVn9MFLlv4vvzT8UiGnj5h35YdvPyTus'
+        template_id = os.getenv('BASE_TEMPLATE_ID') if os.getenv('BASE_TEMPLATE_ID') is not None else '1n8zCDjLHC8p1R2Jw_c3TDaNOpip52fZhVtNqA1hU9bg'
+        nexus = self.drive.gclient().copy(nexus_id, title='#NEXUS ' + hunt_name, folder_id=hunt_folder_id, copy_permissions=False)
+        template = self.drive.gclient().copy(template_id, title='#TEMPLATE ' + hunt_name, folder_id=hunt_folder_id, copy_permissions=False)
         nexus.get_worksheet(0).update('G2', 'https://docs.google.com/spreadsheets/d/%s' % template.id)
         return 'https://docs.google.com/spreadsheets/d/%s' % nexus.id
 
