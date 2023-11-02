@@ -1,15 +1,12 @@
-
-#%%
-import boto3 
-import os 
+# %%
+import boto3
+import os
 from dotenv import load_dotenv
-import json 
+import json
 from boto3.dynamodb.conditions import Key, Attr
 
 
-#%%
-
-
+# %%
 
 
 class DBase:
@@ -18,7 +15,6 @@ class DBase:
         self.ctx = ctx
         self.bot = ctx.bot
 
-    
     ################ Main DB connection ################
 
     def connect(self):
@@ -35,25 +31,25 @@ class DBase:
 
         return dynamodb
 
-
     ################ TABLE hunt ################
 
     def hunt_get_row(self, guildID, category_id):
         ''' query, guildID: int '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('hunt')
+        table = dynamodb.Table('multi-hunt')
         response = table.scan(
             FilterExpression=Attr('guild_id').eq(guildID) & Attr('hunt_category_id').eq(category_id)
         )
+        if len(response['Items']) < 1:
+            raise Exception('This is not a hunt category!')
         return response['Items'][0]
- 
+
     async def hunt_update_row(self, updatedata, guildID, category_id):
         ''' updatedata: list of tuples [(fieldname, value),(fieldname, value)] '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('hunt')
-        currentdata = self.hunt_get_row(guildID, category_id)
+        table = dynamodb.Table('multi-hunt')
 
         # format update fields
         update_expression = ["set "]
@@ -65,90 +61,83 @@ class DBase:
 
         table.update_item(
             Key={
-                    'guild_id': guildID,
-                    'guild_name': currentdata['guild_name'],
-                    'hunt_category_id': category_id
-                },
+                'guild_id': guildID,
+                'hunt_category_id': category_id
+            },
             UpdateExpression=update_expression,
             ExpressionAttributeValues=dict(update_values)
-            )
+        )
         await self.ctx.send('Login update successful')
         return
 
-    async def hunt_insert_row(self, guildname, guildID, category_id):
+    async def hunt_insert_row(self, guild_id, category_id, hunt_role_id, hunt_folder, hunt_nexus):
         ''' guildname, guildID: string and int of guild info '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('hunt')
+        table = dynamodb.Table('multi-hunt')
 
         table.put_item(
-        Item={
-            'guild_name': guildname,
-            'guild_id': int(guildID),
-            'hunt_category_id': category_id,
-            'hunt_role': 'none',
-            'hunt_role_id': 'none',
-            'hunt_username': 'none',
-            'hunt_password': 'none',
-            'hunt_url': 'none',
-            'hunt_folder': 'none',
-            'hunt_nexus': 'none',
+            Item={
+                'guild_id': int(guild_id),
+                'hunt_category_id': int(category_id),
+                'hunt_role_id': int(hunt_role_id),
+                'hunt_username': 'none',
+                'hunt_password': 'none',
+                'hunt_url': 'none',
+                'hunt_folder': hunt_folder,
+                'hunt_nexus': hunt_nexus,
             }
         )
-        await self.ctx.send('INSERT ROW successful')
-        return 
+        # await self.ctx.send('INSERT ROW successful')
+        return
 
     async def hunt_delete_row(self, guildID, category_id):
         ''' guildID: int of guild ID '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('hunt')
-
-        guilddata = self.hunt_get_row(int(guildID), category_id)
+        table = dynamodb.Table('multi-hunt')
 
         table.delete_item(
             Key={
                 'guild_id': int(guildID),
-                'guild_name': guilddata['guild_name'],
                 'hunt_category_id': category_id
             }
         )
         await self.ctx.send('DELETE ROW successful')
         return
 
-
     ################ TABLE tags ################
 
     def tag_get_all(self):
         dynamodb = self.connect()
-        table = dynamodb.Table('tags') 
+        table = dynamodb.Table('tags')
         response = table.scan()
-        data = response['Items']       
+        data = response['Items']
         return data
-    
-    def tag_get_row(self,tagname):
+
+    def tag_get_row(self, tagname):
         ''' tagname: string '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('tags') 
+        table = dynamodb.Table('tags')
 
-        try: 
+        try:
             response = table.scan(
                 FilterExpression=Attr('tag_name').eq(tagname)
             )
-            items = response['Items']      
+            items = response['Items']
 
             return items[0]
-        except: 
+        except:
             return False
 
-    async def tag_insert_row(self,tagname,tagcontent,guildID):
+    async def tag_insert_row(self, tagname, tagcontent, guildID):
         ''' tagname, tagcontent: string '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('tags') 
+        table = dynamodb.Table('tags')
         table.put_item(
-        Item={
+            Item={
                 'tag_name': tagname,
                 'guild_id': int(guildID),
                 'tag_content': tagcontent
@@ -157,45 +146,42 @@ class DBase:
         await self.ctx.send('Tag added successful')
         return
 
-    async def tag_update_row(self,tagname,tagcontent):
+    async def tag_update_row(self, tagname, tagcontent):
         ''' tagname, tagcontent: string '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('tags') 
+        table = dynamodb.Table('tags')
         currentdata = self.tag_get_row(tagname)
         table.update_item(
             Key={
-                    'guild_id': int(currentdata['guild_id']),
-                    'tag_name': tagname
-                },
+                'guild_id': int(currentdata['guild_id']),
+                'tag_name': tagname
+            },
             UpdateExpression='set tag_content = :val1',
             ExpressionAttributeValues={
-                    ':val1': tagcontent
-                }
-            )      
+                ':val1': tagcontent
+            }
+        )
         await self.ctx.send('Tag updated successful')
-        return 
+        return
 
-    async def tag_delete_row(self,tagname):
+    async def tag_delete_row(self, tagname):
         ''' tagname: string '''
 
         dynamodb = self.connect()
-        table = dynamodb.Table('tags') 
+        table = dynamodb.Table('tags')
         currentdata = self.tag_get_row(tagname)
         table.delete_item(
             Key={
-                    'guild_id': int(currentdata['guild_id']),
-                    'tag_name': tagname
-                }
-            )      
+                'guild_id': int(currentdata['guild_id']),
+                'tag_name': tagname
+            }
+        )
 
         await self.ctx.send('Tag deleted successful')
         return
 
-
-
-
-#%%
+# %%
 
 # testing stuff:
 # db = DBase(0)
@@ -208,7 +194,7 @@ class DBase:
 # t = [('hunt_username', 'test'), ('hunt_password', 'urithit'), ('hunt_url', 3)]
 # db.hunt_update_row(t,guildID)
 
-#%%
+# %%
 
 ########################################
 ### RECREATE TABLES JSON TO DYNAMODB ###
@@ -222,24 +208,24 @@ class DBase:
 
 # # Create the DynamoDB table.
 # table = dynamodb.create_table(
-#     TableName='hunt',
+#     TableName='multi-hunt',
 #     KeySchema=[
 #         {
-#             'AttributeName': 'guild_name',
-#             'KeyType': 'HASH'
+#             'AttributeName': 'guild_id',
+#             'KeyType': 'RANGE'
 #         },
 #         {
-#             'AttributeName': 'guild_id',
+#             'AttributeName': 'hunt_category_id',
 #             'KeyType': 'RANGE'
 #         }
 #     ],
 #     AttributeDefinitions=[
 #         {
-#             'AttributeName': 'guild_name',
-#             'AttributeType': 'S'
+#             'AttributeName': 'guild_id',
+#             'AttributeType': 'N'
 #         },
 #         {
-#             'AttributeName': 'guild_id',
+#             'AttributeName': 'hunt_category_id',
 #             'AttributeType': 'N'
 #         },
 #     ],
@@ -262,6 +248,7 @@ class DBase:
 #     Item={
 #             'guild_name': item[fields.index('guild_name')],
 #             'guild_id': int(item[fields.index('guild_id')]),
+#             'hunt_category_id: int(item[fields.index('hunt_category_id')]),
 #             'hunt_role': item[fields.index('hunt_role')],
 #             'hunt_role_id': item[fields.index('hunt_role_id')],
 #             'hunt_username': item[fields.index('hunt_username')],
@@ -326,8 +313,3 @@ class DBase:
 #             'tag_content': item[fields.index('tag_content')]
 #         }
 #     )
-
-
-
-
-

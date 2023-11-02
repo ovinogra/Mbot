@@ -33,10 +33,11 @@ class LoginCog(commands.Cog):
         # bot fields = site, user, pswd, folder, nexus, role
 
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
-        if not res:
-            await ctx.send('Not in this guild.')
-            return
+        try:
+            res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
+        except Exception as e:
+            await ctx.send(str(e))
+            return False
         
         # parse results
         field1 = '**Website**: '+str(res['hunt_url'])+'\n'
