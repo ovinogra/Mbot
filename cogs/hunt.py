@@ -551,8 +551,11 @@ class HuntCog(commands.Cog):
 
         # do the round creation things
         roleid = await self.get_hunt_role_id(ctx)
-        logcategory = discord.utils.get(ctx.guild.channels, id=self.logfeed).category
-        position = logcategory.position + 1
+        log_channel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        if log_channel is not None:
+            position = log_channel.category.position
+        else:
+            position = ctx.message.channel.category.position
         if roleid != "none":
             rolehunt = discord.utils.get(ctx.guild.roles, id=roleid)
             botmember = self.bot.user
