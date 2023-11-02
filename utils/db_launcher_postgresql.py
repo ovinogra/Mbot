@@ -36,6 +36,7 @@ CREATE TABLE hunt (
 	idx serial PRIMARY KEY,
 	guild_name VARCHAR (255) NOT NULL,
 	guild_id VARCHAR (255) NOT NULL,
+	hunt_category_id VARCHAR (255) NOT NULL,
 	hunt_role VARCHAR (255) DEFAULT 'None',
 	hunt_role_id VARCHAR (255) DEFAULT 'None',
 	hunt_username VARCHAR (255) DEFAULT 'None',
