@@ -12,35 +12,6 @@ class AdminCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-
-    @commands.command(aliases=['ins'])
-    @commands.is_owner()
-    @commands.has_role('organiser')
-    async def login_insert(self, ctx, *, query=None):
-        ''' adds a row the hunt db table to initiate puzzle manager commands '''
-
-        if not query:
-            await ctx.send('To use: `!ins <guildName> <guildID>')
-            return
-
-        guildname,guildID = query.split(' ')
-        db = DBase(ctx)
-        await db.hunt_insert_row(guildname,int(guildID))
-
-
-    @commands.command(aliases=['del'])
-    @commands.is_owner()
-    @commands.has_role('organiser')
-    async def login_delete(self, ctx, *, guildID=None):
-
-        if not guildID:
-            await ctx.send('To use: `!del <guildID>')
-            return
-
-        db = DBase(ctx)
-        await db.hunt_delete_row(int(guildID))
-
-
     @commands.command(aliases=['stat'])
     async def server_status(self, ctx):
         final = []
@@ -95,7 +66,6 @@ class AdminCog(commands.Cog):
             for channel in channels:
                 await channel.delete()            
         
-
 
 async def setup(bot):
     await bot.add_cog(AdminCog(bot))

@@ -148,7 +148,11 @@ class HuntCog(commands.Cog):
 
     async def get_hunt_role_id(self,ctx):
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id)
+        try:
+            res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
+        except Exception as e:
+            await ctx.send(str(e))
+            return False
 
         if res['hunt_role_id'] == 'none' and not self.is_bighunt:
             await ctx.send('Update the role id in the login info.')
@@ -163,9 +167,9 @@ class HuntCog(commands.Cog):
 
         db = DBase(ctx)
         try:
-            res = db.hunt_get_row(ctx.guild.id)
-        except:
-            await ctx.send('Not in this guild.')
+            res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
+        except Exception as e:
+            await ctx.send(str(e))
             return False
 
         # res = list(results)
@@ -213,7 +217,11 @@ class HuntCog(commands.Cog):
 
     async def nexus_get_url(self,ctx):
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id)
+        try:
+            res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
+        except Exception as e:
+            await ctx.send(str(e))
+            return False
         return res['hunt_nexus']
 
     def nexus_get_wkbook(self,url):
@@ -296,6 +304,16 @@ class HuntCog(commands.Cog):
         newsheet = gclient.copy(template_key,title=puzzlename, copy_permissions=False)
         newsheet_url = "https://docs.google.com/spreadsheets/d/%s" % newsheet.id
         return newsheet_url
+
+    def make_hunt_nexus(self, hunt_name, hunt_folder):
+        hunt_folder_id = max(hunt_folder.split('/'), key=len)
+        hunt_folder_id = hunt_folder_id.split('?')[0]
+        nexus_id = os.getenv('BASE_NEXUS_ID') if os.getenv('BASE_NEXUS_ID') is not None else '1JssBgYG4w5YXVn9MFLlv4vvzT8UiGnj5h35YdvPyTus'
+        template_id = os.getenv('BASE_TEMPLATE_ID') if os.getenv('BASE_TEMPLATE_ID') is not None else '1n8zCDjLHC8p1R2Jw_c3TDaNOpip52fZhVtNqA1hU9bg'
+        nexus = self.drive.gclient().copy(nexus_id, title='#NEXUS ' + hunt_name, folder_id=hunt_folder_id, copy_permissions=False)
+        template = self.drive.gclient().copy(template_id, title='#TEMPLATE ' + hunt_name, folder_id=hunt_folder_id, copy_permissions=False)
+        nexus.get_worksheet(0).update('G2', 'https://docs.google.com/spreadsheets/d/%s' % template.id)
+        return 'https://docs.google.com/spreadsheets/d/%s' % nexus.id
 
     # begin bot commands #
 
@@ -381,6 +399,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexus_wkbook = self.nexus_get_wkbook(nexus_url)
         nexus_sheet = nexus_wkbook.get_worksheet(0)
         data_all = nexus_sheet.get_all_values()
@@ -491,6 +511,8 @@ class HuntCog(commands.Cog):
             await ctx.send("This command is only available in bighunt mode.")
 
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         data_all = self.nexus_get_wkbook(nexus_url).get_worksheet(2).get_all_values()
 
         embed = discord.Embed(
@@ -522,6 +544,7 @@ class HuntCog(commands.Cog):
 
         if not self.is_bighunt:
             await ctx.send("This command is only available in bighunt mode.")
+            return
 
         if not query:
             await ctx.send('`!round Some Round Name Here -marker=marker`')
@@ -535,6 +558,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexuswkbook = self.nexus_get_wkbook(nexus_url)
         nexussheet = nexuswkbook.sheet1
         round_sheet = nexuswkbook.get_worksheet(2)
@@ -588,6 +613,8 @@ class HuntCog(commands.Cog):
             return False
 
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexuswkbook = self.nexus_get_wkbook(nexus_url)
         roundcategory = None
         roundmarker = None
@@ -624,11 +651,11 @@ class HuntCog(commands.Cog):
         nexus_data = nexus_sheet.get_all_values()
 
         # check existence of puzzle in channels and nexus
-        if self.is_bighunt and self.check_category_channel_list(ctx, puzzlename):
-            await ctx.send('Channel named {} exists in current category.'.format(puzzlename))
+        if not self.is_bighunt and self.check_category_channel_list(ctx, puzzlename):
+            await ctx.send('Channel named `{}` already exists in current category.'.format(puzzlename))
             return False
-        if not self.is_bighunt and self.check_server_channel_list(ctx, puzzlename):
-            await ctx.send('Channel named {} exists in current server.'.format(puzzlename))
+        elif self.is_bighunt and self.check_server_channel_list(ctx, puzzlename):
+            await ctx.send('Channel named `{}` already exists in current server.'.format(puzzlename))
             return False
         if self.check_nexus_puzzle_list(nexus_data, puzzlename):
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
@@ -695,6 +722,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexus_sheet = self.nexus_get_sheet(nexus_url)
         data_all = nexus_sheet.get_all_values()
         headings = data_all[0]
@@ -820,6 +849,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexus_sheet = self.nexus_get_sheet(nexus_url)
         data_all = nexus_sheet.get_all_values()
         headings = data_all[0]
@@ -909,6 +940,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexussheet = self.nexus_get_sheet(nexus_url)
         data_all = nexussheet.get_all_values()
         headings = data_all[0]
@@ -942,6 +975,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexussheet = self.nexus_get_sheet(nexus_url)
         data_all = nexussheet.get_all_values()
         headings = data_all[0]
@@ -990,6 +1025,8 @@ class HuntCog(commands.Cog):
 
         # fetch nexus data and sort headings
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexussheet = self.nexus_get_sheet(nexus_url)
         data_all = nexussheet.get_all_values()
         headings = data_all[0]
@@ -1058,7 +1095,11 @@ class HuntCog(commands.Cog):
 
         # db hunt fetch links
         db = DBase(ctx)
-        res = db.hunt_get_row(ctx.guild.id)
+        try:
+            res = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
+        except Exception as e:
+            await ctx.send(str(e))
+            return
         # res = list(results)
         checks['Google Folder'] = '[Link]('+res['hunt_folder']+')' if 'http' in res['hunt_folder'] else res['hunt_folder']
         checks['Nexus Sheet'] = '[Link]('+res['hunt_nexus']+')' if 'http' in res['hunt_nexus'] else res['hunt_nexus']
@@ -1066,6 +1107,8 @@ class HuntCog(commands.Cog):
         # nexus sheet check API call
         try:
             nexus_url = await self.nexus_get_url(ctx)
+            if not nexus_url:
+                return
             nexussheet = self.nexus_get_sheet(nexus_url)
             checks['Nexus Sheet Access'] = ':+1:'
         except:
@@ -1150,7 +1193,14 @@ class HuntCog(commands.Cog):
     @commands.guild_only()
     async def generate_solve_graph(self, ctx, *, query=None):
         # fetch solve data
+        try:
+            team_name = DBase(ctx).hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)['hunt_team_name']
+        except Exception as e:
+            await ctx.send(str(e))
+            return
         nexus_url = await self.nexus_get_url(ctx)
+        if not nexus_url:
+            return
         nexus_sheet = self.nexus_get_sheet(nexus_url)
         nexus_data = nexus_sheet.get_all_values()
         headings = nexus_data[0]
@@ -1188,9 +1238,8 @@ class HuntCog(commands.Cog):
             'size': 16,
         }
         fig = pyplot.figure(figsize=(14, 7))
-        # TODO use specific team name
         plot = fig.subplots()
-        plot.set_title(ctx.message.channel.category.name + " Solves (17th Shard)", fontdict=font)
+        plot.set_title(ctx.message.channel.category.name + ' Solves (' + team_name + ')', fontdict=font)
         plot.set_xlabel("Hours", fontdict=font)
         plot.set_ylabel("Solves", fontdict=font)
         if query == '-fill' or query == 'fill':
@@ -1204,6 +1253,55 @@ class HuntCog(commands.Cog):
         fig.savefig(buf, bbox_inches='tight')
         buf.seek(0)
         await ctx.send(file=discord.File(fp=buf, filename="solve_graph.png"))
+
+    @commands.command(aliases=['hunt', 'createhunt'])
+    @commands.guild_only()
+    async def create_hunt(self, ctx, *, query=None):
+        """ hunt creation script to
+        1) make category
+        2) copy nexus and template sheets
+        """
+
+        if self.is_bighunt:
+            await ctx.send("This command is not available in bighunt mode.")
+
+        if not query or '-role=' not in query or '-folder' not in query:
+            await ctx.send('Usage: `!createhunt <huntname> -folder=<folder> -role=<roleid>`')
+            return False
+
+        query_parts = query.split(' -')
+        hunt_name = query_parts[0]
+        hunt_role_id = ''
+        hunt_folder = ''
+        for part in query_parts[1:]:
+            if part.startswith('role'):
+                hunt_role_id = part.split('=')[1]
+            elif part.startswith('folder'):
+                hunt_folder = part.split('=')[1]
+        info_msg = await ctx.send(':orange_circle: Creating hunt `{}`...'.format(hunt_name))
+
+        position = ctx.message.channel.category.position
+        hunt_role = discord.utils.get(ctx.guild.roles, id=int(hunt_role_id))
+        bot_member = self.bot.user
+        overwrites = {
+            ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False, connect=False),
+            hunt_role: discord.PermissionOverwrite(read_messages=True, send_messages=True, connect=True, speak=True),
+            bot_member: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True, connect=True, manage_messages=True)
+        }
+        hunt_category = await ctx.guild.create_category(hunt_name, overwrites=overwrites, position=position)
+        hunt_channel = await hunt_category.create_text_channel(hunt_name + '-discussion')
+        await hunt_category.create_voice_channel(name=hunt_name + ' VC')
+
+        nexus_url = self.make_hunt_nexus(hunt_name, hunt_folder)
+        db = DBase(ctx)
+        await db.hunt_insert_row(ctx.guild.id, hunt_category.id, hunt_role_id, hunt_folder, nexus_url)
+
+        nexus_msg = await hunt_channel.send('Nexus sheet: {}'.format(nexus_url))
+        await nexus_msg.pin()
+
+        await info_msg.edit(content=':orange_circle: Hunt created: {}'.format(hunt_channel.mention))
+        return
+
 
 async def setup(bot):
     await bot.add_cog(HuntCog(bot))
