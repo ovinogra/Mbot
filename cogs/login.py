@@ -40,6 +40,7 @@ class LoginCog(commands.Cog):
             return False
         
         # parse results
+        field0 = '**Team**: '+str(res['hunt_team_name'])+'\n'
         field1 = '**Website**: '+str(res['hunt_url'])+'\n'
         field2 = '**Username**: '+str(res['hunt_username'])+'\n'
         field3 = '**Password**: '+str(res['hunt_password'])+'\n'
@@ -51,7 +52,7 @@ class LoginCog(commands.Cog):
             field5 = '**Nexus**: [Link here]('+str(res['hunt_nexus'])+')\n'
         else: 
             field5 = '**Nexus**: '+str(res['hunt_nexus'])+'\n'
-        final = field1+field2+field3+field4+field5
+        final = field0+field1+field2+field3+field4+field5
         role = res['hunt_role_id']
 
         # set up embed
@@ -87,16 +88,13 @@ class LoginCog(commands.Cog):
             if field == 'role':
                 if value == 'none':
                     updatedata.append(('hunt_role_id','none'))
-                    updatedata.append(('hunt_role','none'))
                 else:
                     try:
                         roleID = int(value)
                     except:
                         await ctx.send('Role must be either `none` or id number.')
-                        return 
-                    roleName = discord.utils.get(ctx.guild.roles, id=roleID)
+                        return
                     updatedata.append(('hunt_role_id',roleID))
-                    updatedata.append(('hunt_role',str(roleName)))
             elif field == 'user':
                 updatedata.append(('hunt_username',str(value)))
             elif field == 'pswd':
@@ -107,6 +105,8 @@ class LoginCog(commands.Cog):
                 updatedata.append(('hunt_folder',str(value)))
             elif field == 'nexus':
                 updatedata.append(('hunt_nexus',str(value)))
+            elif field == 'team':
+                updatedata.append(('hunt_team_name', str(value)))
             else:
                 await ctx.send('Flag does not exist: '+field)
 
@@ -121,7 +121,7 @@ class LoginCog(commands.Cog):
     @commands.guild_only()
     async def huntinfo(self, ctx, *, query=None):
         helpstate = '`!login update '\
-                    '[-role=<id>] [-user=<name>] [-pswd=<pswd>] [-site=<url>] [-folder=<url>] [-nexus=<url>]`'
+                    '[-role=<id>] [-user=<name>] [-pswd=<pswd>] [-site=<url>] [-folder=<url>] [-nexus=<url>] [-team=<team>]`'
 
         # fetch hunt info
         if not query:

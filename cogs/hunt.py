@@ -1193,6 +1193,11 @@ class HuntCog(commands.Cog):
     @commands.guild_only()
     async def generate_solve_graph(self, ctx, *, query=None):
         # fetch solve data
+        try:
+            team_name = DBase(ctx).hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)['hunt_team_name']
+        except Exception as e:
+            await ctx.send(str(e))
+            return
         nexus_url = await self.nexus_get_url(ctx)
         if not nexus_url:
             return
@@ -1233,9 +1238,8 @@ class HuntCog(commands.Cog):
             'size': 16,
         }
         fig = pyplot.figure(figsize=(14, 7))
-        # TODO use specific team name
         plot = fig.subplots()
-        plot.set_title(ctx.message.channel.category.name + " Solves (17th Shard)", fontdict=font)
+        plot.set_title(ctx.message.channel.category.name + ' Solves (' + team_name + ')', fontdict=font)
         plot.set_xlabel("Hours", fontdict=font)
         plot.set_ylabel("Solves", fontdict=font)
         if query == '-fill' or query == 'fill':

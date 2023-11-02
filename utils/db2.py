@@ -86,6 +86,7 @@ class DBase:
                 'hunt_url': 'none',
                 'hunt_folder': hunt_folder,
                 'hunt_nexus': hunt_nexus,
+                'hunt_team_name': 'none',
             }
         )
         # await self.ctx.send('INSERT ROW successful')
