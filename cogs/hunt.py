@@ -41,8 +41,6 @@ class HuntCog(commands.Cog):
         self.bot = bot
         self.mark = '✅'
         self.drive = Drive()
-        self.is_bighunt = bool(int(os.getenv("BIG_HUNT")))
-        self.logfeed = 1103066532008951858
         self.vc_delete_queue = []
 
     # discord management functions
@@ -89,7 +87,7 @@ class HuntCog(commands.Cog):
         if not category:
             category = ctx.message.channel.category
         textchannnel = await category.create_text_channel(name=name,position=position)
-        voicechannnel = await category.create_voice_channel(name=name,position=position) if self.is_bighunt else None
+        voicechannnel = await category.create_voice_channel(name=name,position=position) if self.is_bighunt(ctx) else None
         return [textchannnel,voicechannnel]
 
     async def channel_rename(self,ctx,channel,newname):
@@ -110,13 +108,17 @@ class HuntCog(commands.Cog):
         await solve_message.edit(content='`{}` marked as solved!'.format(puzzlename))
 
     async def send_log_message(self, ctx, msg):
-        logchannel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        db = DBase(ctx)
+        logchannel = discord.utils.get(ctx.guild.channels, id=int(db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)['hunt_logfeed']))
         # if the log channel doesn't exist, just fail silently
         if logchannel is None:
             return
         await logchannel.send(msg)
 
     # nexus management functions
+
+    def is_bighunt(self, ctx):
+        return DBase(ctx).hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)['is_bighunt'] or False
 
     def check_nexus_round_list(self, round_data, nametest=None, idtest=None):
         ''' bool: return [True] if round name exists in nexus '''
@@ -154,7 +156,7 @@ class HuntCog(commands.Cog):
             await ctx.send(str(e))
             return False
 
-        if res['hunt_role_id'] == 'none' and not self.is_bighunt:
+        if res['hunt_role_id'] == 'none' and not self.is_bighunt(ctx):
             await ctx.send('Update the role id in the login info.')
             return False
         else:
@@ -264,7 +266,7 @@ class HuntCog(commands.Cog):
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(round_data[2]))
         sheet.append_row(temp,table_range=table_range)
 
-    def nexus_add_puzzle(self, nexussheet, nexus_data, puzzlechannel, voicechannel, puzzlename, puzzlesheeturl, roundmarker):
+    def nexus_add_puzzle(self, ctx, nexussheet, nexus_data, puzzlechannel, voicechannel, puzzlename, puzzlesheeturl, roundmarker):
         """ add channel id, puzzle name, link, priority=New """
 
         # sort headings
@@ -274,7 +276,7 @@ class HuntCog(commands.Cog):
         # new row for puzzle
         temp = ['' for item in range(0,len(headings))]
         temp[lib['Channel ID'][0]] = str(puzzlechannel.id)
-        if self.is_bighunt:
+        if self.is_bighunt(ctx):
             temp[lib['Voice Channel ID'][0]] = str(voicechannel.id)
         temp[lib['Priority'][0]] = 'New'
         temp[lib['Puzzle Name'][0]] = puzzlename
@@ -319,7 +321,7 @@ class HuntCog(commands.Cog):
 
     @commands.command()
     async def help(self,ctx,*,query=None):
-        if not self.is_bighunt:
+        if not self.is_bighunt(ctx):
             embed = discord.Embed(
                 title='Commands',
                 colour=discord.Colour.dark_grey(),
@@ -409,7 +411,7 @@ class HuntCog(commands.Cog):
 
         round_sheet = None
         round_data = None
-        if self.is_bighunt:
+        if self.is_bighunt(ctx):
             # fetch nexus data of rounds
             round_sheet = nexus_wkbook.get_worksheet(2)
             round_data = round_sheet.get_all_values()
@@ -417,7 +419,7 @@ class HuntCog(commands.Cog):
         # want: puzzle channel mention (linked), answer, round
         data_channel = [item[lib['Channel ID'][0]] for item in data_all[2:]]
         data_round = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] for item in data_all[2:]]
-        data_round_name = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] if not self.is_bighunt
+        data_round_name = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] if not self.is_bighunt(ctx)
             else self.get_round_name_from_marker(round_data, item[lib['Round'][0]]) for item in data_all[2:]]
         data_number = ['-' if item[lib['Number'][0]] == '' else item[lib['Number'][0]] for item in data_all[2:]]
         data_answer = ['-' if item[lib['Answer'][0]] == '' else item[lib['Answer'][0]] for item in data_all[2:]]
@@ -453,7 +455,7 @@ class HuntCog(commands.Cog):
         )
 
         current_round_token = ''
-        if self.is_bighunt:
+        if self.is_bighunt(ctx):
             # check if current category is a round in the nexus
             current_round_id = ctx.channel.category.id
             if self.check_nexus_round_list(round_data=round_data, idtest=current_round_id):
@@ -507,7 +509,7 @@ class HuntCog(commands.Cog):
     async def list_rounds(self,ctx,*,query=None):
         ''' list all rounds in nexus'''
 
-        if not self.is_bighunt:
+        if not self.is_bighunt(ctx):
             await ctx.send("This command is only available in bighunt mode.")
 
         nexus_url = await self.nexus_get_url(ctx)
@@ -542,7 +544,7 @@ class HuntCog(commands.Cog):
         4) add category id... somewhere in nexus?
         """
 
-        if not self.is_bighunt:
+        if not self.is_bighunt(ctx):
             await ctx.send("This command is only available in bighunt mode.")
             return
 
@@ -574,9 +576,11 @@ class HuntCog(commands.Cog):
             await ctx.send('Round named `{}` already exists in Nexus.'.format(name))
             return
 
+        db = DBase(ctx)
+        hunt_infos = db.hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
         # do the round creation things
         roleid = await self.get_hunt_role_id(ctx)
-        log_channel = discord.utils.get(ctx.guild.channels, id=self.logfeed)
+        log_channel = discord.utils.get(ctx.guild.channels, id=int(hunt_infos['hunt_logfeed']))
         if log_channel is not None:
             position = log_channel.category.position
         else:
@@ -595,6 +599,8 @@ class HuntCog(commands.Cog):
         newchannnel = await newcategory.create_text_channel(name=marker + '-' + name + '-general')
         newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: ' + name)
         self.nexus_add_round(round_sheet, round_data, newcategory, newchannnel, marker)
+
+        await db.round_insert_row(ctx.guild.id, newcategory.id, hunt_infos['hunt_category_id'])
 
         # send feedback on round creation
         now = datetime.utcnow() - timedelta(hours=5)
@@ -625,7 +631,7 @@ class HuntCog(commands.Cog):
         round_data = nexuswkbook.get_worksheet(2).get_all_values()
         if '-round=' in query:
             puzzlename, roundname = query.split(' -round=')
-            if self.is_bighunt:
+            if self.is_bighunt(ctx):
                 # check if requested round exists in nexus, if it does assume the category exists
                 if self.check_nexus_round_list(round_data, nametest=roundname):
                     roundcategory = self.fetch_round_category(ctx, round_data=round_data, roundname=roundname)
@@ -633,7 +639,7 @@ class HuntCog(commands.Cog):
                 else:
                     await ctx.send('Round name `{}` does not exist in nexus. Please create it first using `!createround`'.format(roundname))
                     return False
-        elif self.is_bighunt:
+        elif self.is_bighunt(ctx):
             puzzlename = query
             roundname = ctx.channel.category.name
             roundid = ctx.channel.category.id
@@ -654,17 +660,17 @@ class HuntCog(commands.Cog):
         nexus_data = nexus_sheet.get_all_values()
 
         # check existence of puzzle in channels and nexus
-        if not self.is_bighunt and self.check_category_channel_list(ctx, puzzlename):
+        if not self.is_bighunt(ctx) and self.check_category_channel_list(ctx, puzzlename):
             await ctx.send('Channel named `{}` already exists in current category.'.format(puzzlename))
             return False
-        elif self.is_bighunt and self.check_server_channel_list(ctx, puzzlename):
+        elif self.is_bighunt(ctx) and self.check_server_channel_list(ctx, puzzlename):
             await ctx.send('Channel named `{}` already exists in current server.'.format(puzzlename))
             return False
         if self.check_nexus_puzzle_list(nexus_data, puzzlename):
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
             return False
 
-        position = roundcategory.channels[0].position if self.is_bighunt else ctx.message.channel.category.channels[0].position
+        position = roundcategory.channels[0].position if self.is_bighunt(ctx) else ctx.message.channel.category.channels[0].position
         if not is_multi:
             infomsg = await ctx.send(':yellow_circle: Creating puzzle `{}`'.format(puzzlename))
 
@@ -673,11 +679,11 @@ class HuntCog(commands.Cog):
         newsheet_url = self.puzzle_sheet_make(nexus_data, puzzlename)
         msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
-        self.nexus_add_puzzle(nexussheet=nexus_sheet, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
+        self.nexus_add_puzzle(nexussheet=nexus_sheet, ctx=ctx, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
 
         # send final feedback
         if not is_multi:
-            if self.is_bighunt:
+            if self.is_bighunt(ctx):
                 await infomsg.edit(content=':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(newchannels[0].mention, roundname))
                 now = datetime.utcnow() - timedelta(hours=5)
                 dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
@@ -700,7 +706,7 @@ class HuntCog(commands.Cog):
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
         for i in range(len(info_content)):
-            if self.is_bighunt:
+            if self.is_bighunt(ctx):
                 msg_edit.append(':yellow_circle: Puzzle created: {} (Round: `{}`)'.format(rets[i][0], rets[i][1]) if rets[i] else info_content[i])
                 # no original status in log channel -- just ignore if failed
                 if rets[i]:
@@ -708,7 +714,7 @@ class HuntCog(commands.Cog):
             else:
                 msg_edit.append(':yellow_circle: Puzzle created: {}'.format(rets[i][0]) if rets[i] else info_content[i])
         await infomsg.edit(content='\n'.join(msg_edit))
-        if self.is_bighunt:
+        if self.is_bighunt(ctx):
             await self.send_log_message(ctx, '\n'.join(log_message))
 
     @commands.command(aliases=['solve'])
@@ -804,7 +810,7 @@ class HuntCog(commands.Cog):
 
         # prepare to move channel down
         channels = ctx.message.channel.category.channels
-        idx = channels[-2 if self.is_bighunt else -1].position+1
+        idx = channels[-2 if self.is_bighunt(ctx) else -1].position+1
         for channel in channels:
             if self.mark in channel.name:
                 idx = channel.position 
@@ -817,10 +823,10 @@ class HuntCog(commands.Cog):
                 ['gemheart', 'bang', 'face_explode', 'face_hearts', 'face_openmouth', 'face_party', 'face_stars',
                  'party', 'rocket', 'star', 'mbot', 'slug'])
             filepath = './misc/emotes/' + emote + '.png'
-            solve_message = await ctx.send(content=('`{}` marked as solved!' + (' Voice chat will be deleted in **2 minutes**.' if self.is_bighunt else '')).format(puzzlename), file=discord.File(filepath))
+            solve_message = await ctx.send(content=('`{}` marked as solved!' + (' Voice chat will be deleted in **2 minutes**.' if self.is_bighunt(ctx) else '')).format(puzzlename), file=discord.File(filepath))
             await ctx.channel.edit(name=self.mark + ctx.channel.name, position=idx)
 
-            if self.is_bighunt:
+            if self.is_bighunt(ctx):
                 now = datetime.utcnow() - timedelta(hours=5)
                 dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
                 await self.send_log_message(ctx, '[' + dt_string + ' EST] :green_circle: Puzzle solved: {} (Round: `{}` ~ Answer: `{}`)'.format(ctx.message.channel.mention, ctx.message.channel.category, query.upper()))
@@ -843,7 +849,7 @@ class HuntCog(commands.Cog):
             return
 
         # cancel VC deletion if necessary
-        if self.is_bighunt:
+        if self.is_bighunt(ctx):
             for vc in self.vc_delete_queue:
                 if vc[0] == ctx.channel.id:
                     vc[1].cancel()
@@ -914,7 +920,7 @@ class HuntCog(commands.Cog):
         puzzle_sheet.batch_update({"requests": requests})
 
         # remake vc if necessary
-        if self.is_bighunt and discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])) is None:
+        if self.is_bighunt(ctx) and discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])) is None:
             vc = await ctx.channel.category.create_voice_channel(name=puzzle_name)
             # this is a separate api edit request, but it should be infrequent enough not to matter
             nexus_sheet.update_cell(row_select, lib['Voice Channel ID'][0]+1, str(vc.id))
@@ -924,7 +930,7 @@ class HuntCog(commands.Cog):
         filepath = './misc/emotes/szeth.png'
         await ctx.send(content='Fixed.',file=discord.File(filepath))
 
-        if self.is_bighunt:
+        if self.is_bighunt(ctx):
             now = datetime.utcnow() - timedelta(hours=5)
             dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
             await self.send_log_message(ctx, '[' + dt_string + ' EST] Puzzle Unsolved: {} (Round: `{}`)'.format(ctx.message.channel.mention, ctx.message.channel.category))
@@ -1160,38 +1166,6 @@ class HuntCog(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
-    @commands.guild_only()
-    @commands.has_role('organiser')
-    async def bighunt(self, ctx, *, query=None):
-        if not query:
-            await ctx.send('Bighunt mode is currently ' + ('enabled.' if self.is_bighunt else 'disabled.'))
-            return
-
-        norm_query = query.lower()
-        edit_line = -1
-        with open('.env', 'r', encoding='utf-8') as reader:
-            data = reader.readlines()
-            for i in range(len(data)):
-                if data[i].startswith('BIG_HUNT='):
-                    edit_line = i
-                    break
-        if norm_query == 'true' or norm_query == 'on':
-            self.is_bighunt = True
-            data[i] = 'BIG_HUNT=1'
-            await ctx.send('Enabled bighunt mode!')
-        elif norm_query == 'false' or norm_query == 'off':
-            self.is_bighunt = False
-            os.putenv('BIG_HUNT', 'False')
-            data[i] = 'BIG_HUNT=0'
-            await ctx.send('Disabled bighunt mode.')
-        else:
-            await ctx.send('`!bighunt true` or `!bighunt false`')
-            return
-
-        with open('.env', 'w', encoding='utf-8') as writer:
-            writer.writelines(data)
-
     @commands.command(aliases=['graph', 'solvegraph'])
     @commands.guild_only()
     async def generate_solve_graph(self, ctx, *, query=None):
@@ -1265,22 +1239,25 @@ class HuntCog(commands.Cog):
         2) copy nexus and template sheets
         """
 
-        if self.is_bighunt:
-            await ctx.send("This command is not available in bighunt mode.")
-
-        if not query or '-role=' not in query or '-folder' not in query:
-            await ctx.send('Usage: `!createhunt <huntname> -folder=<folder> -role=<roleid>`')
+        if not query or ('-role=' not in query and '-bighunt' not in query) or '-folder' not in query:
+            await ctx.send('Usage: `!createhunt <huntname> -folder=<folder> -role=<roleid> [-bighunt] [-logfeed=<logfeedid>]`')
             return False
 
         query_parts = query.split(' -')
         hunt_name = query_parts[0]
         hunt_role_id = ''
         hunt_folder = ''
+        is_bighunt = False
+        logfeed_id = '0'
         for part in query_parts[1:]:
             if part.startswith('role'):
                 hunt_role_id = part.split('=')[1]
             elif part.startswith('folder'):
                 hunt_folder = part.split('=')[1]
+            elif part.startswith('bighunt'):
+                is_bighunt = True
+            elif part.startswith('logfeed'):
+                logfeed_id = part.split('=')[1]
         info_msg = await ctx.send(':orange_circle: Creating hunt `{}`...'.format(hunt_name))
 
         position = ctx.message.channel.category.position
@@ -1297,7 +1274,7 @@ class HuntCog(commands.Cog):
 
         nexus_url = self.make_hunt_nexus(hunt_name, hunt_folder)
         db = DBase(ctx)
-        await db.hunt_insert_row(ctx.guild.id, hunt_category.id, hunt_role_id, hunt_folder, nexus_url)
+        await db.hunt_insert_row(ctx.guild.id, hunt_category.id, hunt_role_id, hunt_folder, nexus_url, is_bighunt, logfeed_id)
 
         nexus_msg = await hunt_channel.send('Nexus sheet: {}'.format(nexus_url))
         await nexus_msg.pin()

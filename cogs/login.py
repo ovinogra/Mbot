@@ -107,6 +107,8 @@ class LoginCog(commands.Cog):
                 updatedata.append(('hunt_nexus',str(value)))
             elif field == 'team':
                 updatedata.append(('hunt_team_name', str(value)))
+            elif field == 'logfeed':
+                updatedata.append(('hunt_logfeed', str(value)))
             else:
                 await ctx.send('Flag does not exist: '+field)
 

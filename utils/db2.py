@@ -42,6 +42,16 @@ class DBase:
             FilterExpression=Attr('guild_id').eq(guildID) & Attr('hunt_category_id').eq(category_id)
         )
         if len(response['Items']) < 1:
+            try:
+                round_row = self.round_get_row(guildID, category_id)
+                response_from_round = table.scan(
+                    FilterExpression=Attr('guild_id').eq(guildID) & Attr('hunt_category_id').eq(round_row['hunt_category_id'])
+                )
+                if len(response_from_round['Items']) < 1:
+                    raise Exception('This is not a hunt category!')
+                return response_from_round['Items'][0]
+            except Exception:
+                pass
             raise Exception('This is not a hunt category!')
         return response['Items'][0]
 
@@ -70,7 +80,7 @@ class DBase:
         await self.ctx.send('Login update successful')
         return
 
-    async def hunt_insert_row(self, guild_id, category_id, hunt_role_id, hunt_folder, hunt_nexus):
+    async def hunt_insert_row(self, guild_id, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed):
         ''' guildname, guildID: string and int of guild info '''
 
         dynamodb = self.connect()
@@ -87,6 +97,8 @@ class DBase:
                 'hunt_folder': hunt_folder,
                 'hunt_nexus': hunt_nexus,
                 'hunt_team_name': 'none',
+                'is_bighunt': is_bighunt,
+                'hunt_logfeed': int(hunt_logfeed),
             }
         )
         # await self.ctx.send('INSERT ROW successful')
@@ -105,6 +117,31 @@ class DBase:
             }
         )
         await self.ctx.send('DELETE ROW successful')
+        return
+
+    def round_get_row(self, guild_id, category_id):
+        dynamodb = self.connect()
+        table = dynamodb.Table('multi-hunt-rounds')
+
+        response = table.scan(
+            FilterExpression=Attr('guild_id').eq(guild_id) & Attr('round_category_id').eq(category_id)
+        )
+        if len(response['Items']) < 1:
+            raise Exception('This is not a hunt category!')
+        return response['Items'][0]
+
+    async def round_insert_row(self, guild_id, category_id, hunt_category_id):
+        dynamodb = self.connect()
+        table = dynamodb.Table('multi-hunt-rounds')
+
+        table.put_item(
+            Item={
+                'guild_id': int(guild_id),
+                'round_category_id': int(category_id),
+                'hunt_category_id': int(hunt_category_id),
+            }
+        )
+        # await self.ctx.send('INSERT ROW successful')
         return
 
     ################ TABLE tags ################
