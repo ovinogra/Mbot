@@ -286,9 +286,7 @@ class MiscCog(commands.Cog):
                 "I'm convinced that responsibility is some kind of psychological disease.",
                 "Power is an illusion of perception.",
                 "I’m so storming pure I practically belch rainbows.",
-                "Mocking a woman is like drinking too much wine. It may be fun for a short time, but the hangover is hell.",
                 "Inappropriate... like dividing by zero?",
-                "Women are fickle, but men are fools.",
                 "I am not enthused by my first experiments in self-determination.",
                 "Mushroom locating AI. With supplementary espionage additions. At your service."
             ]
