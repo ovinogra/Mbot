@@ -13,7 +13,6 @@ class DBase:
 
     def __init__(self, ctx):
         self.ctx = ctx
-        self.bot = ctx.bot
 
     ################ Main DB connection ################
 

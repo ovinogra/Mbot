@@ -168,6 +168,10 @@ class HuntCog(commands.Cog):
 
         # res = list(results)
         # no hunt role set
+        try:
+            hunt_info['hunt_role_id']
+        except KeyError:
+            return False
         if hunt_info['hunt_role_id'] == 'none':
             return True
         else:
@@ -302,6 +306,44 @@ class HuntCog(commands.Cog):
         template = self.drive.gclient().copy(template_id, title='#TEMPLATE ' + hunt_name, folder_id=hunt_folder_id, copy_permissions=False)
         nexus.get_worksheet(0).update('G2', 'https://docs.google.com/spreadsheets/d/%s' % template.id)
         return 'https://docs.google.com/spreadsheets/d/%s' % nexus.id
+
+    # events #
+
+    @commands.Cog.listener()
+    async def on_voice_state_update(self, member, before, after):
+        if after.channel is None:
+            return
+
+        try:
+            hunt_info = DBase(None).hunt_get_row(after.channel.guild.id, after.channel.category.id)
+        except Exception as e:
+            return
+        nexus_url = self.nexus_get_url(hunt_info)
+        if not nexus_url:
+            return
+        nexus_sheet = self.nexus_get_sheet(nexus_url)
+        data_all = nexus_sheet.get_all_values()
+        headings = data_all[0]
+        lib = self.nexus_sort_columns(headings)
+
+        data_id = [item[lib['Voice Channel ID'][0]] for item in data_all]
+        try:
+            row_select = data_id.index(str(after.channel.id)) + 1
+        except ValueError:
+            return
+        col_select = lib['Spreadsheet Link'][0]
+        try:
+            contact_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select]).worksheet('Contact')
+        except gspread.WorksheetNotFound:
+            return
+
+        contact_data = contact_sheet.get_all_values()
+        users = [item[1] for item in contact_data]
+        try:
+            users.index(member.mention)
+        except ValueError:
+            row = len(contact_data) + 1
+            contact_sheet.update_cell(row, 2, member.mention)
 
     # begin bot commands #
 
@@ -1283,6 +1325,100 @@ class HuntCog(commands.Cog):
         await info_msg.edit(content=':orange_circle: Hunt created: {}'.format(hunt_channel.mention))
         return
 
+    @commands.command(aliases=['contacts'])
+    @commands.guild_only()
+    async def contact(self, ctx, *, query=None):
+
+        hunt_info = await self.get_hunt_db_info(ctx)
+
+        if not await self.check_hunt_role(ctx, hunt_info):
+            return
+
+        nexus_url = self.nexus_get_url(hunt_info)
+        if not nexus_url:
+            return
+        nexus_sheet = self.nexus_get_sheet(nexus_url)
+        data_all = nexus_sheet.get_all_values()
+        headings = data_all[0]
+        lib = self.nexus_sort_columns(headings)
+
+        data_id = [item[lib['Channel ID'][0]] for item in data_all]
+        try:
+            row_select = data_id.index(str(ctx.channel.id)) + 1
+        except ValueError:
+            await ctx.send('This is not a puzzle channel!')
+            return
+        col_select = lib['Puzzle Name'][0]
+        puzzle_name = data_all[row_select - 1][col_select]
+        col_select = lib['Spreadsheet Link'][0]
+        try:
+            contact_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select]).worksheet('Contact')
+        except gspread.WorksheetNotFound:
+            await ctx.send('Could not find the "Contact" tab in the puzzle sheet. Are you sure it\'s still there?')
+            return
+
+        contact_data = contact_sheet.get_all_values()
+
+        if not query or query == 'list' or query.startswith('ping'):
+            specified = []
+            joined_voice = []
+            for i in range(1, len(contact_data)):
+                if contact_data[i][0] != '':
+                    specified.append(contact_data[i][0])
+                if contact_data[i][1] != '':
+                    joined_voice.append(contact_data[i][1])
+            if not query or query == 'list':
+                embed = discord.Embed(
+                    title='Contacts for Puzzle: ' + puzzle_name,
+                    colour=discord.Colour.teal()
+                )
+                embed.add_field(
+                    name='Specified Contacts',
+                    value='\n'.join(specified) if len(specified) > 0 else '-',
+                    inline=False
+                )
+                embed.add_field(
+                    name='Joined the Voice Channel',
+                    value='\n'.join(joined_voice) if len(joined_voice) > 0 else '-',
+                    inline=False
+                )
+                await ctx.send(embed=embed)
+                return
+            elif query == 'ping':
+                if len(specified) > 0:
+                    await ctx.send('Pinging ' + ', '.join(specified) + ' for help with puzzle: {}'.format(ctx.channel.mention))
+                else:
+                    await ctx.send('No users are specified contacts for this puzzle. :pensive:')
+                return
+            elif query == 'ping all':
+                contacts = specified + joined_voice
+                if len(contacts) > 0:
+                    await ctx.send('Pinging ' + ', '.join(specified + joined_voice) + ' for help with puzzle: {}'.format(ctx.channel.mention))
+                else:
+                    await ctx.send('No users are specified contacts or have joined the voice channel for this puzzle. :pensive:')
+                return
+
+        if query.startswith('add'):
+            users = [item[0] for item in contact_data]
+            if query == 'add':
+                try:
+                    users.index(ctx.message.author.mention)
+                except ValueError:
+                    row = len(contact_data) + 1
+                    contact_sheet.update_cell(row, 1, ctx.message.author.mention)
+            else:
+                additions = query.split(' ')
+                sheet_additions = []
+                for i in range(1, len(additions)):
+                    try:
+                        users.index(ctx.message.author.mention)
+                    except ValueError:
+                        sheet_additions.append([additions[i]])
+                start_row = len(contact_data) + 1
+                end_row = start_row + len(additions) - 1
+                contact_sheet.update('A' + str(start_row) + ':A' + str(end_row), sheet_additions)
+            await ctx.send('Added users to contacts!')
+            return
 
 async def setup(bot):
     await bot.add_cog(HuntCog(bot))
