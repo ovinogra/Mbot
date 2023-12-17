@@ -116,7 +116,7 @@ class HuntCog(commands.Cog):
 
     # nexus management functions
 
-    def get_hunt_db_info(self, ctx):
+    async def get_hunt_db_info(self, ctx):
         try:
             return DBase(ctx).hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
         except Exception as e:
@@ -154,7 +154,7 @@ class HuntCog(commands.Cog):
         else:
             return False
 
-    def get_hunt_role_id(self, ctx, hunt_info):
+    async def get_hunt_role_id(self, ctx, hunt_info):
         if hunt_info['hunt_role_id'] == 'none' and not self.is_bighunt(hunt_info):
             await ctx.send('Update the role id in the login info.')
             return False
@@ -163,7 +163,7 @@ class HuntCog(commands.Cog):
             return roleid
 
 
-    def check_hunt_role(self, ctx, hunt_info):
+    async def check_hunt_role(self, ctx, hunt_info):
         ''' check if user has role for current hunt '''
 
         # res = list(results)
@@ -252,7 +252,7 @@ class HuntCog(commands.Cog):
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(round_data[2]))
         sheet.append_row(temp,table_range=table_range)
 
-    def nexus_add_puzzle(self, ctx, nexussheet, nexus_data, puzzlechannel, voicechannel, puzzlename, puzzlesheeturl, roundmarker):
+    def nexus_add_puzzle(self, hunt_info, nexussheet, nexus_data, puzzlechannel, voicechannel, puzzlename, puzzlesheeturl, roundmarker):
         """ add channel id, puzzle name, link, priority=New """
 
         # sort headings
@@ -307,7 +307,7 @@ class HuntCog(commands.Cog):
 
     @commands.command()
     async def help(self,ctx,*,query=None):
-        if not self.is_bighunt(self.get_hunt_db_info(ctx)):
+        if not self.is_bighunt(await self.get_hunt_db_info(ctx)):
             embed = discord.Embed(
                 title='Commands',
                 colour=discord.Colour.dark_grey(),
@@ -369,9 +369,9 @@ class HuntCog(commands.Cog):
         can flag by round or unsolved 
         """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
-        if not self.check_hunt_role(ctx, hunt_info):
+        if not await self.check_hunt_role(ctx, hunt_info):
             return
 
         async def send_nexus(nexus):
@@ -497,7 +497,7 @@ class HuntCog(commands.Cog):
     async def list_rounds(self,ctx,*,query=None):
         ''' list all rounds in nexus'''
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         if not self.is_bighunt(hunt_info):
             await ctx.send("This command is only available in bighunt mode.")
@@ -534,7 +534,7 @@ class HuntCog(commands.Cog):
         4) add category id... somewhere in nexus?
         """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         if not self.is_bighunt(hunt_info):
             await ctx.send("This command is only available in bighunt mode.")
@@ -568,9 +568,9 @@ class HuntCog(commands.Cog):
             await ctx.send('Round named `{}` already exists in Nexus.'.format(name))
             return
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
         # do the round creation things
-        roleid = self.get_hunt_role_id(ctx, hunt_info)
+        roleid = await self.get_hunt_role_id(ctx, hunt_info)
         log_channel = discord.utils.get(ctx.guild.channels, id=int(hunt_info['hunt_logfeed']))
         if log_channel is not None:
             position = log_channel.category.position
@@ -591,7 +591,7 @@ class HuntCog(commands.Cog):
         newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: ' + name)
         self.nexus_add_round(round_sheet, round_data, newcategory, newchannnel, marker)
 
-        await db.round_insert_row(ctx.guild.id, newcategory.id, hunt_info['hunt_category_id'])
+        await DBase(ctx).round_insert_row(ctx.guild.id, newcategory.id, hunt_info['hunt_category_id'])
 
         # send feedback on round creation
         now = datetime.utcnow() - timedelta(hours=5)
@@ -613,7 +613,7 @@ class HuntCog(commands.Cog):
             return False
 
         if hunt_info is None:
-            hunt_info = self.get_hunt_db_info(ctx)
+            hunt_info = await self.get_hunt_db_info(ctx)
 
         nexus_url = self.nexus_get_url(hunt_info)
         if not nexus_url:
@@ -673,7 +673,7 @@ class HuntCog(commands.Cog):
         newsheet_url = self.puzzle_sheet_make(nexus_data, puzzlename)
         msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
-        self.nexus_add_puzzle(nexussheet=nexus_sheet, ctx=ctx, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
+        self.nexus_add_puzzle(nexussheet=nexus_sheet, hunt_info=hunt_info, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
 
         # send final feedback
         if not is_multi:
@@ -691,7 +691,7 @@ class HuntCog(commands.Cog):
     @commands.guild_only()
     async def multicreate_puzzles(self, ctx, *, query=None):
         """ create multiple puzzles with one command """
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
         lines = query.splitlines()
         info_content = [':yellow_circle: Creating puzzle `{}`'.format(line.split('-round=')[0]) for line in lines]
         infomsg = await ctx.send('\n'.join(info_content))
@@ -717,9 +717,9 @@ class HuntCog(commands.Cog):
     async def solve_puzzle(self, ctx, *, query=None):
         """ update puzzle in nexus with answer and solved priority """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
-        if not self.check_hunt_role(ctx, hunt_info):
+        if not await self.check_hunt_role(ctx, hunt_info):
             return
 
         if not query:
@@ -842,9 +842,9 @@ class HuntCog(commands.Cog):
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
-        if not self.check_hunt_role(ctx, hunt_info):
+        if not await self.check_hunt_role(ctx, hunt_info):
             return
 
         # cancel VC deletion if necessary
@@ -924,7 +924,7 @@ class HuntCog(commands.Cog):
             # this is a separate api edit request, but it should be infrequent enough not to matter
             nexus_sheet.update_cell(row_select, lib['Voice Channel ID'][0]+1, str(vc.id))
 
-        # update user of undosolve
+        # inform user of undosolve
         await ctx.channel.edit(name=ctx.channel.name.replace(self.mark,''))
         filepath = './misc/emotes/szeth.png'
         await ctx.send(content='Fixed.',file=discord.File(filepath))
@@ -939,9 +939,9 @@ class HuntCog(commands.Cog):
     async def update_nexus_note(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
-        if not self.check_hunt_role(ctx, hunt_info):
+        if not await self.check_hunt_role(ctx, hunt_info):
             return
 
         if not query:
@@ -980,9 +980,9 @@ class HuntCog(commands.Cog):
     async def remove_nexus_note(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
-        if not self.check_hunt_role(ctx, hunt_info):
+        if not await self.check_hunt_role(ctx, hunt_info):
             return
 
         # fetch nexus data and sort headings
@@ -1018,9 +1018,9 @@ class HuntCog(commands.Cog):
     async def update_nexus(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
-        if not self.check_hunt_role(ctx, hunt_info):
+        if not await self.check_hunt_role(ctx, hunt_info):
             return
 
         if not query:
@@ -1092,9 +1092,9 @@ class HuntCog(commands.Cog):
         This awful sequence of checks and API calls presumably makes sure stuff won't break later
         """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
-        if not self.check_hunt_role(ctx, hunt_info):
+        if not await self.check_hunt_role(ctx, hunt_info):
             return
 
         checks = {}
@@ -1170,7 +1170,7 @@ class HuntCog(commands.Cog):
     async def generate_solve_graph(self, ctx, *, query=None):
 
         # fetch solve data
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
         try:
             team_name = hunt_info['hunt_team_name']
         except Exception as e:
