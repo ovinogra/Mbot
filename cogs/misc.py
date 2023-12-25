@@ -191,7 +191,7 @@ class MiscCog(commands.Cog):
             return re.match('.*(' + prompt + '),? (m-?bot|<@' + str(self.bot.user.id) + '>).*' +
                             ('|.*(m-?bot|<@' + str(self.bot.user.id) + '>),? (' + prompt + ').*' if end else ''), msg)
 
-        if match_prompt('(i )?love you', message.content.lower(), True):
+        if match_prompt('(i )?love you|\\bily', message.content.lower(), True):
             quotes = [
                 'And I love you, random citizen!',
                 'Do you love me as much as I love mushrooms?',
