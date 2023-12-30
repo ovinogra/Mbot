@@ -1456,6 +1456,8 @@ class HuntCog(commands.Cog):
             gclient = self.drive.gclient()
             gclient.del_spreadsheet(sheet_id)
             nexus_sheet.delete_row(row_select)
+            if self.is_bighunt(hunt_info):
+                await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])).delete()
             await ctx.channel.delete()
 
 async def setup(bot):
