@@ -56,7 +56,8 @@ class AdminCog(commands.Cog):
             await ctx.send('`!rmc check` will print the channels to be deleted\n`!rmc doit` will delete said channels')
             return 
 
-        channels = ctx.message.channel.category.channels
+        category = ctx.message.channel.category
+        channels = category.channels
         if action == 'check':
             namesall = ['Channels to be deleted:']
             for channel in channels:
@@ -64,7 +65,8 @@ class AdminCog(commands.Cog):
             await ctx.send('\n'.join(namesall))
         elif action == 'doit':
             for channel in channels:
-                await channel.delete()            
+                await channel.delete()
+            await category.delete()
         
 
 async def setup(bot):
