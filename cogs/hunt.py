@@ -1420,6 +1420,44 @@ class HuntCog(commands.Cog):
             await ctx.send('Added users to contacts!')
             return
 
+
+    @commands.command(aliases=['delete', 'rmp'])
+    @commands.guild_only()
+    async def remove_puzzle(self, ctx, *, query=None):
+
+        hunt_info = await self.get_hunt_db_info(ctx)
+
+        if not await self.check_hunt_role(ctx, hunt_info):
+            return
+
+        nexus_url = self.nexus_get_url(hunt_info)
+        if not nexus_url:
+            return
+        nexus_sheet = self.nexus_get_sheet(nexus_url)
+        data_all = nexus_sheet.get_all_values()
+        headings = data_all[0]
+        lib = self.nexus_sort_columns(headings)
+
+        data_id = [item[lib['Channel ID'][0]] for item in data_all]
+        try:
+            row_select = data_id.index(str(ctx.channel.id)) + 1
+        except ValueError:
+            await ctx.send('This is not a puzzle channel!')
+            return
+
+        if not query or query != 'doit':
+            await ctx.send('You are about to delete the puzzle {}. This will remove this channel and the puzzle spreadhseet, and delete the puzzle from the nexus. Type `!rmp doit` to continue.'.format(ctx.channel.mention))
+        else:
+            await ctx.send('Deleting puzzle {}...'.format(ctx.channel.mention))
+            col_select = lib['Spreadsheet Link'][0]
+            sheet_link = data_all[row_select - 1][col_select]
+            sheet_id = max(sheet_link.split('/'), key=len)
+            sheet_id = sheet_id.split('?')[0]
+            gclient = self.drive.gclient()
+            gclient.del_spreadsheet(sheet_id)
+            nexus_sheet.delete_row(row_select)
+            await ctx.channel.delete()
+
 async def setup(bot):
     await bot.add_cog(HuntCog(bot))
 
