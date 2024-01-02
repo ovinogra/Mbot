@@ -8,6 +8,7 @@ import gspread
 import random
 import numpy as np
 from datetime import datetime, timedelta
+from multiprocessing import Lock
 
 from dotenv import load_dotenv
 from matplotlib import pyplot
@@ -32,6 +33,7 @@ import os
 #      -columns: Channel ID, Round, Number, Puzzle Name, Answer, Spreadsheet Link, Priority, Notes, Created At, Solved At
 #      -first entry under Spreadsheet Link must be url to a puzzle template sheet
 # 3) Folder must be shared with google service account
+from utils.queued_vc_contact_update import QueuedVCContactUpdate
 
 
 class HuntCog(commands.Cog):
@@ -42,6 +44,13 @@ class HuntCog(commands.Cog):
         self.mark = '✅'
         self.drive = Drive()
         self.vc_delete_queue = []
+        # LRU cache for VCs to prevent excessive sheets API reads
+        self.contact_cache = []
+        self.contact_cache_data = {}
+        self.cache_max_size = 50
+        self.contact_update_queue = {}
+        self.contact_update_thread = None
+        self.contact_update_lock = Lock()
 
     # discord management functions
 
@@ -307,6 +316,92 @@ class HuntCog(commands.Cog):
         nexus.get_worksheet(0).update('G2', 'https://docs.google.com/spreadsheets/d/%s' % template.id)
         return 'https://docs.google.com/spreadsheets/d/%s' % nexus.id
 
+    def cache_vc_for_contact(self, voice_channel_id, puzzle_url):
+        if voice_channel_id in self.contact_cache:
+            # set this vc to most recently accessed
+            self.contact_cache.remove(voice_channel_id)
+            self.contact_cache.append(voice_channel_id)
+        else:
+            if len(self.contact_cache) >= self.cache_max_size:
+                least_recent_channel_id = self.contact_cache.pop(0)
+                self.contact_cache_data.pop(least_recent_channel_id)
+            self.contact_cache.append(voice_channel_id)
+            self.contact_cache_data[voice_channel_id] = puzzle_url
+
+    async def update_vc_contacts_wrapper(self):
+        try:
+            await self.update_vc_contacts()
+        except Exception as e:
+            # can't do much aside from reset and try again
+            print(e)
+            self.contact_update_thread = None
+
+    async def update_vc_contacts(self):
+        # adds all users after 1 minute
+        await asyncio.sleep(5)
+
+        with self.contact_update_lock:
+            for channel_id in self.contact_update_queue.keys():
+                sheet_url = None
+                if channel_id in self.contact_cache:
+                    sheet_url = self.contact_cache_data[channel_id]
+                    if sheet_url is None:
+                        continue
+                else:
+                    channel = self.contact_update_queue[channel_id].get_channel()
+                    try:
+                        hunt_info = DBase(None).hunt_get_row(channel.guild.id, channel.category.id)
+                    except Exception as e:
+                        self.cache_vc_for_contact(channel.id, None)
+                        continue
+                    nexus_url = self.nexus_get_url(hunt_info)
+                    if not nexus_url:
+                        self.cache_vc_for_contact(channel.id, None)
+                        continue
+                    nexus_sheet = self.nexus_get_sheet(nexus_url)
+                    data_all = nexus_sheet.get_all_values()
+                    headings = data_all[0]
+                    lib = self.nexus_sort_columns(headings)
+
+                    data_id = [item[lib['Voice Channel ID'][0]] for item in data_all]
+                    try:
+                        row_select = data_id.index(str(channel.id)) + 1
+                    except ValueError:
+                        self.cache_vc_for_contact(channel.id, None)
+                        continue
+                    col_select = lib['Spreadsheet Link'][0]
+                    sheet_url = data_all[row_select - 1][col_select]
+                    self.cache_vc_for_contact(channel.id, sheet_url)
+                    print('got sheet from db')
+
+                try:
+                    contact_sheet = self.drive.gclient().open_by_url(sheet_url).worksheet('Contact')
+                except gspread.WorksheetNotFound:
+                    continue
+
+                contact_data = contact_sheet.get_all_values()
+                users = [item[1] for item in contact_data]
+
+                additions = self.contact_update_queue[channel_id].get_to_add()
+                additions_made = []
+                sheet_additions = []
+                for i in range(0, len(additions)):
+                    try:
+                        users.index(additions[i])
+                    except ValueError:
+                        try:
+                            additions_made.index(additions[i])
+                        except ValueError:
+                            additions_made.append(additions[i])
+                            sheet_additions.append([additions[i]])
+                start_row = len(contact_data) + 1
+                end_row = start_row + len(sheet_additions) - 1
+                contact_sheet.update('B' + str(start_row) + ':B' + str(end_row), sheet_additions)
+
+            self.contact_update_queue = {}
+            self.contact_update_thread = None
+        return
+
     # events #
 
     @commands.Cog.listener()
@@ -314,36 +409,15 @@ class HuntCog(commands.Cog):
         if after.channel is None:
             return
 
-        try:
-            hunt_info = DBase(None).hunt_get_row(after.channel.guild.id, after.channel.category.id)
-        except Exception as e:
-            return
-        nexus_url = self.nexus_get_url(hunt_info)
-        if not nexus_url:
-            return
-        nexus_sheet = self.nexus_get_sheet(nexus_url)
-        data_all = nexus_sheet.get_all_values()
-        headings = data_all[0]
-        lib = self.nexus_sort_columns(headings)
-
-        data_id = [item[lib['Voice Channel ID'][0]] for item in data_all]
-        try:
-            row_select = data_id.index(str(after.channel.id)) + 1
-        except ValueError:
-            return
-        col_select = lib['Spreadsheet Link'][0]
-        try:
-            contact_sheet = self.drive.gclient().open_by_url(data_all[row_select - 1][col_select]).worksheet('Contact')
-        except gspread.WorksheetNotFound:
-            return
-
-        contact_data = contact_sheet.get_all_values()
-        users = [item[1] for item in contact_data]
-        try:
-            users.index(member.mention)
-        except ValueError:
-            row = len(contact_data) + 1
-            contact_sheet.update_cell(row, 2, member.mention)
+        with self.contact_update_lock:
+            try:
+                update = self.contact_update_queue[after.channel.id]
+                update.add_another(member.mention)
+            except KeyError:
+                update = QueuedVCContactUpdate(after.channel, member.mention)
+                self.contact_update_queue[after.channel.id] = update
+            if self.contact_update_thread is None:
+                self.contact_update_thread = asyncio.create_task(self.update_vc_contacts_wrapper())
 
     # begin bot commands #
 
@@ -716,6 +790,7 @@ class HuntCog(commands.Cog):
         msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
         self.nexus_add_puzzle(nexussheet=nexus_sheet, hunt_info=hunt_info, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
+        self.cache_vc_for_contact(newchannels[1].id, newsheet_url)
 
         # send final feedback
         if not is_multi:
@@ -1409,13 +1484,13 @@ class HuntCog(commands.Cog):
             else:
                 additions = query.split(' ')
                 sheet_additions = []
-                for i in range(1, len(additions)):
+                for i in range(0, len(additions)):
                     try:
-                        users.index(ctx.message.author.mention)
+                        users.index(additions[i])
                     except ValueError:
                         sheet_additions.append([additions[i]])
                 start_row = len(contact_data) + 1
-                end_row = start_row + len(additions) - 1
+                end_row = start_row + len(sheet_additions) - 1
                 contact_sheet.update('A' + str(start_row) + ':A' + str(end_row), sheet_additions)
             await ctx.send('Added users to contacts!')
             return
@@ -1459,6 +1534,7 @@ class HuntCog(commands.Cog):
             if self.is_bighunt(hunt_info):
                 await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])).delete()
             await ctx.channel.delete()
+
 
 async def setup(bot):
     await bot.add_cog(HuntCog(bot))
