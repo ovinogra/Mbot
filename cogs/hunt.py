@@ -1539,7 +1539,10 @@ class HuntCog(commands.Cog):
             gclient.del_spreadsheet(sheet_id)
             nexus_sheet.delete_row(row_select)
             if self.is_bighunt(hunt_info):
-                await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])).delete()
+                try:
+                    await discord.utils.get(ctx.guild.channels, id=int(data_all[row_select - 1][lib['Voice Channel ID'][0]])).delete()
+                except AttributeError:
+                    pass
             await ctx.channel.delete()
 
 
