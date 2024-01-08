@@ -423,7 +423,12 @@ class HuntCog(commands.Cog):
 
     @commands.command()
     async def help(self,ctx,*,query=None):
-        if not self.is_bighunt(await self.get_hunt_db_info(ctx)):
+        try:
+            hunt_info = DBase(ctx).hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
+            is_bighunt = self.is_bighunt(hunt_info)
+        except Exception as e:
+            is_bighunt = True
+        if not is_bighunt:
             embed = discord.Embed(
                 title='Commands',
                 colour=discord.Colour.dark_grey(),
@@ -433,6 +438,7 @@ class HuntCog(commands.Cog):
                 '`!login`\n'\
                 '`!nexus [-unsolved]`\n'\
                 '`!create Puzzle Name`\n'\
+                '`!contact [add|list]`\n'\
                 '`!solve ANSWER`\n',inline=False)
             embed.add_field(name='Other Functions',value=
                 '`!multicreate [Puzzle Names (split by line)]`\n'\
@@ -459,6 +465,7 @@ class HuntCog(commands.Cog):
                 '`!nexus` to show all puzzles list\n'\
                 '`!createround Round Name -marker=:emoji:` to setup category for a new round\n'\
                 '`!create Puzzle Name` to setup channel/sheet for a new puzzle (use in the general channel for the correct round!)\n'\
+                '`!contact [add|list]` to add yourself as a contact for a puzzle or view all puzzle contacts\n'\
                 '`!solve ANSWER` to mark a puzzle as solved\n',inline=False)
             embed.add_field(name='Other Functions',value=
                 '`!nexus -unsolved` to show only unsolved puzzles \n'\
