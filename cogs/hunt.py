@@ -372,7 +372,6 @@ class HuntCog(commands.Cog):
                     col_select = lib['Spreadsheet Link'][0]
                     sheet_url = data_all[row_select - 1][col_select]
                     self.cache_vc_for_contact(channel.id, sheet_url)
-                    print('got sheet from db')
 
                 try:
                     contact_sheet = self.drive.gclient().open_by_url(sheet_url).worksheet('Contact')
@@ -679,6 +678,7 @@ class HuntCog(commands.Cog):
             return
         nexuswkbook = self.nexus_get_wkbook(nexus_url)
         nexussheet = nexuswkbook.sheet1
+        nexus_data = nexussheet.get_all_values()
         round_sheet = nexuswkbook.get_worksheet(2)
         round_data = round_sheet.get_all_values()
 
@@ -710,17 +710,20 @@ class HuntCog(commands.Cog):
             newcategory = await ctx.guild.create_category(name,overwrites=overwrites,position=position)
         else:
             newcategory = await ctx.guild.create_category(name,position=position)
-        newchannnel = await newcategory.create_text_channel(name=marker + '-' + name + '-general')
-        newvoicechannnel = await newcategory.create_voice_channel(name='ROUND: ' + name)
-        self.nexus_add_round(round_sheet, round_data, newcategory, newchannnel, marker)
+        newchannel = await newcategory.create_text_channel(name=marker + '-' + name + '-general', position=0)
+        newvoicechannel = await newcategory.create_voice_channel(name='ROUND: ' + name, position=0)
+        newsheet_url = self.puzzle_sheet_make(nexus_data, "ROUND: " + name + " " + marker)
+        msg = await newchannel.send(newsheet_url)
+        await msg.pin()
+        self.nexus_add_round(round_sheet, round_data, newcategory, newchannel, marker)
 
         await DBase(ctx).round_insert_row(ctx.guild.id, newcategory.id, hunt_info['hunt_category_id'])
 
         # send feedback on round creation
         now = datetime.utcnow() - timedelta(hours=5)
         dt_string = now.strftime("%Y/%m/%d %H:%M:%S")
-        await ctx.send(':orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannnel.mention))
-        await self.send_log_message(ctx, hunt_info, '[' + dt_string + ' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannnel.mention))
+        await ctx.send(':orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannel.mention))
+        await self.send_log_message(ctx, hunt_info, '[' + dt_string + ' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannel.mention))
 
     @commands.command(aliases=['create','createpuzzle'])
     @commands.guild_only()
@@ -787,7 +790,13 @@ class HuntCog(commands.Cog):
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
             return False
 
-        position = roundcategory.channels[0].position if self.is_bighunt(hunt_info) else ctx.message.channel.category.channels[0].position
+        category = roundcategory if self.is_bighunt(hunt_info) else ctx.message.channel.category
+        text_channels = roundcategory.text_channels
+        # if there are no other unsolved puzzles, set to 500
+        position = 500
+        if len(text_channels) > 1 and text_channels[1].position < 501:
+            position = text_channels[1].position - 1
+
         if not is_multi:
             infomsg = await ctx.send(':yellow_circle: Creating puzzle `{}`'.format(puzzlename))
 
@@ -930,11 +939,12 @@ class HuntCog(commands.Cog):
         puzzle_sheet.batch_update({"requests": requests})
 
         # prepare to move channel down
-        channels = ctx.message.channel.category.channels
-        idx = channels[-2 if self.is_bighunt(hunt_info) else -1].position+1
-        for channel in channels:
-            if self.mark in channel.name:
-                idx = channel.position 
+        channels = ctx.message.channel.category.text_channels
+        # if this is the first solve, set to 1000 to ensure there's space to fill later
+        idx = 1000
+        for c in channels:
+            if self.mark in c.name:
+                idx = c.position - 1
                 break
 
         # update user of solve
@@ -1394,8 +1404,8 @@ class HuntCog(commands.Cog):
             bot_member: discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True, connect=True, manage_messages=True)
         }
         hunt_category = await ctx.guild.create_category(hunt_name, overwrites=overwrites, position=position)
-        hunt_channel = await hunt_category.create_text_channel(hunt_name + '-discussion')
-        await hunt_category.create_voice_channel(name=hunt_name + ' VC')
+        hunt_channel = await hunt_category.create_text_channel(hunt_name + '-discussion', position=0)
+        await hunt_category.create_voice_channel(name=hunt_name + ' VC', position=0)
 
         nexus_url = self.make_hunt_nexus(hunt_name, hunt_folder)
         db = DBase(ctx)
