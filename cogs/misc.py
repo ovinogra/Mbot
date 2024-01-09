@@ -242,7 +242,7 @@ class MiscCog(commands.Cog):
             response = random.choice(quotes)
             await message.channel.send(response)
 
-        if re.match('is it hunt yet\??', message.content.lower()):
+        if re.match('.*is it hunt yet\??', message.content.lower()):
             await message.channel.send(self.is_it_hunt_string())
 
         if 'space' in message.content.lower():
