@@ -92,14 +92,19 @@ class HuntCog(commands.Cog):
         else:
             return False
 
-    async def channel_create(self, ctx, hunt_info, name, position, category=None):
+    async def channel_create(self, ctx, hunt_info, name, category=None):
         if not category:
             category = ctx.message.channel.category
-        textchannnel = await category.create_text_channel(name=name,position=position)
-        voicechannnel = await category.create_voice_channel(name=name,position=position) if self.is_bighunt(hunt_info) else None
-        return [textchannnel,voicechannnel]
+        text_channel = await category.create_text_channel(name=name)
+        await text_channel.move(beginning=True, offset=1)
+        voice_channel = await category.create_voice_channel(name=name) if self.is_bighunt(hunt_info) else None
+        if voice_channel is not None:
+            await voice_channel.move(beginning=True, offset=1)
+        return [text_channel, voice_channel]
 
     async def channel_rename(self,ctx,channel,newname):
+        if channel.name.startswith('✅'):
+            newname = '✅' + newname
         channel.name = newname
         await channel.edit(name=newname)
 
@@ -790,18 +795,11 @@ class HuntCog(commands.Cog):
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
             return False
 
-        category = roundcategory if self.is_bighunt(hunt_info) else ctx.message.channel.category
-        text_channels = roundcategory.text_channels
-        # if there are no other unsolved puzzles, set to 500
-        position = 500
-        if len(text_channels) > 1 and text_channels[1].position < 501:
-            position = text_channels[1].position - 1
-
         if not is_multi:
             infomsg = await ctx.send(':yellow_circle: Creating puzzle `{}`'.format(puzzlename))
 
         # puzzle creation sequence
-        newchannels = await self.channel_create(ctx, hunt_info, name=puzzlename, position=position, category=roundcategory)
+        newchannels = await self.channel_create(ctx, hunt_info, name=puzzlename, category=roundcategory)
         newsheet_url = self.puzzle_sheet_make(nexus_data, puzzlename)
         msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
@@ -941,10 +939,10 @@ class HuntCog(commands.Cog):
         # prepare to move channel down
         channels = ctx.message.channel.category.text_channels
         # if this is the first solve, set to 1000 to ensure there's space to fill later
-        idx = 1000
+        offset = 0
         for c in channels:
+            offset += 1
             if self.mark in c.name:
-                idx = c.position - 1
                 break
 
         # update user of solve
@@ -955,7 +953,8 @@ class HuntCog(commands.Cog):
                  'party', 'rocket', 'star', 'mbot', 'slug'])
             filepath = './misc/emotes/' + emote + '.png'
             solve_message = await ctx.send(content=('`{}` marked as solved!' + (' Voice chat will be deleted in **2 minutes**.' if self.is_bighunt(hunt_info) else '')).format(puzzlename), file=discord.File(filepath))
-            await ctx.channel.edit(name=self.mark + ctx.channel.name, position=idx)
+            await ctx.channel.edit(name=self.mark + ctx.channel.name)
+            await ctx.channel.move(beginning=True, offset=offset)
 
             if self.is_bighunt(hunt_info):
                 now = datetime.utcnow() - timedelta(hours=5)
