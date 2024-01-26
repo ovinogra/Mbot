@@ -28,7 +28,6 @@ DISCORD_TOKEN= ...   # your discord bot token
 GOOGLE_CLIENT_SECRETS=...   # google service account credentials
 AWS_ACCESS_KEY_ID= ...
 AWS_SECRET_ACCESS_KEY= ...
-BIG_HUNT=0
 ```
 2. Enable Google API following instructions on [gspread documentation](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) to get a `client_secrets.json` for a service account.
 3. Initialize two tables in DynamoDB. Unfortunately I don't have a standalone init script for this, but the code used is commented out in `utils/db2.py`.
