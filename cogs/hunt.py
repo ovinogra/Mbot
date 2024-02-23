@@ -804,7 +804,8 @@ class HuntCog(commands.Cog):
         msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
         self.nexus_add_puzzle(nexussheet=nexus_sheet, hunt_info=hunt_info, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
-        self.cache_vc_for_contact(newchannels[1].id, newsheet_url)
+        if self.is_bighunt(hunt_info):
+            self.cache_vc_for_contact(newchannels[1].id, newsheet_url)
 
         # send final feedback
         if not is_multi:
@@ -953,8 +954,8 @@ class HuntCog(commands.Cog):
                  'party', 'rocket', 'star', 'mbot', 'slug'])
             filepath = './misc/emotes/' + emote + '.png'
             solve_message = await ctx.send(content=('`{}` marked as solved!' + (' Voice chat will be deleted in **2 minutes**.' if self.is_bighunt(hunt_info) else '')).format(puzzlename), file=discord.File(filepath))
-            await ctx.channel.edit(name=self.mark + ctx.channel.name)
             await ctx.channel.move(beginning=True, offset=offset)
+            await ctx.channel.edit(name=self.mark + ctx.channel.name)
 
             if self.is_bighunt(hunt_info):
                 now = datetime.utcnow() - timedelta(hours=5)
