@@ -493,9 +493,6 @@ class HuntCog(commands.Cog):
 
         hunt_info = await self.get_hunt_db_info(ctx)
 
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
-
         async def send_nexus(nexus):
             try:
                 await ctx.send(embed=nexus)
@@ -845,9 +842,6 @@ class HuntCog(commands.Cog):
         """ update puzzle in nexus with answer and solved priority """
 
         hunt_info = await self.get_hunt_db_info(ctx)
-
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
 
         if not query:
             await ctx.send('`!solve Red Herring` in appropriate channel')
