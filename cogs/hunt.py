@@ -169,12 +169,7 @@ class HuntCog(commands.Cog):
             return False
 
     async def get_hunt_role_id(self, ctx, hunt_info):
-        if hunt_info['hunt_role_id'] == 'none': #and not self.is_bighunt(hunt_info):
-            # await ctx.send('Update the role id in the login info.')
-            return 'none'
-        else:
-            roleid = int(hunt_info['hunt_role_id'])
-            return roleid
+        return int(hunt_info['hunt_role_id'])
 
 
     async def check_hunt_role(self, ctx, hunt_info):
@@ -704,7 +699,7 @@ class HuntCog(commands.Cog):
             position = log_channel.category.position
         else:
             position = ctx.message.channel.category.position
-        if roleid != "none":
+        if roleid != 0:
             rolehunt = discord.utils.get(ctx.guild.roles, id=roleid)
             botmember = self.bot.user
             overwrites = {
@@ -978,9 +973,6 @@ class HuntCog(commands.Cog):
 
         hunt_info = await self.get_hunt_db_info(ctx)
 
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
-
         # cancel VC deletion if necessary
         if self.is_bighunt(hunt_info):
             for vc in self.vc_delete_queue:
@@ -1075,9 +1067,6 @@ class HuntCog(commands.Cog):
 
         hunt_info = await self.get_hunt_db_info(ctx)
 
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
-
         if not query:
             await ctx.send('`!note backsolve` in appropriate channel')
             return
@@ -1116,9 +1105,6 @@ class HuntCog(commands.Cog):
 
         hunt_info = await self.get_hunt_db_info(ctx)
 
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
-
         # fetch nexus data and sort headings
         nexus_url = self.nexus_get_url(hunt_info)
         if not nexus_url:
@@ -1153,9 +1139,6 @@ class HuntCog(commands.Cog):
         """ update nexus row by flag of column name """
 
         hunt_info = await self.get_hunt_db_info(ctx)
-
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
 
         if not query:
             await ctx.send('`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` in appropriate channel')
@@ -1227,9 +1210,6 @@ class HuntCog(commands.Cog):
         """
 
         hunt_info = await self.get_hunt_db_info(ctx)
-
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
 
         checks = {}
 
@@ -1427,9 +1407,6 @@ class HuntCog(commands.Cog):
 
         hunt_info = await self.get_hunt_db_info(ctx)
 
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
-
         nexus_url = self.nexus_get_url(hunt_info)
         if not nexus_url:
             return
@@ -1522,9 +1499,6 @@ class HuntCog(commands.Cog):
     async def remove_puzzle(self, ctx, *, query=None):
 
         hunt_info = await self.get_hunt_db_info(ctx)
-
-        # if not await self.check_hunt_role(ctx, hunt_info):
-        #     return
 
         nexus_url = self.nexus_get_url(hunt_info)
         if not nexus_url:
