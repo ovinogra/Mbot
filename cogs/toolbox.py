@@ -27,7 +27,7 @@ class ToolboxCog(commands.Cog):
         # get html page - TODO change to requests?
         query_initial = query[:]
         query = query_initial.replace('&','%26').replace('+','%2B').replace('#','%23').replace(' ','+') # html syntax
-        url = 'https://nutrimatic.org/?q='+query+'&go=Go'
+        url = 'https://nutrimatic.org/2024/?q='+query+'&go=Go'
         text = urllib.request.urlopen(url).read()
         text1 = text.decode()
 
