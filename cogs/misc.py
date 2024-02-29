@@ -288,7 +288,8 @@ class MiscCog(commands.Cog):
                 "I’m so storming pure I practically belch rainbows.",
                 "Inappropriate... like dividing by zero?",
                 "I am not enthused by my first experiments in self-determination.",
-                "Mushroom locating AI. With supplementary espionage additions. At your service."
+                "Mushroom locating AI. With supplementary espionage additions. At your service.",
+                "The best conversation I had was over forty million years ago…. And that was with a coffee machine."
             ]
             response = random.choice(quotes)
             await message.channel.send(response)
