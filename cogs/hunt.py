@@ -939,12 +939,11 @@ class HuntCog(commands.Cog):
 
         # prepare to move channel down
         channels = ctx.message.channel.category.text_channels
-        # if this is the first solve, set to 1000 to ensure there's space to fill later
-        offset = 0
+        offset = -1
         for c in channels:
-            offset += 1
             if self.mark in c.name:
                 break
+            offset += 1
 
         # update user of solve
         puzzlename = data_all[row_select - 1][lib['Puzzle Name'][0]]
