@@ -85,7 +85,7 @@ class LoginCog(commands.Cog):
         for item in query:
             field,value = item.split('=',1)
 
-            if field == 'role':
+            if field == 'role' or field == 'r':
                 if value == 'none':
                     updatedata.append(('hunt_role_id','none'))
                 else:
@@ -95,19 +95,19 @@ class LoginCog(commands.Cog):
                         await ctx.send('Role must be either `none` or id number.')
                         return
                     updatedata.append(('hunt_role_id',roleID))
-            elif field == 'user':
+            elif field == 'username' or field == 'user' or field == 'uname' or field == 'u':
                 updatedata.append(('hunt_username',str(value)))
-            elif field == 'pswd':
+            elif field == 'password' or field == 'pswd' or field == 'pass' or field == 'p':
                 updatedata.append(('hunt_password',str(value)))
-            elif field == 'site':
+            elif field == 'website' or field == 'site' or field == 'w':
                 updatedata.append(('hunt_url',str(value)))
-            elif field == 'folder':
+            elif field == 'folder' or field == 'f':
                 updatedata.append(('hunt_folder',str(value)))
-            elif field == 'nexus':
+            elif field == 'nexus' or field == 'n':
                 updatedata.append(('hunt_nexus',str(value)))
-            elif field == 'team':
+            elif field == 'teamname' or field == 'team' or field == 'name' or field == 't':
                 updatedata.append(('hunt_team_name', str(value)))
-            elif field == 'logfeed':
+            elif field == 'logfeed' or field == 'l':
                 updatedata.append(('hunt_logfeed', str(value)))
             else:
                 await ctx.send('Flag does not exist: '+field)
@@ -123,7 +123,7 @@ class LoginCog(commands.Cog):
     @commands.guild_only()
     async def huntinfo(self, ctx, *, query=None):
         helpstate = '`!login update '\
-                    '[-role=<id>] [-user=<name>] [-pswd=<pswd>] [-site=<url>] [-folder=<url>] [-nexus=<url>] [-team=<team>]`'
+                    '[-role=<id>] [-username=<username>] [-password=<password>] [-website=<url>] [-folder=<url>] [-nexus=<url>] [-teamname=<teamname>]`'
 
         # fetch hunt info
         if not query:

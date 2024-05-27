@@ -265,7 +265,7 @@ class HuntCog(commands.Cog):
         table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(round_data[2]))
         sheet.append_row(temp,table_range=table_range)
 
-    def nexus_add_puzzle(self, hunt_info, nexussheet, nexus_data, puzzlechannel, voicechannel, puzzlename, puzzlesheeturl, roundmarker):
+    def nexus_add_puzzle(self, hunt_info, nexussheet, nexus_data, puzzlechannel, voicechannel, puzzlename, puzzlesheeturl, roundmarker, is_meta):
         """ add channel id, puzzle name, link, priority=New """
 
         # sort headings
@@ -277,6 +277,8 @@ class HuntCog(commands.Cog):
         temp[lib['Channel ID'][0]] = str(puzzlechannel.id)
         if self.is_bighunt(hunt_info):
             temp[lib['Voice Channel ID'][0]] = str(voicechannel.id)
+        if is_meta:
+            temp[lib['Number'][0]] = 'M'
         temp[lib['Priority'][0]] = 'New'
         temp[lib['Puzzle Name'][0]] = puzzlename
         temp[lib['Spreadsheet Link'][0]] = puzzlesheeturl
@@ -722,7 +724,7 @@ class HuntCog(commands.Cog):
         await ctx.send(':orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannel.mention))
         await self.send_log_message(ctx, hunt_info, '[' + dt_string + ' EST] :orange_circle: Round created: `{}` ~~~ Create new puzzles in this round from {}'.format(newcategory, newchannel.mention))
 
-    @commands.command(aliases=['create','createpuzzle'])
+    @commands.command(aliases=['create','createpuzzle', 'puzzle'])
     @commands.guild_only()
     async def create_puzzle(self, ctx, *, query=None, is_multi=False, hunt_info=None):
         """ puzzle creation script to
@@ -745,9 +747,18 @@ class HuntCog(commands.Cog):
         roundcategory = None
         roundmarker = None
 
+        query_parts = query.split(' -')
+        puzzlename = query_parts[0]
+        roundname = None
+        is_meta = False
+        for part in query_parts[1:]:
+            if part.startswith('round'):
+                roundname = part.split('=')[1]
+            elif part.startswith('meta'):
+                is_meta = True
+
         round_data = nexuswkbook.get_worksheet(2).get_all_values()
-        if '-round=' in query:
-            puzzlename, roundname = query.split(' -round=')
+        if roundname is not None:
             if self.is_bighunt(hunt_info):
                 # check if requested round exists in nexus, if it does assume the category exists
                 if self.check_nexus_round_list(round_data, nametest=roundname):
@@ -757,7 +768,6 @@ class HuntCog(commands.Cog):
                     await ctx.send('Round name `{}` does not exist in nexus. Please create it first using `!createround`'.format(roundname))
                     return False
         elif self.is_bighunt(hunt_info):
-            puzzlename = query
             roundname = ctx.channel.category.name
             roundid = ctx.channel.category.id
             # check if current category is a round in the nexus
@@ -769,9 +779,6 @@ class HuntCog(commands.Cog):
                 await ctx.send(
                     'Cannot create a puzzle in this category. Current category `{}` is not a round. '.format(roundname))
                 return False
-        else:
-            puzzlename = query
-            roundname = None
 
         nexus_sheet = nexuswkbook.sheet1
         nexus_data = nexus_sheet.get_all_values()
@@ -795,7 +802,7 @@ class HuntCog(commands.Cog):
         newsheet_url = self.puzzle_sheet_make(nexus_data, puzzlename)
         msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
-        self.nexus_add_puzzle(nexussheet=nexus_sheet, hunt_info=hunt_info, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker)
+        self.nexus_add_puzzle(nexussheet=nexus_sheet, hunt_info=hunt_info, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker, is_meta=is_meta)
         if self.is_bighunt(hunt_info):
             self.cache_vc_for_contact(newchannels[1].id, newsheet_url)
 
@@ -928,12 +935,11 @@ class HuntCog(commands.Cog):
 
         # prepare to move channel down
         channels = ctx.message.channel.category.text_channels
-        # if this is the first solve, set to 1000 to ensure there's space to fill later
-        offset = 0
+        offset = -1
         for c in channels:
-            offset += 1
             if self.mark in c.name:
                 break
+            offset += 1
 
         # update user of solve
         puzzlename = data_all[row_select - 1][lib['Puzzle Name'][0]]
