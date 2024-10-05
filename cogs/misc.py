@@ -121,7 +121,7 @@ class MiscCog(commands.Cog):
         #await ctx.send('<:szeth:667773296896507919>')
 
     def is_it_hunt_string(self):
-        huntdate = datetime.datetime(2024,1,12,17,0,0,0) # start time in utc
+        huntdate = datetime.datetime(2025,1,17,17,0,0,0) # start time in utc
         now = datetime.datetime.utcnow()
         delta = huntdate - now
         days = delta.days
@@ -129,7 +129,7 @@ class MiscCog(commands.Cog):
         minutes = (delta.seconds % 3600) // 60
         seconds = (delta.seconds % 3600) % 60
         if days < 0:
-            return '**YES!!!** :tada: Mystery Hunt 2024 has started!'
+            return '**YES!!!** :tada: Mystery Hunt 2025 has started!'
         else:
             return '**NO.** \nHunt is in {} days, {} hours, {} minutes, {} seconds.'.format(days,hours,minutes,seconds)
 
