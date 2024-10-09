@@ -1,41 +1,40 @@
 # %%
+import random
+from base64 import b64encode
+from datetime import datetime
+from hashlib import pbkdf2_hmac
+
 import boto3
 import os
 from dotenv import load_dotenv
-import json
-from boto3.dynamodb.conditions import Key, Attr
+import sqlite3
 
 
 # %%
+
+
+def connect():
+    load_dotenv()
+    return sqlite3.connect(os.path.join(os.getcwd(), os.getenv('DATABASE_PATH')))
+
+
+def hash_password(password):
+    salt = b64encode(os.urandom(16)).decode('utf-8')
+    return 'pbkdf2_sha256$260000$'\
+        + salt + '$'\
+        + b64encode((pbkdf2_hmac('sha256', bytes(password, 'utf-8'), bytes(salt, 'utf-8'), 260000))).decode('utf-8')
 
 
 class DBase:
 
     def __init__(self, ctx):
         self.ctx = ctx
-
-    ################ Main DB connection ################
-
-    def connect(self):
-        load_dotenv()
-        AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-        AWS_REGION = "us-east-1"
-
-        dynamodb = boto3.resource(
-            'dynamodb',
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            region_name=AWS_REGION)
-
-        return dynamodb
-
-    ################ TABLE hunt ################
+        self.conn = connect()
 
     def hunt_get_row(self, guildID, category_id):
         ''' query, guildID: int '''
 
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('multi-hunt')
         response = table.scan(
             FilterExpression=Attr('guild_id').eq(guildID) & Attr('hunt_category_id').eq(category_id)
@@ -57,7 +56,7 @@ class DBase:
     async def hunt_update_row(self, updatedata, guildID, category_id):
         ''' updatedata: list of tuples [(fieldname, value),(fieldname, value)] '''
 
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('multi-hunt')
 
         # format update fields
@@ -79,34 +78,30 @@ class DBase:
         await self.ctx.send('Login update successful')
         return
 
-    async def hunt_insert_row(self, guild_id, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed):
-        ''' guildname, guildID: string and int of guild info '''
-
-        dynamodb = self.connect()
-        table = dynamodb.Table('multi-hunt')
-
-        table.put_item(
-            Item={
-                'guild_id': int(guild_id),
-                'hunt_category_id': int(category_id),
-                'hunt_role_id': int(hunt_role_id),
-                'hunt_username': 'none',
-                'hunt_password': 'none',
-                'hunt_url': 'none',
-                'hunt_folder': hunt_folder,
-                'hunt_nexus': hunt_nexus,
-                'hunt_team_name': 'none',
-                'is_bighunt': is_bighunt,
-                'hunt_logfeed': int(hunt_logfeed),
-            }
-        )
-        # await self.ctx.send('INSERT ROW successful')
+    async def hunt_insert_row(self, guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed, bighunt_pass):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO hunts_Hunt
+                (guild_id, name, category_id, role_id, folder, nexus, is_bighunt, logfeed)
+                VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed))
+        if is_bighunt:
+            cursor.execute("""
+                INSERT INTO auth_user
+                (username, password, date_joined, is_superuser, is_staff, is_active, first_name, last_name, email)
+                VALUES
+                (?, ?, ?, 0, 0, 1, "", "", "")
+            """, (hunt_name, hash_password(bighunt_pass), datetime.now()))
+        self.conn.commit()
+        cursor.close()
         return
 
     async def hunt_delete_row(self, guildID, category_id):
         ''' guildID: int of guild ID '''
 
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('multi-hunt')
 
         table.delete_item(
@@ -119,7 +114,7 @@ class DBase:
         return
 
     def round_get_row(self, guild_id, category_id):
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('multi-hunt-rounds')
 
         response = table.scan(
@@ -130,7 +125,7 @@ class DBase:
         return response['Items'][0]
 
     async def round_insert_row(self, guild_id, category_id, hunt_category_id):
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('multi-hunt-rounds')
 
         table.put_item(
@@ -146,7 +141,7 @@ class DBase:
     ################ TABLE tags ################
 
     def tag_get_all(self):
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('tags')
         response = table.scan()
         data = response['Items']
@@ -155,7 +150,7 @@ class DBase:
     def tag_get_row(self, tagname):
         ''' tagname: string '''
 
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('tags')
 
         try:
@@ -171,7 +166,7 @@ class DBase:
     async def tag_insert_row(self, tagname, tagcontent, guildID):
         ''' tagname, tagcontent: string '''
 
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('tags')
         table.put_item(
             Item={
@@ -186,7 +181,7 @@ class DBase:
     async def tag_update_row(self, tagname, tagcontent):
         ''' tagname, tagcontent: string '''
 
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('tags')
         currentdata = self.tag_get_row(tagname)
         table.update_item(
@@ -205,7 +200,7 @@ class DBase:
     async def tag_delete_row(self, tagname):
         ''' tagname: string '''
 
-        dynamodb = self.connect()
+        dynamodb = connect()
         table = dynamodb.Table('tags')
         currentdata = self.tag_get_row(tagname)
         table.delete_item(

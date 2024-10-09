@@ -1355,28 +1355,34 @@ class HuntCog(commands.Cog):
         """
 
         if not query or '-folder' not in query:
-            await ctx.send('Usage: `!createhunt <huntname> -folder=<folder> [-role=<roleid>] [-bighunt] [-logfeed=<logfeedid>]`')
+            await ctx.send('Usage: `!createhunt <huntname> -folder=<folder> [-role=<roleid>] [-bighunt] [-bighuntpass=<bighuntpass>] [-logfeed=<logfeedid>]`')
             return False
 
         query_parts = query.split(' -')
-        hunt_name = query_parts[0]
-        hunt_role_id = '0'
+        hunt_name = query_parts[0].strip()
+        hunt_role_id = None
         hunt_folder = ''
         is_bighunt = False
-        logfeed_id = '0'
+        logfeed_id = None
+        bighunt_pass = None
         for part in query_parts[1:]:
             if part.startswith('role'):
                 hunt_role_id = part.split('=')[1]
             elif part.startswith('folder'):
                 hunt_folder = part.split('=')[1]
+            elif part.startswith('bighuntpassword') or part.startswith('bighuntpass') or part.startswith('bighuntpswd'):
+                bighunt_pass = part.split('=')[1].strip()
             elif part.startswith('bighunt'):
                 is_bighunt = True
             elif part.startswith('logfeed'):
-                logfeed_id = part.split('=')[1]        
+                logfeed_id = part.split('=')[1]
+        if is_bighunt and bighunt_pass is None:
+            await ctx.send('Error: Bighunts must specify a bighunt password for Shardboard.')
+            return False
         info_msg = await ctx.send(':orange_circle: Creating hunt `{}`...'.format(hunt_name))
 
         position = ctx.message.channel.category.position
-        if hunt_role_id != '0':
+        if hunt_role_id is not None:
             hunt_role = discord.utils.get(ctx.guild.roles, id=int(hunt_role_id))
             bot_member = self.bot.user
             overwrites = {
@@ -1393,7 +1399,7 @@ class HuntCog(commands.Cog):
 
         nexus_url = self.make_hunt_nexus(hunt_name, hunt_folder)
         db = DBase(ctx)
-        await db.hunt_insert_row(ctx.guild.id, hunt_category.id, hunt_role_id, hunt_folder, nexus_url, is_bighunt, logfeed_id)
+        await db.hunt_insert_row(ctx.guild.id, hunt_name, hunt_category.id, hunt_role_id, hunt_folder, nexus_url, is_bighunt, logfeed_id, bighunt_pass)
 
         nexus_msg = await hunt_channel.send('Nexus sheet: {}'.format(nexus_url))
         await nexus_msg.pin()
