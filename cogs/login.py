@@ -113,7 +113,7 @@ class LoginCog(commands.Cog):
 
         # update db
         db = DBase(ctx)
-        await db.hunt_update_row(updatedata, ctx.guild.id, ctx.message.channel.category.id)
+        db.hunt_update_row(updatedata, ctx.guild.id, ctx.message.channel.category.id)
             
 
 

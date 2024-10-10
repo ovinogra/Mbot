@@ -53,7 +53,7 @@ class DBase:
             raise Exception('This is not a hunt category!')
         return row
 
-    async def hunt_update_row(self, update_data, guild_id, category_id):
+    def hunt_update_row(self, update_data, guild_id, category_id):
         cursor = self.conn.cursor()
         updates = update_data[0][0] + ' = ?'
         values = [update_data[0][1]]
@@ -71,7 +71,7 @@ class DBase:
         await self.ctx.send('Login update successful')
         return
 
-    async def hunt_insert_row(self, guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed, bighunt_pass):
+    def hunt_insert_row(self, guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed, bighunt_pass):
         cursor = self.conn.cursor()
         cursor.execute("""
             INSERT INTO hunts_Hunt
@@ -115,7 +115,7 @@ class DBase:
                 return rnd
         return None
 
-    async def round_insert_row(self, guild_id, category_id, hunt_category_id, name, marker):
+    def round_insert_row(self, guild_id, category_id, hunt_category_id, name, marker):
         cursor = self.conn.cursor()
         res = cursor.execute("""
             SELECT id FROM hunts_Hunt WHERE guild_id = ? AND category_id = ?
