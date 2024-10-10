@@ -1,9 +1,7 @@
 # hunt.py
 import discord
-from discord.ext import commands, tasks
-# from utils.db import DBase
-from utils.db2 import DBase
-import datetime
+from discord.ext import commands
+from utils.db import DBase
 
 
 

@@ -2,7 +2,7 @@
 import discord
 from discord.ext import commands
 import asyncio
-from utils.db2 import DBase
+from utils.db import DBase
 from utils.paginator import Pages
 
 
