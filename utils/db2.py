@@ -1,10 +1,8 @@
 # %%
-import random
 from base64 import b64encode
 from datetime import datetime
 from hashlib import pbkdf2_hmac
 
-import boto3
 import os
 from dotenv import load_dotenv
 import sqlite3
@@ -80,8 +78,7 @@ class DBase:
                 (guild_id, name, category_id, role_id, folder, nexus, is_bighunt, logfeed)
                 VALUES
                 (?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed))
+        """, (guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed))
         if is_bighunt:
             cursor.execute("""
                 INSERT INTO auth_user
@@ -93,15 +90,30 @@ class DBase:
         cursor.close()
         return
 
-    def round_get_row(self, guild_id, category_id):
+    def round_get_row(self, guild_id, category_id=None, name=None, marker=None):
         cursor = self.conn.cursor()
-        res = cursor.execute("""
-            SELECT * FROM hunts_Round WHERE (SELECT guild_id FROM hunts_Hunt WHERE id = hunt_id) = ? AND category_id = ?
-        """, (guild_id, category_id))
-        round = res.fetchone()
-        if round is None:
-            raise Exception('This is not a hunt category!')
-        return round
+        if category_id is not None:
+            res = cursor.execute("""
+                SELECT * FROM hunts_Round WHERE (SELECT guild_id FROM hunts_Hunt WHERE id = hunt_id) = ? AND category_id = ?
+            """, (guild_id, category_id))
+            rnd = res.fetchone()
+            if rnd is not None:
+                return rnd
+        elif name is not None:
+            res = cursor.execute("""
+                SELECT * FROM hunts_Round WHERE (SELECT guild_id FROM hunts_Hunt WHERE id = hunt_id) = ? AND name = ?
+            """, (guild_id, name))
+            rnd = res.fetchone()
+            if rnd is not None:
+                return rnd
+        elif marker is not None:
+            res = cursor.execute("""
+                SELECT * FROM hunts_Round WHERE (SELECT guild_id FROM hunts_Hunt WHERE id = hunt_id) = ? AND marker = ?
+            """, (guild_id, marker))
+            rnd = res.fetchone()
+            if rnd is not None:
+                return rnd
+        return None
 
     async def round_insert_row(self, guild_id, category_id, hunt_category_id, name, marker):
         cursor = self.conn.cursor()
@@ -119,7 +131,8 @@ class DBase:
         return
 
     # Tags
-
+    # TODO port this over to new db schema
+    '''
     def tag_get_all(self):
         dynamodb = connect()
         table = dynamodb.Table('tags')
@@ -128,8 +141,6 @@ class DBase:
         return data
 
     def tag_get_row(self, tagname):
-        ''' tagname: string '''
-
         dynamodb = connect()
         table = dynamodb.Table('tags')
 
@@ -144,8 +155,6 @@ class DBase:
             return False
 
     async def tag_insert_row(self, tagname, tagcontent, guildID):
-        ''' tagname, tagcontent: string '''
-
         dynamodb = connect()
         table = dynamodb.Table('tags')
         table.put_item(
@@ -159,8 +168,6 @@ class DBase:
         return
 
     async def tag_update_row(self, tagname, tagcontent):
-        ''' tagname, tagcontent: string '''
-
         dynamodb = connect()
         table = dynamodb.Table('tags')
         currentdata = self.tag_get_row(tagname)
@@ -178,8 +185,6 @@ class DBase:
         return
 
     async def tag_delete_row(self, tagname):
-        ''' tagname: string '''
-
         dynamodb = connect()
         table = dynamodb.Table('tags')
         currentdata = self.tag_get_row(tagname)
@@ -192,3 +197,4 @@ class DBase:
 
         await self.ctx.send('Tag deleted successful')
         return
+    '''

@@ -139,24 +139,13 @@ class HuntCog(commands.Cog):
             await ctx.send(str(e))
             return {}
 
+    def get_round_db_info(self, ctx, round_name=None):
+        if round_name is not None:
+            return DBase(ctx).round_get_row(ctx.guild.id, name=round_name)
+        return DBase(ctx).round_get_row(ctx.guild.id, category_id=ctx.message.channel.category.id)
+
     def is_bighunt(self, hunt_info):
         return hunt_info['is_bighunt'] or False
-
-    def check_nexus_round_list(self, round_data, nametest=None, idtest=None):
-        ''' bool: return [True] if round name exists in nexus '''
-
-        if nametest:
-            roundnames = [item[0] for item in round_data[3:]]
-            if nametest in roundnames:
-                return True
-            else:
-                return False
-        if idtest:
-            roundids = [item[1] for item in round_data[3:]]
-            if str(idtest) in roundids:
-                return True
-            else:
-                return False
 
     def check_nexus_puzzle_list(self, nexus_data, newpuzzle):
         ''' check if puzzle name already exists in nexus '''
@@ -196,32 +185,10 @@ class HuntCog(commands.Cog):
             else: 
                 return True
 
-    def fetch_round_category(self, ctx, round_data, roundid=None, roundname=None):
-        allroundnames = [item[0] for item in round_data[3:]]
-        allroundidx = [item[1] for item in round_data[3:]]
-        if roundname:
-            category = discord.utils.get(ctx.guild.channels, id=int(allroundidx[allroundnames.index(roundname)]))
-            return category
-        if roundid:
-            category = discord.utils.get(ctx.guild.channels, id=int(roundid))
-            return category
-
-    def fetch_round_marker(self, ctx, round_data, roundid=None, roundname=None):
-        allroundnames = [item[0] for item in round_data[3:]]
-        allroundidx = [item[1] for item in round_data[3:]]
-        allroundmarker = [item[3] for item in round_data[3:]]
-        if roundname:
-            marker = allroundmarker[allroundnames.index(roundname)]
-            return marker
-        if roundid:
-            marker = allroundmarker[allroundidx.index(str(roundid))]
-            return marker
-
-    # relies on column order in rounds sheet
-    def get_round_name_from_marker(self, data, marker):
-        for item in data[3:]:
-            if marker == item[3]:
-                return item[0]
+    def get_round_name_from_marker(self, ctx, marker):
+        round_info = DBase(ctx).round_get_row(ctx.guild.id, marker=marker)
+        if round_info is not None:
+            return round_info['name']
         return 'Unsorted'
 
     def nexus_get_url(self, hunt_info):
@@ -509,18 +476,11 @@ class HuntCog(commands.Cog):
         headings = data_all[0]
         lib = self.nexus_sort_columns(headings)
 
-        round_sheet = None
-        round_data = None
-        if self.is_bighunt(hunt_info):
-            # fetch nexus data of rounds
-            round_sheet = nexus_wkbook.get_worksheet(2)
-            round_data = round_sheet.get_all_values()
-
         # want: puzzle channel mention (linked), answer, round
         data_channel = [item[lib['Channel ID'][0]] for item in data_all[2:]]
         data_round = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] for item in data_all[2:]]
         data_round_name = ['Unsorted' if item[lib['Round'][0]] == '' else item[lib['Round'][0]] if not self.is_bighunt(hunt_info)
-            else self.get_round_name_from_marker(round_data, item[lib['Round'][0]]) for item in data_all[2:]]
+            else self.get_round_name_from_marker(ctx, item[lib['Round'][0]]) for item in data_all[2:]]
         data_number = ['-' if item[lib['Number'][0]] == '' else item[lib['Number'][0]] for item in data_all[2:]]
         data_answer = ['-' if item[lib['Answer'][0]] == '' else item[lib['Answer'][0]] for item in data_all[2:]]
 
@@ -558,8 +518,9 @@ class HuntCog(commands.Cog):
         if self.is_bighunt(hunt_info):
             # check if current category is a round in the nexus
             current_round_id = ctx.channel.category.id
-            if self.check_nexus_round_list(round_data=round_data, idtest=current_round_id):
-                current_round_token = self.fetch_round_marker(ctx, round_data=round_data, roundid=current_round_id)
+            round_info = self.get_round_db_info(ctx)
+            if round_info is not None:
+                current_round_token = round_info['marker']
             # if not in a category and no flags specified, go for "all"
             elif not query:
                 query = "-all"
@@ -735,13 +696,13 @@ class HuntCog(commands.Cog):
             elif part.startswith('meta'):
                 is_meta = True
 
-        round_data = nexuswkbook.get_worksheet(2).get_all_values()
         if roundname is not None:
             if self.is_bighunt(hunt_info):
                 # check if requested round exists in nexus, if it does assume the category exists
-                if self.check_nexus_round_list(round_data, nametest=roundname):
-                    roundcategory = self.fetch_round_category(ctx, round_data=round_data, roundname=roundname)
-                    roundmarker = self.fetch_round_marker(ctx, round_data=round_data, roundname=roundname)
+                round_info = self.get_round_db_info(ctx, round_name=roundname)
+                if round_info is not None:
+                    roundcategory = discord.utils.get(ctx.guild.channels, id=round_info['category_id'])
+                    roundmarker = round_info['marker']
                 else:
                     await ctx.send('Round name `{}` does not exist in nexus. Please create it first using `!createround`'.format(roundname))
                     return False
@@ -749,9 +710,10 @@ class HuntCog(commands.Cog):
             roundname = ctx.channel.category.name
             roundid = ctx.channel.category.id
             # check if current category is a round in the nexus
-            if self.check_nexus_round_list(round_data=round_data, idtest=roundid):
-                roundcategory = self.fetch_round_category(ctx, round_data=round_data, roundid=roundid)
-                roundmarker = self.fetch_round_marker(ctx, round_data=round_data, roundid=roundid)
+            round_info = self.get_round_db_info(ctx)
+            if round_info is not None:
+                roundcategory = discord.utils.get(ctx.guild.channels, id=round_info['category_id'])
+                roundmarker = round_info['marker']
                 pass
             else:
                 await ctx.send(
