@@ -122,7 +122,9 @@ class HuntCog(commands.Cog):
         await solve_message.edit(content='`{}` marked as solved!'.format(puzzlename))
 
     async def send_log_message(self, ctx, hunt_info, msg):
-        logchannel = discord.utils.get(ctx.guild.channels, id=int(hunt_info['hunt_logfeed']))
+        if hunt_info['logfeed'] is None:
+            return
+        logchannel = discord.utils.get(ctx.guild.channels, id=int(hunt_info['logfeed']))
         # if the log channel doesn't exist, just fail silently
         if logchannel is None:
             return
@@ -169,7 +171,7 @@ class HuntCog(commands.Cog):
             return False
 
     async def get_hunt_role_id(self, ctx, hunt_info):
-        return int(hunt_info['hunt_role_id'])
+        return hunt_info['role_id']
 
 
     async def check_hunt_role(self, ctx, hunt_info):
@@ -178,13 +180,13 @@ class HuntCog(commands.Cog):
         # res = list(results)
         # no hunt role set
         try:
-            hunt_info['hunt_role_id']
+            hunt_info['role_id']
         except KeyError:
             return False
-        if hunt_info['hunt_role_id'] == 'none':
+        if hunt_info['role_id'] == 'none':
             return True
         else:
-            roleid = int(hunt_info['hunt_role_id'])
+            roleid = int(hunt_info['role_id'])
             status = discord.utils.get(ctx.author.roles, id=roleid)
             # role is not correct
             if not status:
@@ -223,7 +225,7 @@ class HuntCog(commands.Cog):
         return 'Unsorted'
 
     def nexus_get_url(self, hunt_info):
-        return hunt_info['hunt_nexus']
+        return hunt_info['nexus']
 
     def nexus_get_wkbook(self,url):
         nexus_key = max(url.split('/'),key=len)
@@ -253,17 +255,6 @@ class HuntCog(commands.Cog):
             lib[label] = [index]
 
         return lib
-
-    def nexus_add_round(self, sheet, round_data, categoryobject, generalchannelobject, marker):
-        """ add a row for the new round in third tab of nexus workbook """
-
-        # new row for round
-        temp = [categoryobject.name,str(categoryobject.id),str(generalchannelobject.id),marker]
-
-        # append row to end of category/round list
-        rownum = len(round_data)+1
-        table_range = 'A'+str(rownum)+':'+gspread.utils.rowcol_to_a1(rownum,len(round_data[2]))
-        sheet.append_row(temp,table_range=table_range)
 
     def nexus_add_puzzle(self, hunt_info, nexussheet, nexus_data, puzzlechannel, voicechannel, puzzlename, puzzlesheeturl, roundmarker, is_meta):
         """ add channel id, puzzle name, link, priority=New """
@@ -678,28 +669,16 @@ class HuntCog(commands.Cog):
         nexuswkbook = self.nexus_get_wkbook(nexus_url)
         nexussheet = nexuswkbook.sheet1
         nexus_data = nexussheet.get_all_values()
-        round_sheet = nexuswkbook.get_worksheet(2)
-        round_data = round_sheet.get_all_values()
-
-        # check if round name exists in server
-        # if self.check_server_category_list(ctx,name):
-        #     await ctx.send('Round named `{}` already exists in server.'.format(name))
-        #     return
-        # check if round name exists in nexus
-        if self.check_nexus_round_list(round_data, name):
-            await ctx.send('Round named `{}` already exists in Nexus.'.format(name))
-            return
 
         hunt_info = await self.get_hunt_db_info(ctx)
         # do the round creation things
-        roleid = await self.get_hunt_role_id(ctx, hunt_info)
-        log_channel = discord.utils.get(ctx.guild.channels, id=int(hunt_info['hunt_logfeed']))
-        if log_channel is not None:
-            position = log_channel.category.position
+        role_id = await self.get_hunt_role_id(ctx, hunt_info)
+        if hunt_info['logfeed'] is not None:
+            position = discord.utils.get(ctx.guild.channels, id=int(hunt_info['logfeed'])).category.position
         else:
             position = ctx.message.channel.category.position
-        if roleid != 0:
-            rolehunt = discord.utils.get(ctx.guild.roles, id=roleid)
+        if role_id is not None:
+            rolehunt = discord.utils.get(ctx.guild.roles, id=role_id)
             botmember = self.bot.user
             overwrites = {
                     ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False, connect=False),
@@ -714,9 +693,8 @@ class HuntCog(commands.Cog):
         newsheet_url = self.puzzle_sheet_make(nexus_data, "ROUND: " + name + " " + marker)
         msg = await newchannel.send(newsheet_url)
         await msg.pin()
-        self.nexus_add_round(round_sheet, round_data, newcategory, newchannel, marker)
 
-        await DBase(ctx).round_insert_row(ctx.guild.id, newcategory.id, hunt_info['hunt_category_id'])
+        await DBase(ctx).round_insert_row(ctx.guild.id, newcategory.id, hunt_info['category_id'], name, marker)
 
         # send feedback on round creation
         now = datetime.utcnow() - timedelta(hours=5)
@@ -1223,8 +1201,8 @@ class HuntCog(commands.Cog):
         checks['Manage Channels'] = ':+1:' if perms.manage_channels else ':x:'
         checks['Add Reactions'] = ':+1:' if perms.add_reactions else ':x:'
 
-        checks['Google Folder'] = '[Link]('+hunt_info['hunt_folder']+')' if 'http' in hunt_info['hunt_folder'] else hunt_info['hunt_folder']
-        checks['Nexus Sheet'] = '[Link]('+hunt_info['hunt_nexus']+')' if 'http' in hunt_info['hunt_nexus'] else hunt_info['hunt_nexus']
+        checks['Google Folder'] = '[Link]('+hunt_info['folder']+')' if 'http' in hunt_info['folder'] else hunt_info['folder']
+        checks['Nexus Sheet'] = '[Link]('+hunt_info['nexus']+')' if 'http' in hunt_info['nexus'] else hunt_info['nexus']
 
         # nexus sheet check API call
         try:
@@ -1286,7 +1264,7 @@ class HuntCog(commands.Cog):
         # fetch solve data
         hunt_info = await self.get_hunt_db_info(ctx)
         try:
-            team_name = hunt_info['hunt_team_name']
+            team_name = hunt_info['team_name']
         except Exception as e:
             await ctx.send(str(e))
             return

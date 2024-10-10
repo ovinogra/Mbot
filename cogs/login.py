@@ -40,20 +40,20 @@ class LoginCog(commands.Cog):
             return False
         
         # parse results
-        field0 = '**Team**: '+str(res['hunt_team_name'])+'\n'
-        field1 = '**Website**: '+str(res['hunt_url'])+'\n'
-        field2 = '**Username**: '+str(res['hunt_username'])+'\n'
-        field3 = '**Password**: '+str(res['hunt_password'])+'\n'
-        if res['hunt_folder'].find('http') != -1:
-            field4 = '**Folder**: [Link here]('+str(res['hunt_folder'])+')\n'
+        field0 = '**Team**: '+str(res['team_name'])+'\n'
+        field1 = '**Website**: '+str(res['url'])+'\n'
+        field2 = '**Username**: '+str(res['username'])+'\n'
+        field3 = '**Password**: '+str(res['password'])+'\n'
+        if res['folder'].find('http') != -1:
+            field4 = '**Folder**: [Link here]('+str(res['folder'])+')\n'
         else: 
-            field4 = '**Folder**: '+str(res['hunt_folder'])+'\n'
-        if res['hunt_nexus'].find('http') != -1:
-            field5 = '**Nexus**: [Link here]('+str(res['hunt_nexus'])+')\n'
+            field4 = '**Folder**: '+str(res['folder'])+'\n'
+        if res['nexus'].find('http') != -1:
+            field5 = '**Nexus**: [Link here]('+str(res['nexus'])+')\n'
         else: 
-            field5 = '**Nexus**: '+str(res['hunt_nexus'])+'\n'
+            field5 = '**Nexus**: '+str(res['nexus'])+'\n'
         final = field0+field1+field2+field3+field4+field5
-        role = res['hunt_role_id']
+        role = res['role_id']
 
         # set up embed
         embed = discord.Embed(
@@ -62,8 +62,8 @@ class LoginCog(commands.Cog):
             )
 
         # role should be either 'none' or numeric ID       
-        if role == 'none':
-            embed.set_footer(text='Role: '+role)
+        if role is None:
+            embed.set_footer(text='Role: none')
             await ctx.send(embed=embed)
             return
         roleID = int(role)
@@ -87,28 +87,28 @@ class LoginCog(commands.Cog):
 
             if field == 'role' or field == 'r':
                 if value == 'none':
-                    updatedata.append(('hunt_role_id','none'))
+                    updatedata.append(('role_id','none'))
                 else:
                     try:
                         roleID = int(value)
                     except:
                         await ctx.send('Role must be either `none` or id number.')
                         return
-                    updatedata.append(('hunt_role_id',roleID))
+                    updatedata.append(('role_id',roleID))
             elif field == 'username' or field == 'user' or field == 'uname' or field == 'u':
-                updatedata.append(('hunt_username',str(value)))
+                updatedata.append(('username',str(value)))
             elif field == 'password' or field == 'pswd' or field == 'pass' or field == 'p':
-                updatedata.append(('hunt_password',str(value)))
+                updatedata.append(('password',str(value)))
             elif field == 'website' or field == 'site' or field == 'w':
-                updatedata.append(('hunt_url',str(value)))
+                updatedata.append(('url',str(value)))
             elif field == 'folder' or field == 'f':
-                updatedata.append(('hunt_folder',str(value)))
+                updatedata.append(('folder',str(value)))
             elif field == 'nexus' or field == 'n':
-                updatedata.append(('hunt_nexus',str(value)))
+                updatedata.append(('nexus',str(value)))
             elif field == 'teamname' or field == 'team' or field == 'name' or field == 't':
-                updatedata.append(('hunt_team_name', str(value)))
+                updatedata.append(('team_name', str(value)))
             elif field == 'logfeed' or field == 'l':
-                updatedata.append(('hunt_logfeed', str(value)))
+                updatedata.append(('logfeed', str(value)))
             else:
                 await ctx.send('Flag does not exist: '+field)
 
