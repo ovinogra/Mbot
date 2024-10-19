@@ -25,6 +25,16 @@ def hash_password(password):
         + b64encode((pbkdf2_hmac('sha256', bytes(password, 'utf-8'), bytes(salt, 'utf-8'), 260000))).decode('utf-8')
 
 
+def make_updates(update_data):
+    updates = update_data[0][0] + ' = ?'
+    values = [update_data[0][1]]
+    for i in range(1, len(update_data)):
+        updates += ", " + update_data[i][0] + ' = ?'
+        values.append(update_data[i][1])
+    updates += ' '
+    return updates, values
+
+
 class DBase:
 
     def __init__(self, ctx):
@@ -55,12 +65,7 @@ class DBase:
 
     def hunt_update_row(self, update_data, guild_id, category_id):
         cursor = self.conn.cursor()
-        updates = update_data[0][0] + ' = ?'
-        values = [update_data[0][1]]
-        for i in range(1, len(update_data)):
-            updates += ", " + update_data[i][0] + ' = ?'
-            values.append(update_data[i][1])
-        updates += ' '
+        updates, values = make_updates(update_data)
         values.append(guild_id)
         values.append(category_id)
         cursor.execute("""
@@ -68,17 +73,11 @@ class DBase:
         """, tuple(values))
         self.conn.commit()
         cursor.close()
-        await self.ctx.send('Login update successful')
         return
 
     def hunt_insert_row(self, guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed, bighunt_pass):
         cursor = self.conn.cursor()
-        cursor.execute("""
-            INSERT INTO hunts_Hunt
-                (guild_id, name, category_id, role_id, folder, nexus, is_bighunt, logfeed)
-                VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed))
+        web_user_id = None
         if is_bighunt:
             cursor.execute("""
                 INSERT INTO auth_user
@@ -86,6 +85,13 @@ class DBase:
                 VALUES
                 (?, ?, ?, 0, 0, 1, "", "", "")
             """, (hunt_name, hash_password(bighunt_pass), datetime.now()))
+            web_user_id = cursor.lastrowid
+        cursor.execute("""
+            INSERT INTO hunts_Hunt
+                (guild_id, name, category_id, role_id, folder, nexus, is_bighunt, logfeed, web_user_id)
+                VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (guild_id, hunt_name, category_id, hunt_role_id, hunt_folder, hunt_nexus, is_bighunt, hunt_logfeed, web_user_id))
         self.conn.commit()
         cursor.close()
         return
@@ -126,6 +132,62 @@ class DBase:
         cursor.execute("""
             INSERT INTO hunts_Round (name, marker, category_id, hunt_id) VALUES (?, ?, ?, ?)
         """, (name, marker, category_id, hunt['id']))
+        self.conn.commit()
+        cursor.close()
+        return
+
+    def puzzle_get_row(self, guild_id, channel_id=None, name=None):
+        cursor = self.conn.cursor()
+        if channel_id is not None:
+            res = cursor.execute("""
+                SELECT * FROM hunts_Puzzle WHERE (SELECT guild_id FROM hunts_Hunt WHERE id = hunt_id) = ? AND channel_id = ?
+            """, (guild_id, channel_id))
+            puzzle = res.fetchone()
+            if puzzle is not None:
+                return puzzle
+        elif name is not None:
+            res = cursor.execute("""
+                SELECT * FROM hunts_Puzzle WHERE (SELECT guild_id FROM hunts_Hunt WHERE id = hunt_id) = ? AND name = ?
+            """, (guild_id, name))
+            puzzle = res.fetchone()
+            if puzzle is not None:
+                return puzzle
+        return None
+
+    def puzzle_insert_row(self, guild_id, hunt_category_id, channel_id, voice_channel_id, name, spreadsheet_link, is_meta, round_name):
+        cursor = self.conn.cursor()
+        res = cursor.execute("""
+            SELECT id FROM hunts_Hunt WHERE guild_id = ? AND category_id = ?
+        """, (guild_id, hunt_category_id))
+        hunt = res.fetchone()
+        if hunt is None:
+            raise Exception('Could not find a hunt!')
+        cursor.execute("""
+            INSERT INTO hunts_Puzzle
+                (name, channel_id, voice_channel_id, spreadsheet_link, priority, is_meta, unlock_time, hunt_id)
+                VALUES
+                (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (name, channel_id, voice_channel_id, spreadsheet_link, 'New', is_meta, datetime.now(), hunt['id']))
+        if round_name is not None:
+            cursor.execute("""
+                INSERT INTO hunts_Puzzle_Rounds
+                    (puzzle_id, round_id)
+                    VALUES
+                    (?, (SELECT id FROM hunts_Round WHERE (SELECT guild_id FROM hunts_Hunt WHERE id = hunt_id) = ? AND name = ?))
+            """, (cursor.lastrowid, guild_id, round_name))
+        self.conn.commit()
+        cursor.close()
+        return
+
+    def puzzle_update_row(self, update_data, guild_id, hunt_category_id, channel_id):
+        cursor = self.conn.cursor()
+        updates, values = make_updates(update_data)
+        values.append(guild_id)
+        values.append(hunt_category_id)
+        values.append(channel_id)
+        cursor.execute("""
+            UPDATE hunts_Puzzle SET """ + updates + """WHERE hunt_id = (SELECT id FROM hunts_Hunt WHERE guild_id = ? AND category_id = ?) AND channel_id = ?
+        """, tuple(values))
         self.conn.commit()
         cursor.close()
         return

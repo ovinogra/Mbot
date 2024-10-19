@@ -114,6 +114,7 @@ class LoginCog(commands.Cog):
         # update db
         db = DBase(ctx)
         db.hunt_update_row(updatedata, ctx.guild.id, ctx.message.channel.category.id)
+        await ctx.send('Login update successful')
             
 
 

@@ -132,7 +132,7 @@ class HuntCog(commands.Cog):
 
     # nexus management functions
 
-    def get_hunt_db_info(self, ctx):
+    async def get_hunt_db_info(self, ctx):
         try:
             return DBase(ctx).hunt_get_row(ctx.guild.id, ctx.message.channel.category.id)
         except Exception as e:
@@ -144,20 +144,13 @@ class HuntCog(commands.Cog):
             return DBase(ctx).round_get_row(ctx.guild.id, name=round_name)
         return DBase(ctx).round_get_row(ctx.guild.id, category_id=ctx.message.channel.category.id)
 
+    def get_puzzle_db_info(self, ctx, puzzle_name=None):
+        if puzzle_name is not None:
+            return DBase(ctx).puzzle_get_row(ctx.guild.id, name=puzzle_name)
+        return DBase(ctx).puzzle_get_row(ctx.guild.id, channel_id=ctx.message.channel.id)
+
     def is_bighunt(self, hunt_info):
         return hunt_info['is_bighunt'] or False
-
-    def check_nexus_puzzle_list(self, nexus_data, newpuzzle):
-        ''' check if puzzle name already exists in nexus '''
-
-        headings = nexus_data[0]
-        lib = self.nexus_sort_columns(headings)
-
-        data_name = [item[lib['Puzzle Name'][0]] for item in nexus_data[2:]]
-        if newpuzzle in data_name:
-            return True
-        else:
-            return False
 
     async def get_hunt_role_id(self, ctx, hunt_info):
         return hunt_info['role_id']
@@ -240,6 +233,7 @@ class HuntCog(commands.Cog):
         temp[lib['Priority'][0]] = 'New'
         temp[lib['Puzzle Name'][0]] = puzzlename
         temp[lib['Spreadsheet Link'][0]] = puzzlesheeturl
+        # TODO sync this with database time
         temp[lib['Created At'][0]] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
         if roundmarker:
             temp[lib['Round'][0]] = roundmarker
@@ -451,7 +445,7 @@ class HuntCog(commands.Cog):
         can flag by round or unsolved 
         """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         async def send_nexus(nexus):
             try:
@@ -570,7 +564,7 @@ class HuntCog(commands.Cog):
     async def list_rounds(self,ctx,*,query=None):
         ''' list all rounds in nexus'''
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         if not self.is_bighunt(hunt_info):
             await ctx.send("This command is only available in bighunt mode.")
@@ -607,7 +601,7 @@ class HuntCog(commands.Cog):
         4) add category id... somewhere in nexus?
         """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         if not self.is_bighunt(hunt_info):
             await ctx.send("This command is only available in bighunt mode.")
@@ -631,7 +625,7 @@ class HuntCog(commands.Cog):
         nexussheet = nexuswkbook.sheet1
         nexus_data = nexussheet.get_all_values()
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
         # do the round creation things
         role_id = await self.get_hunt_role_id(ctx, hunt_info)
         if hunt_info['logfeed'] is not None:
@@ -677,7 +671,7 @@ class HuntCog(commands.Cog):
             return False
 
         if hunt_info is None:
-            hunt_info = self.get_hunt_db_info(ctx)
+            hunt_info = await self.get_hunt_db_info(ctx)
 
         nexus_url = self.nexus_get_url(hunt_info)
         if not nexus_url:
@@ -704,7 +698,7 @@ class HuntCog(commands.Cog):
                     roundcategory = discord.utils.get(ctx.guild.channels, id=round_info['category_id'])
                     roundmarker = round_info['marker']
                 else:
-                    await ctx.send('Round name `{}` does not exist in nexus. Please create it first using `!createround`'.format(roundname))
+                    await ctx.send('Round name `{}` does not exist for this hunt. Please create it first using `!createround`'.format(roundname))
                     return False
         elif self.is_bighunt(hunt_info):
             roundname = ctx.channel.category.name
@@ -723,14 +717,15 @@ class HuntCog(commands.Cog):
         nexus_sheet = nexuswkbook.sheet1
         nexus_data = nexus_sheet.get_all_values()
 
-        # check existence of puzzle in channels and nexus
+        # check existence of puzzle in channels and database
         if not self.is_bighunt(hunt_info) and self.check_category_channel_list(ctx, puzzlename):
             await ctx.send('Channel named `{}` already exists in current category.'.format(puzzlename))
             return False
         elif self.is_bighunt(hunt_info) and self.check_server_channel_list(ctx, puzzlename):
             await ctx.send('Channel named `{}` already exists in current server.'.format(puzzlename))
             return False
-        if self.check_nexus_puzzle_list(nexus_data, puzzlename):
+        puzzle = self.get_puzzle_db_info(ctx, puzzle_name=puzzlename)
+        if puzzle is not None:
             await ctx.send('Puzzle named `{}` already exists in Nexus.'.format(puzzlename))
             return False
 
@@ -743,6 +738,7 @@ class HuntCog(commands.Cog):
         msg = await newchannels[0].send(newsheet_url)
         await msg.pin()
         self.nexus_add_puzzle(nexussheet=nexus_sheet, hunt_info=hunt_info, nexus_data=nexus_data, puzzlechannel=newchannels[0], voicechannel=newchannels[1], puzzlename=puzzlename, puzzlesheeturl=newsheet_url, roundmarker=roundmarker, is_meta=is_meta)
+        DBase(ctx).puzzle_insert_row(ctx.guild.id, hunt_info['category_id'], newchannels[0].id, newchannels[1].id if newchannels[1] is not None else None, puzzlename, newsheet_url, is_meta, roundname)
         if self.is_bighunt(hunt_info):
             self.cache_vc_for_contact(newchannels[1].id, newsheet_url)
 
@@ -762,7 +758,7 @@ class HuntCog(commands.Cog):
     @commands.guild_only()
     async def multicreate_puzzles(self, ctx, *, query=None):
         """ create multiple puzzles with one command """
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
         lines = query.splitlines()
         info_content = [':yellow_circle: Creating puzzle `{}`'.format(line.split('-round=')[0]) for line in lines]
         infomsg = await ctx.send('\n'.join(info_content))
@@ -788,7 +784,7 @@ class HuntCog(commands.Cog):
     async def solve_puzzle(self, ctx, *, query=None):
         """ update puzzle in nexus with answer and solved priority """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         if not query:
             await ctx.send('`!solve Red Herring` in appropriate channel')
@@ -821,6 +817,7 @@ class HuntCog(commands.Cog):
         except IndexError:
             row_data[0].append(time)
         nexus_sheet.update(edit_row, row_data)
+        DBase(ctx).puzzle_update_row([('answer', query.upper()), ('priority', 'Solved'), ('solve_time', datetime.now())], ctx.guild.id, hunt_info['category_id'], ctx.message.channel.id)
 
         # update sheet to indicate solve
         col_select = lib['Puzzle Name'][0]
@@ -902,7 +899,6 @@ class HuntCog(commands.Cog):
                 self.vc_delete_queue.append(deletion)
                 await deletion[1]
                 self.vc_delete_queue.remove(deletion)
-
         else:
             await ctx.send('Updated solution (again): {}'.format(puzzlename))
 
@@ -911,7 +907,7 @@ class HuntCog(commands.Cog):
     async def undo_solve_puzzle(self, ctx):
         """ remove solved puzzle changes in nexus (in case !solve is run in the wrong channel) """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         # cancel VC deletion if necessary
         if self.is_bighunt(hunt_info):
@@ -943,6 +939,8 @@ class HuntCog(commands.Cog):
         col_select = lib['Solved At'][0]
         row_data[0][col_select] = ''
         nexus_sheet.update(edit_row, row_data)
+        DBase(ctx).puzzle_update_row([('answer', None), ('priority', 'New'), ('solve_time', None)], ctx.guild.id, hunt_info['category_id'], ctx.message.channel.id)
+
 
         # undo the coloring stuff
         col_select = lib['Puzzle Name'][0]
@@ -1005,7 +1003,7 @@ class HuntCog(commands.Cog):
     async def update_nexus_note(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         if not query:
             await ctx.send('`!note backsolve` in appropriate channel')
@@ -1035,6 +1033,7 @@ class HuntCog(commands.Cog):
             nexussheet.update_cell(row_select, col_select, data_notes[row_select-3]+'; '+query)
         else:
             nexussheet.update_cell(row_select, col_select, query)
+        DBase(ctx).puzzle_update_row([('notes', query)], ctx.guild.id, hunt_info['category_id'], ctx.message.channel.id)
 
         await ctx.send('Updated column Notes for puzzle: {}'.format(puzzlename))
 
@@ -1043,7 +1042,7 @@ class HuntCog(commands.Cog):
     async def remove_nexus_note(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         # fetch nexus data and sort headings
         nexus_url = self.nexus_get_url(hunt_info)
@@ -1069,6 +1068,7 @@ class HuntCog(commands.Cog):
             notes = data_notes[row_select-3].split(';')
             notes.pop()
             nexussheet.update_cell(row_select, col_select, '; '.join(notes))
+            DBase(ctx).puzzle_update_row([('notes', '; '.join(notes))], ctx.guild.id, hunt_info['category_id'], ctx.message.channel.id)
             await ctx.send('Removed last note from puzzle: {}'.format(puzzlename))
         else:
             await ctx.send('No notes to remove from puzzle: {}'.format(puzzlename))
@@ -1078,7 +1078,7 @@ class HuntCog(commands.Cog):
     async def update_nexus(self,ctx,*,query=None):
         """ update nexus row by flag of column name """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         if not query:
             await ctx.send('`!update [-round=<>] [-number=<>] [-name=<>] [-priority=<>] [-notes=<>]` in appropriate channel')
@@ -1111,36 +1111,36 @@ class HuntCog(commands.Cog):
 
         # update requested columns/fields
         puzzlename = data_all[row_select-1][lib['Puzzle Name'][0]]
+        db_update_data = []
         for item in updatedict:
-
-            if item == 'round':
-                col_select = lib['Round'][0]+1
-                nexussheet.update_cell(row_select, col_select, updatedict[item])
-                await ctx.send('Updated column Round for puzzle: {}'.format(puzzlename))
-            
-            elif item == 'number':
-                col_select = lib['Number'][0]+1
-                nexussheet.update_cell(row_select, col_select, updatedict[item])
-                await ctx.send('Updated column Number for puzzle: {}'.format(puzzlename))
-            
-            elif item == 'name':
+            # TODO add this back and make sure the db reflects it
+            # if item == 'round':
+            #    col_select = lib['Round'][0]+1
+            #    nexussheet.update_cell(row_select, col_select, updatedict[item])
+            #    await ctx.send('Updated column Round for puzzle: {}'.format(puzzlename))
+            # if item == 'number':
+            #    col_select = lib['Number'][0]+1
+            #    nexussheet.update_cell(row_select, col_select, updatedict[item])
+            #    await ctx.send('Updated column Number for puzzle: {}'.format(puzzlename))
+            if item == 'name':
                 col_select = lib['Puzzle Name'][0]+1
                 nexussheet.update_cell(row_select, col_select, updatedict[item])
+                db_update_data.append((item, updatedict[item]))
                 await self.channel_rename(ctx,ctx.channel,updatedict[item])
                 await ctx.send('Updated column Name for puzzle: {}'.format(puzzlename))
-
             elif item == 'priority':
                 col_select = lib['Priority'][0]+1
                 nexussheet.update_cell(row_select, col_select, updatedict[item].title())
+                db_update_data.append((item, updatedict[item]))
                 await ctx.send('Updated column Priority for puzzle: {}'.format(puzzlename))
-
             elif item == 'notes':
                 col_select = lib['Notes'][0]+1
                 nexussheet.update_cell(row_select, col_select, updatedict[item])
+                db_update_data.append((item, updatedict[item]))
                 await ctx.send('Updated column Notes for puzzle: {}'.format(puzzlename))
-
             else:
                 await ctx.send('Check key name. Column {} not updateable via bot.'.format(item))
+        DBase(ctx).puzzle_update_row(db_update_data, ctx.guild.id, hunt_info['category_id'], ctx.message.channel.id)
 
     @commands.command(aliases=['check','checksetup'])
     @commands.guild_only()
@@ -1149,7 +1149,7 @@ class HuntCog(commands.Cog):
         This awful sequence of checks and API calls presumably makes sure stuff won't break later
         """
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         checks = {}
 
@@ -1224,7 +1224,7 @@ class HuntCog(commands.Cog):
     async def generate_solve_graph(self, ctx, *, query=None):
 
         # fetch solve data
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
         try:
             team_name = hunt_info['team_name']
         except Exception as e:
@@ -1351,7 +1351,7 @@ class HuntCog(commands.Cog):
     @commands.guild_only()
     async def contact(self, ctx, *, query=None):
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         nexus_url = self.nexus_get_url(hunt_info)
         if not nexus_url:
@@ -1444,7 +1444,7 @@ class HuntCog(commands.Cog):
     @commands.guild_only()
     async def remove_puzzle(self, ctx, *, query=None):
 
-        hunt_info = self.get_hunt_db_info(ctx)
+        hunt_info = await self.get_hunt_db_info(ctx)
 
         nexus_url = self.nexus_get_url(hunt_info)
         if not nexus_url:
