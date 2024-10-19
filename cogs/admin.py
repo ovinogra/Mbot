@@ -2,7 +2,7 @@
 from tabnanny import check
 import discord
 from discord.ext import commands
-from utils.db2 import DBase
+from utils.db import DBase
 
 
 # A cog with some db owner commands, mostly for testing
