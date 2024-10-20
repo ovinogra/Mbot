@@ -26,12 +26,15 @@ The setup relies on a Google service account and a AWS DynamoDB connection.
 ```
 DISCORD_TOKEN= ...   # your discord bot token
 GOOGLE_CLIENT_SECRETS=...   # google service account credentials
-AWS_ACCESS_KEY_ID= ...
-AWS_SECRET_ACCESS_KEY= ...
+BASE_NEXUS_ID= ... # for !createhunt, the stuff in your nexus URL after /d/ and before /edit?=
+BASE_TEMPLATE_ID= ... # for !createhunt, the stuff in your template URL after /d/ and before /edit?=
+DATABASE_PATH= ... # the relative path to your database file
 ```
 2. Enable Google API following instructions on [gspread documentation](https://gspread.readthedocs.io/en/latest/oauth2.html#for-bots-using-service-account) to get a `client_secrets.json` for a service account.
-3. Initialize two tables in DynamoDB. Unfortunately I don't have a standalone init script for this, but the code used is commented out in `utils/db2.py`.
-4. [Per hunt] Set up a google folder (shared w/ service account address) with Nexus and Puzzle Template sheets. 
+3. Initialize the database tables.  This can either be done:
+   1. [forthcoming] on the M-Bot side (or for standalone M-Bot) via `python utils/db_init.py`. Note that this may require replacing the database or generating your own update scripts if new changes are made in the future.
+   2. on the Shardboard side via the usual Django database commands (`python manage.py makemigrations`/`python manage.py migrate`)
+4. Set up base Nexus and Puzzle Template sheets (shared w/ service account address). 
 5. Feel free to message me for details/help. 
 
 
